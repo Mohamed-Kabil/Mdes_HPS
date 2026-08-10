@@ -1,0 +1,333 @@
+{
+  "_meta": {
+    "description": "Request/response schemas for the 6 MDES Customer Service APIs (Search -> Token Delete) as actually implemented in project pwc-api-sp5_api, extracted from source for comparison against the official Mastercard MDES Customer Service API reference.",
+    "sourceOfTruth": "https://developer.mastercard.com/mdes-customer-service/documentation/api-reference/",
+    "callSites": [
+      "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java",
+      "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java",
+      "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/PanLifeCycleItspWebService.java"
+    ],
+    "notASchemaSource": {
+      "file": "ws-core-impl/src/main/java/com/acp/vision/pcrd/utils/ClientApiTools.java",
+      "method": "MdesCustomerService(css_event_rq tokenLifeCycle, Connection connection), lines 1207-1258",
+      "reason": "Verified by full read (previously only grepped 3 lines). This method builds zero request fields. It receives an already-serialized JSON string from an upstream PL/SQL layer (tokenLifeCycle.getrequest(), line 1214) and picks the target URL path purely by string-sniffing which field name is present in that JSON body (hasFieldInJson(requestBody, \"TokenSuspendRequest\") etc., lines 1216-1222). It is a router only -- not a schema source. Previously miscited here as a call site; removed from callSites above."
+    },
+    "modelPackage": "com.acp.common.api.ITSP.model",
+    "networkGate": "All 6 calls are gated behind response.getNetworkCode() == \"02\" (MDES). \"01\" is the Visa/VTS branch and uses unrelated model classes.",
+    "endpointBase": "InitConfig mdesCSEndPoint (or mdesCustServiceEndPoint for suspend/unsuspend/delete via ClientApiTools's routing-only forward)",
+    "requiredFieldPolicy": {
+      "status": "UNKNOWN_UPSTREAM_DTO_NOT_AVAILABLE",
+      "explanation": "Every field below has \"required\": \"unknown\" rather than true/false. This is a deliberate, distinct value -- NOT a claim that the field is optional. Bean Validation (jakarta.validation.Validator, invoked via AbstractWebServiceV35.validateConstraints() at ws-core-impl/.../ws/api/AbstractWebServiceV35.java:525-534, called from validateRequest() at line 504) genuinely runs server-side and would enforce @NotNull/@Size/@Pattern constraints if present. But it validates the INBOUND V35Rq request classes (TokenInquiryRequestV35Rq, TokenLifeCycleItspV35Rq, PanLifeCycleItspV35Rq, all extending com.acp.provider.message.api.AbstractMessageV35Rq), not the outbound com.acp.common.api.ITSP.model.* classes documented in this file. Those V35Rq classes are copied field-by-field into the outbound classes via mapper methods (e.g. TokenLifeCycleItspWebService.java:438 response.setTokenUniqueReference(request.getTspTokenId())), so a constraint on the V35Rq side would transitively constrain the outbound field -- IF such a constraint exists. We cannot currently confirm or deny this: com.acp.provider.message.* has no source in this repository checkout (confirmed: grep for 'package com.acp.provider.message' across the whole tree returns only ErrorCodes.java; the actual request/response/aggregate classes are not present as .java files anywhere in this checkout), and no compiled jar containing that package exists locally either (checked ~/.m2/repository -- no ma/hps/* group present, only 8 unrelated jars from an old Maven tool install; no .gradle cache; no .jar files anywhere in the repo tree). Do not treat \"unknown\" as \"optional\" in the diff engine -- surface it as a distinct third state so a missing constraint isn't silently reported as a confirmed non-required field.",
+      "howToResolve": "Obtain the ws-provider-message/ws-jpublisher artifact's actual source or jar (e.g. from an internal Artifactory/Nexus, or a build machine that has resolved this Maven module) and inspect AbstractMessageV35Rq, TokenInquiryRequestV35Rq, TokenLifeCycleItspV35Rq, PanLifeCycleItspV35Rq for jakarta.validation annotations."
+    },
+    "enumFieldPolicy": {
+      "status": "NONE_FOUND_IN_AVAILABLE_SOURCE",
+      "explanation": "Every field in the outbound com.acp.common.api.ITSP.model.* classes (which we do have source for) is declared as plain Java String -- no enum types back ReasonCode, CurrentStatusCode, TokenType, etc. in those classes. This was confirmed by direct read of each class, not inferred. However, the inbound V35Rq classes (see requiredFieldPolicy above) are equally unavailable, so we cannot rule out an enum-like @Pattern or Java enum constraint being enforced upstream before values are copied into these String fields."
+    }
+  },
+
+  "search": {
+    "mastercardOperation": "Search",
+    "mastercardPath": "POST /{id}/search",
+    "internalPath": "/mdes/csapi/v2/search",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenInquiryRequestWebService.java",
+    "sourceLines": "147-169, 485-612",
+    "requestWrapper": "TokenActivateWrapper.SearchRequest",
+    "_variantNote": "TokenInquiryRequestWebService.java:153-163 selects exactly one of the 3 variants below via if/else if/else if on request.getTokenUniqueReference() / request.getEncryptData().getPan() / request.getDeviceId(), in that priority order. They are mutually exclusive request shapes, not simultaneously-populated fields -- modeled here as 3 separate variants (searchByTokenUniqueReference / searchByPan / searchByDeviceId) rather than one flattened object as in the previous version of this file.",
+    "requestVariants": {
+      "searchByTokenUniqueReference": {
+        "builderMethod": "mapToRequestSearchByTUR() -- TokenInquiryRequestWebService.java:566-588",
+        "condition": "request.getTokenUniqueReference() != null (checked first, line 153)",
+        "fields": {
+          "TokenUniqueReference": { "type": "string", "required": "unknown", "javaSource": "SearchRequest.java:10" },
+          "ExcludeDeletedIndicator": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:13" },
+          "IncludeDeviceTokensOnly": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:16" },
+          "ExcludeTokensDeletedFromConsumerApp": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:20" },
+          "AuditInfo": {
+            "type": "object",
+            "required": "unknown",
+            "javaSource": "SearchRequest.java:23 (type AuditInfo)",
+            "properties": {
+              "UserId": { "type": "string", "required": "unknown", "javaSource": "AuditInfo.java:14" },
+              "UserName": { "type": "string", "required": "unknown", "javaSource": "AuditInfo.java:17" },
+              "Organization": { "type": "string", "required": "unknown", "javaSource": "AuditInfo.java:20 (Java field name organisation, @JsonProperty(\"Organization\"))" },
+              "Phone": { "type": "string", "required": "unknown", "javaSource": "AuditInfo.java:23" }
+            }
+          }
+        }
+      },
+      "searchByPan": {
+        "builderMethod": "mapToRequestSearchByPan() -- TokenInquiryRequestWebService.java:485-518, then encrypted at lines 156-160 (encryptItspPayload(..., \"SC\") producing a SearchRequestString)",
+        "condition": "request.getEncryptData().getPan() != null (checked second, line 155)",
+        "fields": {
+          "ExcludeDeletedIndicator": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:13" },
+          "IncludeDeviceTokensOnly": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:16" },
+          "ExcludeTokensDeletedFromConsumerApp": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:20" },
+          "AuditInfo": {
+            "type": "object",
+            "required": "unknown",
+            "javaSource": "SearchRequest.java:23",
+            "properties": {
+              "UserId": { "type": "string", "required": "unknown" },
+              "UserName": { "type": "string", "required": "unknown" },
+              "Organization": { "type": "string", "required": "unknown" },
+              "Phone": { "type": "string", "required": "unknown" }
+            }
+          },
+          "EncryptedAccountInformation": {
+            "type": "object",
+            "required": "unknown",
+            "javaSource": "SearchRequest.java:29 (plaintext CurrentAccount, pre-encryption) -> post-encryption becomes SearchRequestString.java:31 (EncryptedAccountInformationString)",
+            "preEncryptionShape": {
+              "EncryptedData": {
+                "CurrentAccount": {
+                  "AccountPan": { "type": "string", "required": "unknown", "javaSource": "CurrentAccount.java:8, populated from request.getEncryptData().getPan()" }
+                }
+              }
+            },
+            "postEncryptionShape": {
+              "_note": "SKIPPED PER USER INSTRUCTION -- EncryptedAccountInformationString.java was never opened; described only by inference from EncryptedData.java's sibling fields (PublicKeyFingerprint, EncryptedKey, OaepHashingAlgorithm, Iv) in the previous version of this file. Treated as encryption plumbing, out of scope unless Mastercard's own reference spec documents these fields -- if it does, re-open EncryptedAccountInformationString.java before diffing this branch."
+            }
+          }
+        }
+      },
+      "searchByDeviceId": {
+        "builderMethod": "mapToRequestSearchByDeviceId() -- TokenInquiryRequestWebService.java:590-612",
+        "condition": "request.getDeviceId() != null (checked third/last, line 161, else-branch)",
+        "fields": {
+          "PaymentAppInstanceId": { "type": "string", "required": "unknown", "javaSource": "SearchRequest.java:26, populated from request.getDeviceId()" },
+          "ExcludeDeletedIndicator": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:13" },
+          "IncludeDeviceTokensOnly": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:16" },
+          "ExcludeTokensDeletedFromConsumerApp": { "type": "string", "constValueUsedHere": "false", "required": "unknown", "javaSource": "SearchRequest.java:20" },
+          "AuditInfo": {
+            "type": "object",
+            "required": "unknown",
+            "javaSource": "SearchRequest.java:23",
+            "properties": {
+              "UserId": { "type": "string", "required": "unknown" },
+              "UserName": { "type": "string", "required": "unknown" },
+              "Organization": { "type": "string", "required": "unknown" },
+              "Phone": { "type": "string", "required": "unknown" }
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "wrapper": "TokenActivateWrapper.SearchResponse",
+      "javaSource": "SearchResponse.java (whole file)",
+      "Accounts": {
+        "type": "object",
+        "javaSource": "Accounts.java:10 (List<Account>)",
+        "Account": {
+          "type": "array",
+          "items": {
+            "AccountPanSuffix": { "type": "string", "javaSource": "Account.java:8" },
+            "ExpirationDate": { "type": "string", "javaSource": "Account.java:11" },
+            "Tokens": {
+              "type": "object",
+              "javaSource": "Tokens.java:10 (List<Token>)",
+              "Token": {
+                "type": "array",
+                "items": {
+                  "TokenUniqueReference": { "type": "string", "javaSource": "Token.java:8" },
+                  "PrimaryAccountNumberUniqueReference": { "type": "string", "javaSource": "Token.java:11" },
+                  "TokenSuffix": { "type": "string", "javaSource": "Token.java:14" },
+                  "ExpirationDate": { "type": "string", "javaSource": "Token.java:17" },
+                  "DigitizationRequestDateTime": { "type": "string", "javaSource": "Token.java:20" },
+                  "TokenActivatedDateTime": { "type": "string", "javaSource": "Token.java:23" },
+                  "FinalTokenizationDecision": { "type": "string", "javaSource": "Token.java:26" },
+                  "CorrelationId": { "type": "string", "javaSource": "Token.java:29" },
+                  "CurrentStatusCode": { "type": "string", "javaSource": "Token.java:32" },
+                  "CurrentStatusDescription": { "type": "string", "javaSource": "Token.java:35" },
+                  "CurrentStatusDateTime": { "type": "string", "javaSource": "Token.java:38" },
+                  "ProvisioningStatusCode": { "type": "string", "javaSource": "Token.java:41" },
+                  "ProvisioningStatusDescription": { "type": "string", "javaSource": "Token.java:44" },
+                  "TokenRequestorId": { "type": "string", "javaSource": "Token.java:47" },
+                  "WalletId": { "type": "string", "javaSource": "Token.java:50" },
+                  "PaymentAppInstanceId": { "type": "string", "javaSource": "Token.java:53" },
+                  "TokenType": { "type": "string", "javaSource": "Token.java:56" },
+                  "StorageTechnology": { "type": "string", "javaSource": "Token.java:59" },
+                  "LastCommentId": { "type": "string", "javaSource": "Token.java:62" },
+                  "TokenRequestorConsumerFacingEntityName": { "type": "string", "javaSource": "Token.java:65" },
+                  "Device": {
+                    "type": "object",
+                    "javaSource": "Token.java:68 (type Device)",
+                    "properties": {
+                      "DeviceId": { "type": "string", "javaSource": "Device.java:8" },
+                      "DeviceName": { "type": "string", "javaSource": "Device.java:11" },
+                      "DeviceType": { "type": "string", "javaSource": "Device.java:14" },
+                      "DecureElementId": { "type": "string", "javaSource": "Device.java:17" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "tokenActivate": {
+    "mastercardOperation": "Token Activate",
+    "mastercardPath": "POST /{id}/token/activate",
+    "internalPath": "/mdes/csapi/v2/token/activate",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenLifeCycleItspWebService.java",
+    "sourceLines": "144-147, 431-453",
+    "requestWrapper": "TokenActivateWrapper.TokenActivateRequest",
+    "request": {
+      "TokenUniqueReference": { "type": "string", "required": "unknown", "javaSource": "TokenLifeCycleItspRq.java:15, populated from request.getTspTokenId()" },
+      "CommentText": { "type": "string", "required": "unknown", "javaSource": "TokenLifeCycleItspRq.java:18" },
+      "ReasonCode": { "type": "string", "required": "unknown", "javaSource": "TokenLifeCycleItspRq.java:21, populated from request.getActionReason()" },
+      "AuditInfo": {
+        "type": "object",
+        "required": "unknown",
+        "javaSource": "TokenLifeCycleItspRq.java:24",
+        "properties": {
+          "UserId": { "type": "string", "required": "unknown" },
+          "UserName": { "type": "string", "required": "unknown" },
+          "Organization": { "type": "string", "required": "unknown" },
+          "Phone": { "type": "string", "required": "unknown" }
+        }
+      }
+    },
+    "response": {
+      "_note": "No dedicated Mastercard response DTO consumed in code beyond HTTP status handling (200/400/401/500). On 200 the internal TokenLifeCycleItspV35Rs is returned with ResponseInfo(errorCode=00000). Mastercard error codes mapped: VSE40002->T0111, VSE40000->T0117, VSE40001->T0118, VSE40003->T0112, VSE40010->T0109, VSE40011->T0113 (these mappings are shared across activate/suspend/unsuspend/delete, see TokenLifeCycleItspWebService.java lines 264-298)."
+    }
+  },
+
+  "tokenUpdate": {
+    "mastercardOperation": "Token Update",
+    "mastercardPath": "POST /{id}/token/update",
+    "internalPath": "/mdes/csapi/v2/token/update",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/PanLifeCycleItspWebService.java",
+    "sourceLines": "122-183",
+    "requestWrapper": "built inline as raw Jackson ObjectNode (no POJO) when request.getActionReason() == \"ACCOUNT_UPDATE\"",
+    "request": {
+      "TokenUpdateRequest": {
+        "type": "object",
+        "required": "unknown",
+        "properties": {
+          "EncryptedAccountInformation": {
+            "type": "object",
+            "required": "unknown",
+            "_pre_encryption_plaintext": {
+              "EncryptedData": {
+                "CurrentAccount": { "AccountPan": { "type": "string", "required": "unknown", "javaSource": "request.getEncryptData().getCardholderInfo().getPan(), PanLifeCycleItspWebService.java:134" } },
+                "NewAccount": {
+                  "AccountPan": { "type": "string", "required": "unknown", "javaSource": "request.getEncryptData().getReplaceCardholderInfo().getPan(), PanLifeCycleItspWebService.java:135" },
+                  "ExpirationDate": { "type": "string", "format": "MMyy", "required": "unknown", "javaSource": "PanLifeCycleItspWebService.java:138-155, converted from source YYMM" }
+                }
+              }
+            },
+            "_note": "The plaintext object above is JSON-serialized then passed through encryptItspPayload(institutionCode, json, \"SC\") (line 165) producing the actual EncryptedAccountInformation node sent to Mastercard."
+          }
+        }
+      },
+      "CommentText": { "type": "string", "required": "unknown", "javaSource": "PanLifeCycleItspWebService.java:174" },
+      "AuditInfo": {
+        "type": "object",
+        "required": "unknown",
+        "javaSource": "PanLifeCycleItspWebService.java:175-181 (built as raw ObjectNode, no POJO)",
+        "properties": {
+          "UserId": { "type": "string", "required": "unknown" },
+          "UserName": { "type": "string", "required": "unknown" },
+          "Organization": { "type": "string", "required": "unknown" },
+          "Phone": { "type": "string", "required": "unknown" }
+        }
+      }
+    },
+    "response": {
+      "_note": "Only HTTP status 200/else is checked; internal PanLifeCycleItspV35Rs.ResponseInfo is set to errorCode 00000 (success) or 99999 (error), no field-level Mastercard response mapping implemented."
+    },
+    "_alsoInThisFile_notPartOfThe6": {
+      "operation": "ACCOUNT_CLOSED branch (request.getActionReason().equals(\"ACCOUNT_CLOSED\"), PanLifeCycleItspWebService.java:185-202) calls a different Mastercard API entirely -- dropped from this file per scope decision, not extracted.",
+      "internalPath": "/paa/paymentaccount/static/1/0/closeAccount (mdesPAMEndPoint, not csapi -- out of scope for MDES Customer Service API comparison)"
+    }
+  },
+
+  "tokenSuspend": {
+    "mastercardOperation": "Token Suspend",
+    "mastercardPath": "POST /{id}/token/suspend",
+    "internalPath": "/mdes/csapi/v2/token/suspend",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenLifeCycleItspWebService.java",
+    "sourceLines": "148-151, 454-475",
+    "requestWrapper": "TokenActivateWrapper.TokenSuspendRequest",
+    "request": {
+      "TokenUniqueReference": { "type": "string", "required": "unknown", "javaSource": "TokenSuspendRequest.java:12, populated from request.getTspTokenId()" },
+      "CommentText": { "type": "string", "required": "unknown", "javaSource": "TokenSuspendRequest.java:15" },
+      "ReasonCode": { "type": "string", "required": "unknown", "javaSource": "TokenSuspendRequest.java:18, populated from request.getActionReason()" },
+      "AuditInfo": {
+        "type": "object",
+        "required": "unknown",
+        "javaSource": "TokenSuspendRequest.java:21",
+        "properties": {
+          "UserId": { "type": "string", "required": "unknown" },
+          "UserName": { "type": "string", "required": "unknown" },
+          "Organization": { "type": "string", "required": "unknown" },
+          "Phone": { "type": "string", "required": "unknown" }
+        }
+      }
+    },
+    "response": {
+      "_note": "Same status/error handling as tokenActivate (see that section)."
+    }
+  },
+
+  "tokenUnsuspend": {
+    "mastercardOperation": "Token Unsuspend",
+    "mastercardPath": "POST /{id}/token/unsuspend",
+    "internalPath": "/mdes/csapi/v2/token/unsuspend",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenLifeCycleItspWebService.java",
+    "sourceLines": "152-155, 476-497",
+    "requestWrapper": "TokenActivateWrapper.TokenUnsuspendRequest",
+    "request": {
+      "TokenUniqueReference": { "type": "string", "required": "unknown", "javaSource": "TokenUnsuspendRequest.java:11, populated from request.getTspTokenId()" },
+      "CommentText": { "type": "string", "required": "unknown", "javaSource": "TokenUnsuspendRequest.java:14" },
+      "ReasonCode": { "type": "string", "required": "unknown", "javaSource": "TokenUnsuspendRequest.java:17, populated from request.getActionReason()" },
+      "AuditInfo": {
+        "type": "object",
+        "required": "unknown",
+        "javaSource": "TokenUnsuspendRequest.java:20",
+        "properties": {
+          "UserId": { "type": "string", "required": "unknown" },
+          "UserName": { "type": "string", "required": "unknown" },
+          "Organization": { "type": "string", "required": "unknown" },
+          "Phone": { "type": "string", "required": "unknown" }
+        }
+      }
+    },
+    "response": {
+      "_note": "Same status/error handling as tokenActivate (see that section). Note: request.getAction() value for this operation is \"RESUME\", mapped internally to the unsuspend call."
+    }
+  },
+
+  "tokenDelete": {
+    "mastercardOperation": "Token Delete",
+    "mastercardPath": "POST /{id}/token/delete",
+    "internalPath": "/mdes/csapi/v2/token/delete",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenLifeCycleItspWebService.java",
+    "sourceLines": "156-159, 498-519",
+    "requestWrapper": "TokenActivateWrapper.TokenDeleteRequest",
+    "request": {
+      "TokenUniqueReference": { "type": "string", "required": "unknown", "javaSource": "TokenDeleteRequest.java:12, populated from request.getTspTokenId()" },
+      "CommentText": { "type": "string", "required": "unknown", "javaSource": "TokenDeleteRequest.java:15" },
+      "ReasonCode": { "type": "string", "required": "unknown", "javaSource": "TokenDeleteRequest.java:18, populated from request.getActionReason()" },
+      "AuditInfo": {
+        "type": "object",
+        "required": "unknown",
+        "javaSource": "TokenDeleteRequest.java:21",
+        "properties": {
+          "UserId": { "type": "string", "required": "unknown" },
+          "UserName": { "type": "string", "required": "unknown" },
+          "Organization": { "type": "string", "required": "unknown" },
+          "Phone": { "type": "string", "required": "unknown" }
+        }
+      }
+    },
+    "response": {
+      "_note": "Same status/error handling as tokenActivate (see that section)."
+    }
+  }
+}

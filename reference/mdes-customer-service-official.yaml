@@ -1,0 +1,3228 @@
+openapi: 3.0.3
+info:
+  version: 2.2.2
+  title: Mastercard Digital Enablement Service Customer Service API
+  description: >-
+    The MDES Customer Service API provides our Issuer partners with resources to
+    help resolve consumer queries about payment accounts enabled through our
+    digitization platform.
+  contact:
+    name: API Support
+    url: https://developer.mastercard.com/support
+    email: apisupport@mastercard.com
+servers:
+  - url: https://sandbox.api.mastercard.com/mdes/csapi
+    description: Sandbox server
+  - url: https://sandbox.api.mastercard.com/mdes/csapi/mtf
+    description: MTF server
+  - url: https://api.mastercard.com/mdes/csapi
+    description: Production server
+tags:
+  - name: Search
+    description: Retrieves information associated with one or more tokens.
+  - name: Token Activate
+    description: Performs the first time activation of a token.
+  - name: Token Update
+    description: Updates data belonging to one or more tokens.
+  - name: Token Suspend
+    description: Changes a token state from active to suspended.
+  - name: Token Unsuspend
+    description: Changes a token state from suspended to active.
+  - name: Token Delete
+    description: Deletes a token.
+  - name: Token Status History
+    description: Displays a token's previous statuses and lifecycle changes.
+  - name: Token Comments
+    description: Displays comments previously submitted on a token.
+  - name: Transactions
+    description: >-
+      Displays transactions performed with the token at any POI (Point of Interaction).
+  - name: Token Activation Methods
+    description: >-
+      Used to retrieve the available Activation Methods for a token that is awaiting activation.
+  - name: Token Resend Activation Code
+    description: >-
+      Initiates the sending of the Activation Code for a specific token to the account holder.
+  - name: Update Token Assurance
+    description: Changes the Assurance Level of an eligible token.
+  - name: Token Reset Mobile PIN
+    description: >-
+      Requests the reset of the PIN associated with a Mastercard Cloud-Based
+      Payment token.
+  - name: Disable Payment Channels
+    description: >-
+      Disables one or more payment channels associated with a token in the India
+      market.
+  - name: Token Requestor Search
+    description: Searches for Token Requestor Information
+  - name: Notify Authentication Decision
+    description: Used to update token corresponding issuer decision after cardholder authentication.
+paths:
+  /{id}/search:
+    post:
+      x-mastercard-api-encrypted: true
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Search
+      summary: Retrieves information associated with one or more tokens.
+      operationId: Search for a Token
+      description: >
+        Provides the ability to search for tokens based on Account PAN,
+        Alternate Account Identifier, Token Unique Reference(TUR), Token, Payment App
+        Instance Id, Comment Id, or Virtual Card Number. Returns all of the tokens
+        associated with an account according to the scope of the indicated search
+        request criteria. The response includes key state and informational data
+        for each token, including the Token Unique Reference which is needed for
+        subsequent token lifecycle management activities. <br>
+        Note:
+        <li> The Search API request must include only one of the available search methods Account PAN, Token
+        Unique Reference, Token, Payment App Instance Id, Comment Id, Alternate
+        Account Identifier, or Virtual Card Number. They cannot be used together in a single request.
+        For Incontrol Issuers, searching based on a Real Card Number (RCN) will not be supported
+        and will return an 'EMPTY_RESULT' with a HTTP 200 in the response.</li><br>
+        <li> Using the same search filter condition in two different filter fields will return a null or empty response.
+        For example, if you pass the filters **ExcludeDeletedIndicator = true** (to exclude deleted tokens)
+        and **StatusCode = D** (to include only deleted tokens) in the request, the system will return a null or empty response.</li>
+
+      requestBody:
+        $ref: '#/components/requestBodies/SearchRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SearchResponse'
+        default:
+          $ref: '#/components/responses/ErrorsResponse'
+  /{id}/token/activate:
+    post:
+      x-mastercard-api-encrypted: true
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Activate
+      summary: Performs the first time activation of a token.
+      operationId: Token Activation
+      description: >
+        Used to activate a token for a digitization that has been approved and
+        provisioned, but requires additional cardholder authentication prior to
+        activation. If the provisioning was not completed successfully,
+        activation cannot be accomplished using Customer Service API. It is
+        expected that a cardholder will complete the authentication process
+        using an issuer's call center or using an issuer-supplied mobile
+        application, and only then should the issuer use this API to activate
+        the token.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenActivateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenActivateResponse'
+  /{id}/token/update:
+    post:
+      x-mastercard-api-encrypted: true
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Update
+      summary: Updates data belonging to one or more tokens.
+      operationId: Update a token
+      description: >
+        Used to update Account PAN Mapping Information or Issuer Product
+        Configuration ID associated to a provisioned token. To update a specific
+        token, the API should be requested using the Token Unique Reference. To
+        update all tokens mapped to a specific Account PAN, the API should be
+        requested using the Account PAN. In either case, updates will only be
+        applied to tokens in ACTIVE or SUSPENDED state, not those in IN PROGRESS
+        or DELETED state. When updating Account PAN Mapping information, the
+        Account PAN, Expiration Date, and Sequence Number may be updated
+        individually or in any combination. Only the information provided will be
+        updated. For Incontrol Issuers, updating Account Mapping Information for a Real Card Number (RCN) to provisioned token(s) will not be supported and will return an 'EMPTY_RESULT' with a HTTP 400 in the response.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenUpdateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenUpdateResponse'
+  /{id}/token/suspend:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Suspend
+      summary: Changes a token state from active to suspended.
+      operationId: Suspend a token
+      description: |
+        Used to suspend an active token so that it may not initiate any new
+        transactions. All authorizations for a SUSPENDED token will be declined.
+        Tokens may be suspended by multiple parties (suspenders) concurrently.
+        The token status is updated from ACTIVE to SUSPENDED when the first
+        suspender triggers a suspend action. Additional suspenders can add their
+        suspend action to the list of suspenders. Suspenders can unsuspend only
+        their own suspend action. All suspenders need to perform an unsuspend
+        action to move a token from SUSPENDED to ACTIVE. The token status will
+        only change when the last suspender has unsuspended the token.
+
+        For CoF tokens, the only two supported suspenders are issuer and token
+        requestor.
+
+        For Apple Pay tokens, there are some differences in behavior versus the
+        general principles. An issuer may add themselves as a suspender to a
+        token already suspended by a cardholder, as above. However, a cardholder
+        cannot suspend a token already suspended by the issuer. As a special
+        case for Apple Pay, an issuer may unsuspend (override) a token already
+        suspended by a cardholder. However, a cardholder cannot unsuspend a
+        token already suspended by the issuer.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenSuspendRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenSuspendResponse'
+  /{id}/token/unsuspend:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Unsuspend
+      summary: Changes a token state from suspended to active.
+      operationId: Unsuspend a token
+      description: |
+        Used to unsuspend or resume a suspended token and return it to the
+        active state where it may initiate new transactions. Tokens may be
+        suspended by multiple parties (suspenders) concurrently. The token
+        status is updated from ACTIVE to SUSPENDED when the first suspender
+        triggers a suspend action. Additional suspenders can add their suspend
+        action to the list of suspenders. Suspenders can unsuspend only their
+        own suspend action. All suspenders need to perform an unsuspend action
+        to move a token from SUSPENDED to ACTIVE. The token status will only
+        change when the last suspender has unsuspended the token.
+
+        For CoF tokens, the only two supported suspenders are issuer and token
+        requestor.
+
+        For Apple Pay tokens, there are some differences in behavior versus the
+        general principles. An issuer may add themselves as a suspender to a
+        token already suspended by a cardholder, as above. However, a cardholder
+        cannot suspend a token already suspended by the issuer. As a special
+        case for Apple Pay, an issuer may unsuspend (override) a token already
+        suspended by a cardholder. However, a cardholder cannot unsuspend a
+        token already suspended by the issuer.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenUnsuspendRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenUnsuspendResponse'
+  /{id}/token/delete:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Delete
+      summary: Deletes a token.
+      operationId: Token Delete
+      description: >
+        Used to delete a token so that it may not initiate any new transactions.
+        All authorizations for a deleted token will be declined. A deleted token
+        may not be returned to an active state.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenDeleteRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenDeleteResponse'
+  /{id}/token/statushistory:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Status History
+      summary: Displays a token's previous statuses and lifecycle changes.
+      operationId: Token Status History
+      description: >
+        Used to retrieve the historical statuses and lifecycle events  for a
+        token, such as suspended, resumed, and finally deleted. For any FPAN, Expiry Date or PSN update,
+        this API will also return the corresponding updated status as part of the historical data. Note: the initial
+        activation of the token will not be returned  with this API. We
+        recommend all our partners to do a 'Search'  to verify that the token
+        was activated.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenStatusHistoryRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenStatusHistoryResponse'
+  /{id}/token/comments:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Comments
+      summary: Displays comments previously submitted on a token.
+      operationId: Token Comments
+      description: >
+        Used to retrieve all comments associated with a token. Typically the
+        response includes comments created earlier by Issuer Customer Service
+        representatives detailing additional information about a particular
+        inquiry or event. There may also be comments with warnings of potential
+        fraud. These comments are created automatically by the MDES system when
+        a Token requestor indicates a high risk of fraud during digitization.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenCommentsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenCommentsResponse'
+  /{id}/transactions:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Transactions
+      summary: >-
+        Displays transactions performed with the token at any POI (Point of
+        Interaction).
+      operationId: Transaction History
+      description: >
+        Used to retrieve transactions performed by a token. It only returns
+        transactions performed within the last 30 days, to help identify a
+        particular token, or to identify a particular recent transaction. It is
+        not intended to provide the full transaction history of a token or
+        Account PAN. NOTE: The Transaction History API response is not supported
+        for static Card on File (CoF) tokens.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenTransactionsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenTransactionsResponse'
+  /{id}/token/activationmethods:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Activation Methods
+      summary: Shows the activation methods available for an inactive token.
+      operationId: Show Activation Methods
+      description: >
+        Used to retrieve the available Activation Methods for a token that is
+        awaiting activation. Activation Methods are the means by which a
+        cardholder may complete cardholder authentication with the issuer beyond
+        the scope of MDES. It is possible that there are no Activation Methods
+        for a token when an issuer did not provide any cardholder-specific
+        information with the Tokenization Authorization Request (TAR)
+        pre-digitization network message response.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenActivationMethodsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenActivationMethodsResponse'
+  /{id}/token/resendactivationcode:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Resend Activation Code
+      summary: Initiates the sending of the Activation Code for a specific token to the account holder.
+      operationId: Send Activation Code
+      description: >
+        Used to trigger the process of generating and sending a new Activation Code (for a specific token) to the cardholder via the requested Activation Method. When successful, a new Activation Code Expiration Date Time period will begin, and a new Activation Code will be sent to the issuer using the Activation Code Notification (ACN) pre-digitization network message. It can only be used to do this for Activation Methods that involve the external distribution of an Activation Code to the cardholder. For example, via email or SMS. It cannot be used to send a new activation code via the "Mobile Application" activation method.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenResendActivationCodeRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResendActivationCodeResponse'
+  /{id}/token/resetmobilepin:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Reset Mobile PIN
+      summary: >-
+        Requests the reset of the PIN associated with a Mastercard Cloud-Based
+        Payment token.
+      operationId: Reset Mobile Pin
+      description: >
+        Used to request that the Mobile PIN for a Mastercard Cloud-Based Payment
+        token in a single issuer wallet is reset. The request is passed to the
+        Credential Management System for processing. When the Mobile PIN is a
+        token-level PIN (as opposed to a wallet-level PIN), the cardholder must
+        choose a new PIN within 10 minutes of a Reset Mobile PIN action.
+        Otherwise, the reset will need to be re-requested.
+      requestBody:
+        $ref: '#/components/requestBodies/TokenResetMobilePinRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResetMobilePinResponse'
+  /{id}/updatetokenassurance:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Update Token Assurance
+      summary: Changes the Assurance Level of an eligible token.
+      operationId: Token Assurance Update
+      description: >
+        Used after an issuer has performed additional cardholder authentication
+        to indicate an increased level of token assurance. It will only be
+        applied to tokens that actually have a Token Assurance Level, and those
+        that are in ACTIVE or SUSPENDED state.
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateTokenAssuranceRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/UpdateTokenAssuranceResponse'
+  /{id}/token/disablepaymentchannels:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Disable Payment Channels
+      summary: >-
+        Disables one or more payment channels associated with a token in the
+        India market.
+      operationId: Disable Payment Channels
+      description: >
+        Applicable to the India market only, this API is used to disable
+        specific payment channels for a token.  A transaction submitted with a
+        POS Entry mode for a disabled channel will be declined.  If
+        disabledPaymentChannels are provided the current list of disabled
+        channels will be returned.
+      requestBody:
+        $ref: '#/components/requestBodies/DisablePaymentChannelsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/DisablePaymentChannelsResponse'
+  /{id}/tokenrequestorsearch:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Token Requestor Search
+      description: >-
+        Provides the ability to search for Token Requestor Information based on
+        the TokenRequestorId.
+      summary: API returns supported token requestors who support Token Connect
+      operationId: Token Requestor Search
+      requestBody:
+        $ref: '#/components/requestBodies/TokenRequestorSearchRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenRequestorSearchResponse'
+  /{id}/token/notifyauthenticationdecision:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/id'
+      tags:
+        - Notify Authentication Decision
+      description: >-
+        Used to update token corresponding issuer decision after cardholder authentication.
+      summary: API returns cardholder authentication results for post-tokenization authentication.
+      operationId: Notify Authentication Decision
+      requestBody:
+        $ref: '#/components/requestBodies/NotifyAuthenticationDecisionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/NotifyAuthenticationDecisionResponse'
+components:
+  parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      description: Static endpoint iteration number (Not API Version)
+      schema:
+        type: string
+        example: v2
+  requestBodies:
+    SearchRequest:
+      required: true
+      description: JSON object containing parameters to search for Tokens
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Search'
+          examples:
+            Search by TUR:
+              value:
+                SearchRequest:
+                  TokenUniqueReference: "DAPL000014413602ee506ca2fe43d4891e3856fc4a6c7a"
+                  ExcludeDeletedIndicator: "true"
+                  IncludeDeviceTokensOnly: "true"
+                  ExcludeTokensDeletedFromConsumerApp: "true"
+                  AuditInfo:
+                    UserId: "JTT047101111"
+                    UserName: "A Name"
+                    Organization: "Your Company"
+                    Phone: "555-3574"
+            Search by PAID:
+              value:
+                SearchRequest:
+                  PaymentAppInstanceId: "0623470BE037500153680333289372683153CD8EB9B9D09G"
+                  ExcludeDeletedIndicator: "true"
+                  IncludeDeviceTokensOnly: "true"
+                  ExcludeTokensDeletedFromConsumerApp: "true"
+                  AuditInfo:
+                    UserId: "JTT047101111"
+                    UserName: "A Name"
+                    Organization: "Your Company"
+                    Phone: "555-3574"
+                  PageInfo:
+                    Offset: "0"
+                    Limit: "1"
+            Search by Account Number:
+              value:
+                SearchRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        AccountPan: "1111111111111111"
+                      PublicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                      EncryptedKey: "A1B2C3D4E5F6112233445566778899111"
+                      OaepHashingAlgorithm: "SHA512"
+                      Iv: "1b9396c98ab2bfd195de661d"
+                      algorithmCipherMode: "GCM"
+                      tag: "a1b2c3d4e5f6789"
+                      aad: "4a6f686e446f654"
+                  ExcludeDeletedIndicator: "true"
+                  IncludeDeviceTokensOnly: "true"
+                  ExcludeTokensDeletedFromConsumerApp: "true"
+                  AuditInfo:
+                    UserId: "JTT047101111"
+                    UserName: "A Name"
+                    Organization: "Your Company"
+                    Phone: "555-3574"
+                  PageInfo:
+                    Offset: "0"
+                    Limit: "1"
+            Search by Account Number (or other identifiers) for Compact Response:
+              value:
+                SearchRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        AccountPan: "1111111111111111"
+                      PublicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                      EncryptedKey: "A1B2C3D4E5F6112233445566778899111"
+                      OaepHashingAlgorithm: "SHA512"
+                      Iv: "1b9396c98ab2bfd195de661d"
+                      algorithmCipherMode: "GCM"
+                      tag: "a1b2c3d4e5f6789"
+                      aad: "4a6f686e446f654"
+                  ExcludeDeletedIndicator: "true"
+                  IncludeDeviceTokensOnly: "true"
+                  ExcludeTokensDeletedFromConsumerApp: "true"
+                  TokenStatusCodes: "A"
+                  TokenTypes: "S"
+                  TokenRequestorId: "00212345678"
+                  CompactResponse: "true"
+                  AuditInfo:
+                    UserId: "JTT047101111"
+                    UserName: "A Name"
+                    Organization: "Your Company"
+                    Phone: "555-3574"
+                  PageInfo:
+                    Offset: "0"
+                    Limit: "1"
+            Search by FAID:
+              value:
+                SearchRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        FinancialAccountId: "51860092WTYuuyui5435WAB"
+                      PublicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                      EncryptedKey: "A1B2C3D4E5F6112233445566778899111"
+                      OaepHashingAlgorithm: "SHA512"
+                      Iv: "1b9396c98ab2bfd195de661d"
+                      algorithmCipherMode: "GCM"
+                      tag: "a1b2c3d4e5f6789"
+                      aad: "4a6f686e446f654"
+                  CountryCode: 'GBR'
+                  InterbankCardAssociationId: '12345678901'
+                  ExcludeTokensDeletedFromConsumerApp: "true"
+                  ExcludeDeletedIndicator: "true"
+                  IncludeDeviceTokensOnly: "false"
+                  AuditInfo:
+                    UserId: "JTT047101111"
+                    UserName: "A Name"
+                    Organization: "Your Company"
+                  PageInfo:
+                    Limit: "10"
+                    Offset: "20"
+            Search by AAID:
+              value:
+                SearchRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        AlternateAccountIdentifier: "GB82SAIT1234IND8765532"
+                      PublicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                      EncryptedKey: "A1B2C3D4E5F6112233445566778899111"
+                      OaepHashingAlgorithm: "SHA512"
+                      Iv: "1b9396c98ab2bfd195de661d"
+                      algorithmCipherMode: "GCM"
+                      tag: "a1b2c3d4e5f6789"
+                      aad: "4a6f686e446f654"
+                  CountryCode: 'GBR'
+                  InterbankCardAssociationId: '12345678901'
+                  ExcludeDeletedIndicator: "true"
+                  IncludeDeviceTokensOnly: "false"
+                  AuditInfo:
+                    UserId": "JTT047101111"
+                    UserName: "A Name"
+                    Organization: "Your Company"
+                  PageInfo:
+                    Limit: "2"
+                    Offset": "0"
+    TokenActivateRequest:
+      required: true
+      description: JSON object containing parameters for activating a token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenActivate'
+          examples:
+            Activation by TUR:
+              value:
+                TokenActivateRequest:
+                  TokenUniqueReference: "DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c"
+                  CommentText: "Confirmed cardholder identity"
+                  ReasonCode: "C"
+                  AuditInfo:
+                    UserId: "A1435477"
+                    UserName: "John Smith"
+                    Organisation: "Any Bank"
+                    Phone: "555 1234"
+            Activation by AccountPAN:
+              value:
+                TokenActivateRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        AccountPan: "1111111111111111"
+                    PublicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                    EncryptedKey: "A1B2C3D4E5F6112233445566"
+                    OaepHashingAlgorithm: "SHA512"
+                    Iv: "1b9396c98ab2bfd195de661d"
+                    algorithmCipherMode: "GCM"
+                    tag: "a1b2c3d4e5f6789"
+                    aad: "4a6f686e446f654"
+                  PaymentAppInstanceId: "645b532a245e4723d7a9c4f62b24f24a24ba98e27d43e34e"
+                  CommentText: "Confirmed cardholder identity"
+                  ReasonCode: "C"
+                  AuditInfo:
+                    UserId”: "A1435477"
+                    UserName: "John Smith"
+                    Organization: "Any Bank"
+                    Phone: "555 1234"
+    TokenUpdateRequest:
+      required: true
+      description: JSON object containing parameters for updating a token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenUpdate'
+          examples:
+            Update by TUR:
+              value:
+                TokenUpdateRequest:
+                  TokenUniqueReference: "DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c"
+                  CommentText: "Cardholder has a new Account Pan"
+                  IssuerProductConfigurationId: "ABC1020304"
+                  RemoveAlternateAccountIdentifierSuffix: "true"
+                  UpdateWalletProviderIndicator: "0"
+                  AuditInfo:
+                    UserId: "A1435477"
+                    UserName: "John Smith"
+                    Organization: "Any Bank"
+                    Phone: "555 1234"
+            Update AccountPAN:
+              value:
+                TokenUpdateRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        AccountPan: "1111000011110000"
+                      NewAccount:
+                        AccountPan: "1111111111111111"
+                        ExpirationDate: "1227"
+                      AccountPanSequenceNumber: "001"
+                    PublicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                    EncryptedKey: "A1B2C3D4E5F6112233445566"
+                    OaepHashingAlgorithm: "SHA512"
+                    Iv: "1b9396c98ab2bfd195de661d"
+                    algorithmCipherMode: "GCM"
+                    tag: "a1b2c3d4e5f6789"
+                    aad: "4a6f686e446f654"
+                CommentText: "Cardholder has a new Account Pan"
+                RemoveAlternateAccountIdentifierSuffix: "false"
+                UpdateWalletProviderIndicator: "1"
+                AuditInfo:
+                  UserId: "A1435477"
+                  UserName: "John Smith"
+                  Organization: "Any Bank"
+                  Phone: "555 1234"
+            Update FinancialAccountID :
+              value:
+                TokenUpdateRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        FinancialAccountId: "NL91ABNA0417164300"
+                      NewAccount:
+                        FinancialAccountId: "NL91ABNA0417164301"
+                    PublicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                    EncryptedKey: "A1B2C3D4E5F6112233445566"
+                    OaepHashingAlgorithm: "SHA512"
+                    Iv: "1b9396c98ab2bfd195de661d"
+                    algorithmCipherMode: "GCM"
+                    tag: "a1b2c3d4e5f6789"
+                    aad: "4a6f686e446f654"
+                CommentText: "Cardholder has a new Account Pan"
+                CurrentFinancialAccountInformation:
+                  InterbankCardAssociationId”: "12345678901"
+                  CountryCode: "GBR"
+                RemoveAlternateAccountIdentifierSuffix: "false"
+                UpdateWalletProviderIndicator: "1"
+                AuditInfo:
+                  UserId: "A1435477"
+                  UserName: "John Smith"
+                  Organization: "Any Bank"
+                  Phone: "555 1234"
+            Update ProductConfigurationID  :
+              value:
+                TokenUpdateRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        AccountPan: "1111111111111111"
+                    PublicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                    EncryptedKey: "A1B2C3D4E5F6112233445566"
+                    OaepHashingAlgorithm: "SHA512"
+                    Iv: "1b9396c98ab2bfd195de661d"
+                    algorithmCipherMode: "GCM"
+                    tag: "a1b2c3d4e5f6789"
+                    aad: "4a6f686e446f654"
+                  CommentText: "Cardholder has a new Account Pan"
+                  IssuerProductConfigurationId: "ABC1020304"
+                  UpdateWalletProviderIndicator: "1"
+                  AuditInfo:
+                    UserId: "A1435477"
+                    UserName: "John Smith"
+                    Organization: "Any Bank"
+                    Phone: "555 1234"
+            Remove Alternate Account ID Suffix  :
+              value:
+                TokenUpdateRequest:
+                  EncryptedAccountInformation:
+                    EncryptedData:
+                      CurrentAccount:
+                        AccountPan:  '1111111111111111'
+                  CommentText: Removing Alternate Account ID Suffix
+                  RemoveAlternateAccountIdentifierSuffix: 'true'
+                  UpdateWalletProviderIndicator: '1'
+                  AuditInfo:
+                    UserId: A1435477
+                    UserName: User Name
+                    Organization: Any Bank
+                    Phone: 555 1234
+    TokenSuspendRequest:
+      required: true
+      description: JSON object containing parameters for updating a token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenSuspend'
+    TokenUnsuspendRequest:
+      required: true
+      description: JSON object containing parameters for unsuspending a token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenUnsuspend'
+    TokenDeleteRequest:
+      required: true
+      description: JSON object containing parameters for deleting a token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenDelete'
+    TokenStatusHistoryRequest:
+      required: true
+      description: JSON object containing parameters for obtaining history of a token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenStatusHistory'
+    TokenCommentsRequest:
+      required: true
+      description: >-
+        JSON object containing parameters for obtaining all comments assocaited
+        to a token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenComments'
+    TokenActivationMethodsRequest:
+      required: true
+      description: >-
+        JSON object containing parameters for obtaining authentication methods
+        for a given token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenActivationMethods'
+    TokenResendActivationCodeRequest:
+      required: true
+      description: >-
+        JSON object containing parameters required for resending an activation code for a given token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenResendActivationCode'
+    TokenTransactionsRequest:
+      required: true
+      description: >-
+        JSON object containing parameters for obtaining transactions performed
+        by a token in the last 30 days
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenTransactions'
+    TokenResetMobilePinRequest:
+      required: true
+      description: JSON object containing parameters to initiate a mobile pin reset
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenResetMobilePin'
+    UpdateTokenAssuranceRequest:
+      required: true
+      description: JSON object containing parameters to update the Token Assurance value
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateTokenAssurance'
+    DisablePaymentChannelsRequest:
+      required: true
+      description: JSON object containing parameters Disable selected payment channels
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DisablePaymentChannels'
+    TokenRequestorSearchRequest:
+      required: true
+      description: Parameters to search for a token requestor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenRequestorSearch'
+    NotifyAuthenticationDecisionRequest:
+      required: true
+      description: Parameters to notify authentication decision
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotifyAuthenticationDecision'
+  responses:
+    SearchResponse:
+      description: Successful search response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SearchResults'
+          examples:
+            Standard Response:
+              summary: Standard Response
+              value:
+                {
+                  "SearchResponse": {
+                    "Accounts": {
+                      "Account": [
+                      {
+                        "AccountPanSuffix": "5641",
+                        "ExpirationDate": "0823",
+                        "Tokens": {
+                          "Token": [
+                          {
+                            "TokenUniqueReference": "DAPLMC000014413649393db1856e435abcbff9fe23f13a3a",
+                            "PrimaryAccountNumberUniqueReference": "FAPLMC0000144136f8b0db3d2d1f4be4ad34818ab0bfce97",
+                            "TokenSuffix": "5651",
+                            "ExpirationDate": "0926",
+                            "DigitizationRequestDateTime": "2023-08-03T05:10:45-05:00",
+                            "TokenActivatedDateTime": "2023-08-03T05:11:13-05:00",
+                            "FinalTokenizationDecision": "A",
+                            "CorrelationId": "D0000059209898",
+                            "CurrentStatusCode": "A",
+                            "CurrentStatusDescription": "Active",
+                            "CurrentStatusDateTime": "2023-08-09T05:08:12-05:00",
+                            "ProvisioningStatusCode": "S",
+                            "ProvisioningStatusDescription": "Provisioning successful",
+                            "Suspenders": { },
+                            "TokenRequestorId": "50110030273",
+                            "TokenRequestorName": "APPLE PAY",
+                            "WalletId": "103",
+                            "PaymentAppInstanceId": "0423470BE037800153480333289372683153CD8EB9A9D09E",
+                            "TokenType": "S",
+                            "StorageTechnology": "S",
+                            "LastComment": "614041166",
+                            "TokenDeletedFromConsumerApp": "false",
+                            "TokenRequestorConsumerFacingEntityName": "APPLE PAY",
+                            "Device": {
+                              "DeviceId": "****2FAS****",
+                              "DeviceName": "ACM",
+                              "DeviceType": "21",
+                              "SecureElementId": "0423470BE037800153480333289372683153CD8EB9A9D09E"
+                            }
+                          }
+                          ]
+                        }
+                      }
+                      ]
+                    },
+                    "PageInfo": {
+                      "Offset": "0",
+                      "Limit": "1",
+                      "Total": "10",
+                      "Count": "1"
+                    }
+                  }
+                }
+            Compact Response:
+              summary: Compact Response
+              value:
+                {
+                  "SearchResponse": {
+                    "Accounts": {
+                      "Account": [
+                      {
+                        "AccountPanSuffix": "6099",
+                        "ExpirationDate": "1299",
+                        "Tokens": {
+                          "Token": [
+                          {
+                            "TokenUniqueReference": "DSHRMC00000000086c72231aa82e4a04afdfeeba7d237940",
+                            "PrimaryAccountNumberUniqueReference": "FWSPMC009810627438930a35e0fd41bb8afca5f973087c26",
+                            "TokenSuffix": "4580",
+                            "CurrentStatusCode": "A",
+                            "TokenRequestorId": "wueyywq-qwiuw",
+                            "WalletId": "103",
+                            "TokenType": "S",
+                            "StorageTechnology": "D",
+                            "TokenDeletedFromConsumerApp": "false",
+                            "TokenRequestorConsumerFacingEntityName": "test_param",
+                            "Source": "ACCOUNT_ON_FILE"
+                          }
+                          ]
+                        }
+                      }
+                      ]
+                    },
+                    "PageInfo": {
+                      "Offset": "0",
+                      "Limit": "5",
+                      "Total": "1",
+                      "Count": "1"
+                    }
+                  }
+                }
+    TokenActivateResponse:
+      description: Token Activation Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenActivateResults'
+    TokenUpdateResponse:
+      description: Token Update Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenUpdateResults'
+    TokenSuspendResponse:
+      description: Response to a token suspension
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenSuspendResults'
+    TokenUnsuspendResponse:
+      description: Response to a token unsuspension
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenUnsuspendResults'
+    TokenDeleteResponse:
+      description: Response to a token deletion
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenDeleteResults'
+    TokenStatusHistoryResponse:
+      description: Response containing the history of a given token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenStatusHistoryResults'
+    TokenCommentsResponse:
+      description: Response containing all of the comments for a given token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenCommentsResults'
+    TokenActivationMethodsResponse:
+      description: >-
+        Response containing Activation Methods for a token that is awaiting activation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenActivationMethodsResults'
+    TokenResendActivationCodeResponse:
+      description: >-
+        Response containing the token unique reference of the token which required the activation code.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenResendActivationCodeResults'
+    TokenTransactionsResponse:
+      description: >-
+        Response containing transactions performed by the token in the last 30
+        days
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenTransactionsResults'
+    TokenResetMobilePinResponse:
+      description: JSON object containing the results of a mobile pin reset
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenResetMobilePinResults'
+    UpdateTokenAssuranceResponse:
+      description: >-
+        JSON object containing the results of the update to the Token Assurance
+        value
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateTokenAssuranceResults'
+    DisablePaymentChannelsResponse:
+      description: Disable Payment Channels Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DisablePaymentChannelsResults'
+    TokenRequestorSearchResponse:
+      description: Parameters returned when searching for a token requestor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenRequestorSearchResults'
+    NotifyAuthenticationDecisionResponse:
+      description: Parameters returned when notified of the authentication decision
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotifyAuthenticationDecisionResponse'
+    ErrorsResponse:
+      description: JSON object containing details of why the operation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorsResults'
+  schemas:
+    Account:
+      type: object
+      properties:
+        AccountPanSuffix:
+          description: >-
+            Last 4 digits of Account PAN mapped (or to be mapped) to Token(s). Conditional field.<br>Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '1234'
+        FinancialAccountSuffix:
+          description: >-
+            Last 4 digits of the financial account information mapped (or to be
+            mapped) to token(s). Conditional field.
+             *  Only present when mapping is tied to a financial account.
+             *  Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '1234'
+        CountryCode:
+          description: >-
+            The country of the financial account. Expressed as a 3-letter
+            (alpha-3) country code as defined in ISO 3166-1. Conditional field.
+             *  Present when mapping is tied to a financial account.
+             *  Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: 'GBR'
+        InterbankCardAssociationId:
+          description: >-
+            The id assigned by Mastercard to the financial institution. Conditional field.
+             *  Present when mapping is tied to a financial account.
+             *  Not present when CompactResponse field is set to true in response.
+          type: number
+          minLength: 3
+          maxLength: 11
+          example: '12345678901'
+        InstitutionName:
+          description: >-
+            The name of the financial institution associated with the account. Conditional field.
+             *  Present when mapping is tied to a financial account.
+             *  Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 5
+          maxLength: 64
+          example: 'Financial Institution 1'
+        ExpirationDate:
+          description: >-
+            Expiration date of Account PAN mapped (or to be mapped) to Token(s).
+            MMYY format. <br> Conditional field. Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '1215'
+        AlternateAccountIdentifierSuffix:
+          description: >-
+            Alternate Account Identifier is a cardholder friendly reference to a
+            bank account. It is typically used to identify associated tokens
+            when the cardholder is unaware of their Account PAN. The Alternate
+            Account Identifier Suffix exposes just the last few characters of
+            the full identifier, in order to protect the full identifier from
+            possible fraud. The suffix may be up to 8 characters long.<br>
+            Conditional field. Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 4
+          maxLength: 8
+          example: '4300'
+        Tokens:
+          $ref: '#/components/schemas/Tokens'
+    AccountData:
+      description: >-
+        Contains an encrypted JSON object. Encrypted by the ephemeral AES key
+        using CBC or GCM mode (IV as provided in 'Iv', or zero if none provided) and
+        PKCS#7 padding. The JSON object being encrypted will be defined in the
+        context of the API call.
+      type: object
+      properties:
+        CurrentAccount:
+          type: object
+          properties:
+            VirtualCardNumber:
+              type: string
+              description: >-
+                When present, return tokens for the VirtualCardNumber matching this
+                VCN, for any Wallet Provider or device. Optional for Token Search
+              minLength: 9
+              maxLength: 19
+              example:  '1111111111111111'
+            AccountPan:
+              type: string
+              minLength: 0
+              description: >-
+                When present, return tokens for the Account matching this
+                Primary Account Number (PAN), for any Wallet Provider or device.
+                Optional for Token Search. Conditional field, used for updating
+                all tokens mapped to a single Account PAN and must not be present
+                when TokenUniqueReference or CurrentFinancialAccountInformation
+                is present for Token Update.
+              maxLength: 19
+              example:  '1111111111111111'
+            Token:
+              type: string
+              minLength: 0
+              description: When present, the search will return one specific token.
+              maxLength: 19
+              example: '5598765432109876'
+            AlternateAccountIdentifier:
+              type: string
+              minLength: 9
+              description: >-
+                When present, the search will return tokens matching this
+                Alternate Account Identifier, for any Wallet Provider or device.
+                Alternate Account Identifier will be minimum 9 and maximum 64
+                characters. Space characters are not allowed.
+              maxLength: 64
+              example: 'NL91ABNA0417164300'
+            FinancialAccountId:
+              type: string
+              description: >-
+                When present, return tokens for the Account matching this
+                Financial Account Information, for any Wallet Provider or
+                device. Optional for Token Search. Conditional field, used
+                for updating all tokens mapped to a single Financial Account
+                and must not be present when TokenUniqueReference or
+                CurrentAccountPan is present for Token Update.
+              minLength: 9
+              maxLength: 64
+              example: 'NL91ABNA0417164300'
+    Accounts:
+      type: object
+      properties:
+        Account:
+          description: >-
+            When searching by Account PAN or by Payment App Instance Id, the
+            search response may contain more than one token. Each individual
+            token can be updated during its lifetime and associated to a
+            different Account PAN, or given a new Expiration Date. Different
+            tokens within a single search response may therefore have different
+            Account PANs and/or Expiration Dates. Account objects are used to
+            group tokens that have exactly the same Account PAN and Account PAN
+            Expiration Date.
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    ActivationMethod:
+      required:
+        - ActivationMethodType
+        - ActivationMethodValue
+        - ActivationMethodId
+      type: object
+      properties:
+        ActivationMethodType:
+          description: |
+            Type of activation method. Valid values:
+              * "SMS" - Activation code sent in text message to masked mobile phone number
+              * "EMA" - Activation code sent in email to masked email address
+              * "ACC" - Cardholder to call automated call center phone number
+              * "CLC" - Cardholder to call Call Center phone number
+              * "WEB" - Website
+              * "BAP" - Mobile application
+              * "OBC" - Activation code spoken via call to cardholder on masked voice call phone number.
+              * "EMV_3DS" - The Mastercard Identity Check program which uses 3-D Secure (3DS) to authenticate the cardholder.
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: 'CLC'
+        ActivationMethodValue:
+          description: Activation method details value.
+          type: string
+          minLength: 4
+          maxLength: 64
+          example: '555-123-4567'
+        ActivationMethodId:
+          description: Unique identifier of the activation method.
+          type: string
+          minLength: 4
+          maxLength: 64
+          example: '123123122'
+        ResendIndicator:
+          description: >-
+            Whether the activation method can be used to re-send an activation
+            code. Valid values are TRUE and FALSE.
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: 'false'
+    ActivationMethods:
+      type: object
+      properties:
+        ActivationMethod:
+          description: The type of method of activating the token.
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivationMethod'
+    AuditInfo:
+      type: object
+      required:
+        - UserId
+        - UserName
+        - Organization
+      properties:
+        UserId:
+          description: >-
+            User ID (as assigned by the Issuer/Processor) of the Customer
+            Service Representative who triggered the API request. MDES is not
+            the system of record for this field and does not perform any
+            duplicate checks or other functional validations. The
+            Issuer/Processor, must ensure that the contents of this field comply
+            with their internal system of record. String of up to 50 characters.
+          type: string
+          minLength: 4
+          maxLength: 50
+          example: 'A1435477'
+        UserName:
+          description: >-
+            User Name of the Customer Service Representative who triggered the
+            API request. String of up to 200 characters.
+          type: string
+          minLength: 4
+          maxLength: 200
+          example: 'John Smith'
+        Organization:
+          description: >-
+            Name of the Issuer or Processor to which the Customer Service
+            Representative who triggered the API request belongs. String of up
+            to 200 characters.
+          type: string
+          minLength: 4
+          maxLength: 200
+          example: 'Solid Bank Inc'
+        Phone:
+          description: >-
+            Phone Number of the Customer Service Representative who triggered
+            the API request. String of up to 20 characters. Optional.
+          type: string
+          minLength: 4
+          maxLength: 20
+          example: '5555551234'
+    auditInfo:
+      type: object
+      required:
+        - userId
+        - userName
+        - organization
+      properties:
+        userId:
+          description: >-
+            User ID (as assigned by the Issuer/Processor) of the Customer
+            Service Representative who triggered the API request. MDES is not
+            the system of record for this field and does not perform any
+            duplicate checks or other functional validations. The
+            Issuer/Processor, must ensure that the contents of this field comply
+            with their internal system of record. String of up to 50 characters.
+          type: string
+          minLength: 4
+          maxLength: 50
+          example: 'A1435477'
+        userName:
+          description: >-
+            User Name of the Customer Service Representative who triggered the
+            API request. String of up to 200 characters.
+          type: string
+          minLength: 4
+          maxLength: 200
+          example: 'John Smith'
+        organization:
+          description: >-
+            Name of the Issuer or Processor to which the Customer Service
+            Representative who triggered the API request belongs. String of up
+            to 200 characters.
+          type: string
+          minLength: 4
+          maxLength: 200
+          example: 'Solid Bank Inc'
+        phone:
+          description: >-
+            Phone Number of the Customer Service Representative who triggered
+            the API request. String of up to 20 characters. Optional.
+          type: string
+          minLength: 4
+          maxLength: 20
+          example: '5555551234'
+    PageInfo:
+      type: object
+      required:
+        - Offset
+        - Limit
+      properties:
+        Offset:
+          description: The starting index of the current page. Must be a multiple of the limit.
+          type: number
+          minLength: 1
+          maxLength: 5
+          example: '10'
+        Limit:
+          description: The maximum number of records for each page. Accepted maximum value of 20.
+          type: number
+          minLength: 1
+          maxLength: 2
+          example: '20'
+    PageInfoResults:
+      type: object
+      required:
+        - Offset
+        - Limit
+        - Total
+        - Count
+      properties:
+        Offset:
+          description: The index of the current page. <br>Conditional field, not present when CompactResponse field is set to true in response.
+          type: number
+          minLength: 1
+          maxLength: 5
+          example: '10'
+        Limit:
+          description: The maximum number of token records per page. <br>Conditional field, not present when CompactResponse field is set to true in response.
+          type: number
+          minLength: 1
+          maxLength: 2
+          example: '20'
+        Total:
+          description: Indicating the total number of tokens for the given search parameter.<br>Conditional field, not present when CompactResponse field is set to true in response.
+          type: number
+          minLength: 1
+          maxLength: 5
+          example: '100'
+        Count:
+          description: Indicating the count of token records on the page. <br>Conditional field, not present when CompactResponse field is set to true in response.
+          type: number
+          minLength: 1
+          maxLength: 2
+          example: '20'
+    Comment:
+      required:
+        - CommentId
+        - CommentText
+        - CommentDateTime
+        - AuditInfo
+      description: >-
+        A collection of datapoints applied as a note to the account by the
+        issuer's customer support.
+      type: object
+      properties:
+        CommentId:
+          description: Identifier for the comment.
+          type: string
+          minLength: 4
+          maxLength: 256
+          example: 'ABC123456'
+        CommentText:
+          description: Comment text for the updated tokens.
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: 'Cardholder called to activiate their digital card'
+        CommentDateTime:
+          description: >-
+            Date and time that the comment was updated. Format -
+            YYYY-MM-DDThh:mm:ssTZD .
+          type: string
+          minLength: 20
+          maxLength: 29
+          example: '2015-01-21T00:04:35.000Z'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    Comments:
+      type: object
+      properties:
+        Comment:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    CurrentFinancialAccountInformation:
+      type: object
+      description: Current Financial Account Information of the token(s) to be updated.
+      properties:
+        InterbankCardAssociationId:
+          description: >-
+            Current ICA associated with the Financial of the token(s) to be
+            updated. Conditional field, used for updating all tokens mapped to a
+            single Financial Account and must be present when
+            'CurrentFinancialAccountInformation.FinancialAccountId' is present.
+          type: string
+          minLength: 3
+          maxLength: 11
+          example: '12345678901'
+        CountryCode:
+          description: >-
+            Current Country code associated with the Financial of the token(s)
+            to be updated. Expressed as a 3-letter (alpha-3) country code as
+            defined in ISO 3166-1.  Conditional field, used for updating all
+            tokens mapped to a single Financial Account and must be present when
+            'CurrentFinancialAccountInformation.FinancialAccountId' is present.
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: 'GBR'
+    DisablePaymentChannels:
+      type: object
+      properties:
+        DisablePaymentChannelsRequest:
+          $ref: '#/components/schemas/DisablePaymentChannelsData'
+    DisablePaymentChannelsData:
+      type: object
+      required:
+        - TokenUniqueReference
+        - AuditInfo
+      properties:
+        TokenUniqueReference:
+          description: >-
+            Unique reference of the token to be updated. Conditional field, used
+            for updating a single token.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        DisabledPaymentChannels:
+          type: object
+          properties:
+            DisabledChannel:
+              type: string
+              description: >
+                The payment channels that disabled for the token. Possible
+                values are:
+                  * "CONTACTLESS" - Contactless.
+                  * "MP_QR_CODE" - Merchant Presented QR (MPQR).
+                  * "CP_QR_CODE" - Consumer Presented QR (CPQR).
+                  * "ECOMMERCE" - Digital Secure Remote Payment (DSRP) / In-App.
+                  * "P2P" - Person to Person (P2P).
+                  * "POS_SWIPE" - Magnetic Secure Transmission (MST) / Dynamic Magnetic Stripe Data (DMSD)
+              minLength: 3
+              maxLength: 11
+              example: 'CONTACTLESS'
+        EnableAllPaymentChannels:
+          description: >-
+            Used to enable all payment channels.  Will be assumed to be false if
+            not present.
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: 'FALSE'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    DisablePaymentChannelsResults:
+      type: object
+      properties:
+        DisablePaymentChannelsResponse:
+          $ref: '#/components/schemas/DisablePaymentChannelsResultsData'
+    DisablePaymentChannelsResultsData:
+      type: object
+      required:
+        - DisabledPaymentChannels
+      properties:
+        DisabledPaymentChannels:
+          type: object
+          properties:
+            DisabledChannel:
+              type: string
+              description: >
+                The payment channels that disabled for the token. Possible
+                values are:
+                  * "CONTACTLESS" - Contactless.
+                  * "MP_QR_CODE" - Merchant Presented QR (MPQR).
+                  * "CP_QR_CODE" - Consumer Presented QR (CPQR).
+                  * "ECOMMERCE" - Digital Secure Remote Payment (DSRP) / In-App.
+                  * "P2P" - Person to Person (P2P).
+                  * "POS_SWIPE" - Magnetic Secure Transmission (MST) / Dynamic Magnetic Stripe Data (DMSD)
+              minLength: 3
+              maxLength: 11
+              example: 'CONTACTLESS'
+    Device:
+      type: object
+      properties:
+        DeviceId:
+          description: >-
+            Serial number of the device provisioned with the token. May be
+            masked. Conditional field.
+              * Not present for CoF tokens, and only present when provided by a Wallet Provider. May be masked (by the Wallet Provider). Example (unmasked) "C2ZBY14310005664". Example (masked) "xxxxY1431xxxxxxx".
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 5
+          maxLength: 64
+          example: 'C2ZBY14310005664'
+        DeviceName:
+          description: >-
+            Nickname of the device provisioned with the token. Conditional field.
+              * Not present for CoF tokens, and only present when the Payment App Provider has implemented the 'Get Device Info' MDES API.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 5
+          maxLength: 64
+          example: 'My Device'
+        DeviceType:
+          description: >
+            Type of the device provisioned with the token. Valid values: NOTE -
+            Some values from 00-19 may indicate not only the physical form
+            factor but also other attributes such as device technology and
+            payment app specifications.
+              * '00' - Card.
+              * '01' - Mobile Network Operator (MNO) controlled removable secure element (SIM or UICC) personalized for use with a mobile phone or smartphone.
+              * '02' - Key Fob.
+              * '03' - Watch using a contactless chip or a fixed (non-removable) secure element not controlled by the MNO.
+              * '04' - Mobile Tag.
+              * '05' - Wristband.
+              * '06' - Mobile Phone Case or Sleeve.
+              * '07' - Mobile phone or smartphone with a fixed (non-removable) secure element controlled by the MNO, for example, code division multiple access (CDMA).
+              * '08' - Removable secure element not controlled by the MNO, for example, memory card personalized for used with a mobile phone or smartphone.
+              * '09' - Mobile Phone or smartphone with a fixed (non-removable) secure element not controlled by the MNO.
+              * '10' - MNO controlled removable secure element (SIM or UICC) personalized for use with a tablet or e-book.
+              * '11' - Tablet or e-book with a fixed (non-removable) secure element controlled by the MNO.
+              * '12' - Removable secure element not controlled by the MNO, for example, memory card personalized for use with a tablet or e-book.
+              * '13' - Tablet or e-book with fixed (non-removable) secure element not controlled by the MNO.
+              * '14' - Mobile phone or smartphone with a payment application running in a host processor.
+              * '15' - Tablet or e-book with a payment application running in a host processor.
+              * '16' - Mobile phone or smartphone with a payment application running in the Trusted Execution Environment (TEE) of a host processor.
+              * '17' - Tablet or e-book with a payment application running in the TEE of a host processor.
+              * '18' - Watch with a payment application running in the TEE of a host processor.
+              * '19' - Watch with a payment application running in a host processor.
+            NOTE - Values from 20-99 exclusively indicate the form factor only
+            without also indicating the storage technology.
+              * '20' - Card.
+              * '21' - Phone Mobile phone.
+              * '22' - Tablet/e-reader Tablet computer or e-reader.
+              * '23' - Watch/Wristband Watch or wristband, including a fitness band, smart strap, disposable band, watch add-on, and security/ID band.
+              * '24' - Sticker.
+              * '25' - PC PC or laptop.
+              * '26' - Device Peripheral Mobile phone case or sleeve.
+              * '27' - Tag Key fob or mobile tag.
+              * '28' - Jewelry Ring, bracelet, necklace, and cuff links.
+              * '29' - Fashion Accessory Handbag, bag charm, and glasses.
+              * '30' - Garment Dress.
+              * '31' - Domestic Appliance Refrigerator, washing machine.
+              * '32' - Vehicle Vehicle, including vehicle attached devices.
+              * '33' - Media/Gaming Device Media or gaming device, including a set top box, media player, and television.
+              * '34' to '99' - Reserved for future form factors. Any value in this range may occur within form factor and transaction data without prior notice.
+            Conditional field.
+              * Not present for CoF tokens, and only present when supplied by the Payment App Provider.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: '14'
+        SecureElementId:
+          description: >-
+            Identifier of the secure element provisioned with the token. Conditional field.
+             * Not present for CoF tokens, and only present when the token is provisioned to a secure element.
+             * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 48
+          maxLength: 48
+          example: '0416231B342G80015987657748933803102AC30A842F29F0'
+    EncryptedAccountInformation:
+      description: >-
+        Used when account data is supplied in Search, Activate or Update APIs. Use only if account data is present, not required otherwise.
+      type: object
+      required:
+        - EncryptedData
+        - PublicKeyFingerprint
+        - EncryptedKey
+        - OaepHashingAlgorithm
+      properties:
+        EncryptedData:
+          $ref: '#/components/schemas/AccountData'
+        PublicKeyFingerprint:
+          type: string
+          description: >
+            The fingerprint of the public key used to encrypt the ephemeral AES
+            key.
+          minLength: 32
+          maxLength: 64
+          example: '4c4ead5927f0df8117f178eea9308daa58e27c2b'
+        EncryptedKey:
+          type: string
+          description: >
+            One-time use AES key encrypted by the MasterCard public key (as
+            identified by publicKeyFingerprint) using the OAEP or PKCS#1 v1.5
+            scheme (depending on the value of oaepHashingAlgorithm.
+          minLength: 32
+          maxLength: 512
+          example: 'A1B2C3D4E5F6112233445566778899111'
+        OaepHashingAlgorithm:
+          type: string
+          description: >
+            Hashing algorithm used with the OAEP scheme. Only present when EncryptedAccountInformation.EncryptedData is present. Must be either:
+              * SHA256
+              * SHA512.
+          minLength: 6
+          maxLength: 6
+          example: 'SHA512'
+        Iv:
+          type: string
+          description: The initialization vector used when encrypting data using the
+            one-time use AES key. Must be exactly 12 bytes (24 character hex string)
+            when using GCM and 16 bytes (32 character hex string) when using CBC to
+            match the block size. Conditional field.
+            Required when the EncryptedAccountInformation.EncryptedData object is present.
+            If not present, an IV of zero is assumed.
+          maxLength: 32
+          minLength: 24
+          example: "313233343536373839303132"
+        algorithmCipherMode:
+          type: string
+          description: The AES cipher mode used for the encrypted data. Must be one of the following value:<br>CBC - When CBC cipher mode to be used<br>GCM - When GCM cipher mode to be used
+          maxLength: 3
+          minLength: 3
+          example: "GCM"
+        tag:
+          type: string
+          description: Tag to verify during data decryption. Required when algorithmCipherMode used is GCM, not present otherwise.
+          maxLength: 36
+          minLength: 1
+          example: "a1b2c3d4e5f6789"
+        aad:
+          type: string
+          description: Additional authentication data used in GCM mode. Hex-encoded data (case-insensitive). Required when algorithmCipherMode used is GCM, not present otherwise.
+          maxLength: 36
+          minLength: 1
+          example: "4a6f686e446f654"
+    Error:
+      type: object
+      properties:
+        Source:
+          type: string
+          description: >-
+            Unique identifier that attempts to define the field in error when
+            available.  If a specific field can't be identified, "System" will
+            be returned.
+          minLength: 6
+          maxLength: 64
+          example: Atms.Atm.Location.Address.Line1
+        ReasonCode:
+          type: string
+          description: Indicator that identifies the reason for the error.
+          minLength: 5
+          maxLength: 100
+          example: MISSING_CONDITIONAL_FIELD
+        ErrorCode:
+          type: string
+          description: >-
+            An identifier that represents additional detail for the reason of
+            the error.
+          minLength: 4
+          maxLength: 100
+          example: E0010039
+        Description:
+          type: string
+          description: >-
+            A textual description of the error that is appropriate for logging
+            and may communicate additional details related to the reason code.
+          example: Missing Conditional Field - either TokenUniqueReference or PaymentAppInstanceId.
+          minLength: 5
+          maxLength: 256
+        Recoverable:
+          type: string
+          description: >-
+            An indicator stating whether it is reasonable to retry a failed
+            request.
+          minLength: 4
+          maxLength: 5
+          example: false
+    Errors:
+      type: object
+      properties:
+        Error:
+          description: >-
+            A collection of datapoints that describe a specific error event in
+            response to an operation on the account.
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    ErrorsResults:
+      type: object
+      properties:
+        Errors:
+          $ref: '#/components/schemas/Errors'
+    Search:
+      type: object
+      properties:
+        SearchRequest:
+          $ref: '#/components/schemas/SearchData'
+    SearchData:
+      type: object
+      required:
+        - AuditInfo
+      properties:
+        EncryptedAccountInformation:
+          $ref: '#/components/schemas/EncryptedAccountInformation'
+        PaymentAppInstanceId:
+          type: string
+          description: >
+            When present, the search will return tokens already present or to
+            be provisioned to the specified Payment App instance. Note - This
+            may contain the identifier of the Secure Element or a mobile device
+            for some programs. Cannot be used together with any of the following
+            search request parameters (AccountPan, TokenUniqueReference, Token,
+            CommentId, or AlternateAccountIdentifier).
+          minLength: 48
+          maxLength: 64
+          example: '645b532a245e4723d7a9c4f62b24f24a24ba98e27d43e34e'
+        CommentId:
+          description: >
+            When present, the search will return one specific token linked to
+            the comment. Cannot be used together with
+            EncryptedAccountInformation
+          type: string
+          minLength: 1
+          maxLength: 48
+          example: 'ABC123456'
+        TokenUniqueReference:
+          description: >
+            A unique reference assigned to a token and used to identify the token for the duration of its lifetime. When
+            present, the search will return one specific matching token.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        ExcludeDeletedIndicator:
+          description: >
+            Indicates whether deleted tokens should be included or excluded from the search
+            results. Valid values:
+              * "true" - indicates deleted tokens are excluded from the search results.
+              * "false" - indicates deleted tokens are included in the search results.
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: 'true'
+        IncludeDeviceTokensOnly:
+          description: >
+            Gives issuers the choice to receive only device tokens mapped to
+            their payment credentials. This is an optional parameter, if the issuer decides to
+            not include this field in their "Search" request, MDES will return all tokens
+            mapped to the payment credentials (server, device and COF based
+            tokens). Valid values:
+              * "true" - When present with the "true" value, MDES
+            will never return any server-based tokens associated to the payment
+            credentials.
+              * "false" - When present with the "false" value, MDES will return all tokens
+            mapped to the payment credentials (server, device and COF based
+            tokens).
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: 'false'
+        InterbankCardAssociationId:
+          description: >
+            Current ICA associated with the Financial of the token(s) to be
+            updated. Conditional field, used for updating all tokens mapped to a
+            single Financial Account and must be present when FinancialAccountId or AlternateAccountIdentifier is present.
+          type: number
+          minLength: 3
+          maxLength: 11
+          example: '12345678901'
+        CountryCode:
+          description: >
+            Current Country code associated with the AlternateAccountIdentifier of the
+            tokens to be searched. Expressed as a 3-letter (alpha-3) country code as
+            defined in ISO 3166-1. Conditional field, must be present when FinancialAccountId or AlternateAccountIdentifier is present.
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: 'GBR'
+        ExcludeTokensDeletedFromConsumerApp:
+          description: >
+            Gives issuers the choice to only receive device tokens that are active on the consumer device. Tokens that have been deleted from the consumer app (digital wallet)
+            but active in MDES will be excluded when the response if set to true. This is an optional parameter, if the issuer decides to
+            not include this field in their "Search" request, MDES will return all tokens including tokens deleted from the consumer app but active in MDES. Valid values:
+              * "true" - When present with the "true" value, MDES
+            will never return any tokens that are deleted from the consumer app.
+              * "false" - When present with the "false" value, MDES will return tokens
+              that are deleted from the consumer app.
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: 'false'
+        TokenStatusCodes:
+          description: >
+            The statuses of the Token to include in the search criteria.
+             Valid values:
+              * "U" - Unmapped. The token has not yet been linked to the Account PAN. The process of tokenization is ‘In Progress.'
+              * "A" - Active. The token is linked to the Account PAN and may initiate new transactions to be authorized.
+              * "S" - Suspended. The token is linked to the Account PAN but may not perform transactions at the request of one or more suspenders.
+              * "D" - Deleted. The token is logically deleted, but is still linked to the Account PAN for post-authorization transaction processing.
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 4
+          example: 'A'
+        TokenTypes:
+          description: >
+            Types of tokens to include in search criteria.
+            Valid values:
+             * "S" - Embedded Secure Element token.
+             * "C" - Mastercard Cloud-Based Payments token.
+             * "F" – CoF token.
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 3
+          example: 'S'
+        TokenRequestorId:
+          description: >
+            Per EMV Co., the entity is uniquely recognized by Mastercard as the Token Service Provider.
+          type: string
+          minLength: 11
+          maxLength: 11
+          example: '00212345678'
+        CompactResponse:
+          description: >
+            Can be used alongside any identifier in the Search API. Returns a compact response by limiting the data included in the response, based on the parameters specified in the request. Valid values include:
+              * "true" - will return only the following fields in the Search response.
+                 * TokenUniqueReference
+                 * PrimaryAccountNumberUniqueReference
+                 * CurrentStatusCode
+                 * TokenSuffix
+                 * TokenRequestorId
+                 * WalletId
+                 * TokenType
+                 * StorageTechnology
+                 * TokenDeletedFromConsumerApp
+                 * TokenRequestorConsumerFacingEntityName
+                 * Source
+            * "false" - will return the default values in the Search response.
+          type: boolean
+          minLength: 4
+          maxLength: 5
+          example: 'true'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+        PageInfo:
+          $ref: '#/components/schemas/PageInfo'
+    SearchResults:
+      type: object
+      properties:
+        SearchResponse:
+          $ref: '#/components/schemas/SearchResultsData'
+    SearchResultsData:
+      type: object
+      properties:
+        Accounts:
+          $ref: '#/components/schemas/Accounts'
+        PageInfo:
+          $ref: '#/components/schemas/PageInfoResults'
+    SimpleTokenCommentResults:
+      type: object
+      required:
+        - TokenUniqueReference
+      properties:
+        TokenUniqueReference:
+          description: Unique reference to the Token
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        CommentId:
+          description: >-
+            Identifier of the comment added. Only present when comment text was
+            provided in the request.
+          type: string
+          minLength: 4
+          maxLength: 256
+          example: 'ABC123456'
+    SimpleTokenResults:
+      type: object
+      properties:
+        Token:
+          $ref: '#/components/schemas/SimpleTokenCommentResults'
+    Status:
+      type: object
+      properties:
+        StatusCode:
+          description: |
+            The status of the Token. Valid values:
+              * "U" - Unmapped. The token has not yet been linked to the Account PAN. The process of tokenization is 'In Progress'.
+              * "A" - Active. The token is linked to the Account PAN and may initiate new transactions to be authorized.
+              * "S" - Suspended. The token is linked to the Account PAN but may not perform transactions at the request of one or more suspenders.
+              * "D" - Deleted. The token is logically deleted but is still linked to the Account PAN for the purposes of post-authorization transaction processing.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'U'
+        StatusDescription:
+          description: Description of the current status.
+          type: string
+          minLength: 4
+          maxLength: 256
+          example: 'Unmapped'
+        StatusDateTime:
+          description: >-
+            Date and time the status was updated. String, ISO 8691 format -
+            YYYY-MM-DDThh:mm:ssTZD .
+          type: string
+          minLength: 20
+          maxLength: 29
+          example: '2022-01-21T00:04:35.000Z'
+        Initiator:
+          description: |
+            Party that initiated the status update. Valid values:
+              * "I" - Issuer.
+              * "W" - Token Requestor (including Wallet Provider).
+              * "C" - Cardholder.
+              * "P" - Mobile PIN Validation service.
+              * "M" - Mobile PIN Change Validation service.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'I'
+        CommentId:
+          description: >-
+            Identifier of the comment added.  Conditional field, only present
+            when comment text was provided in the request.
+          type: string
+          minLength: 4
+          maxLength: 256
+          example: '1234'
+        ReasonCode:
+          description: |
+            Reason for the status update.  Valid values:
+              * "A" - Cardholder successfully authenticated using a mobile App prior to activation.
+              * "C" - Cardholder successfully authenticated with a customer service agent prior to activation. (For 'Token Activate').
+              * "C" - Account closed. (For 'Token Delete').
+              * "F" - Cardholder reported token device found or not stolen.
+              * "L" - Cardholder reported/confirmed token device lost.
+              * "S" - Cardholder reported/confirmed token device stolen.
+              * "T" - Issuer or cardholder reported fraudulent/then confirmed no fraudulent token transactions.
+              * "Z" - Other.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'Z'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    Statuses:
+      type: object
+      properties:
+        Status:
+          description: >-
+            An identifier of the token state present in the MDES system of
+            record.
+          type: array
+          items:
+            $ref: '#/components/schemas/Status'
+    Suspenders:
+      type: object
+      properties:
+        Suspender:
+          type: array
+          items:
+            description: >
+              Suspender(s) of the token when the token current status is SUSPENDED. Conditional field, only present when token mapping is suspended. Valid values:
+                  * "I" - The issuer has requested token suspension.
+                  * "W" - Token Requestor (including Wallet Provider) has requested token suspension.
+                  * "C" - The cardholder has requested token suspension.
+                  * "P" - The Mobile PIN Validation service has requested token suspension. Occurs when the cardholder has entered their Mobile PIN incorrectly too many times whilst performing a transaction.
+                  * "M" - The Mobile PIN Change Validation service has requested token suspension. Occurs when the cardholder has entered their Mobile PIN incorrectly too many times whilst changing their mobile pin.
+            type: string
+            example: 'W'
+    Token:
+      type: object
+      properties:
+        TokenUniqueReference:
+          description: >-
+            Unique reference to the token. Conditional field, present when
+            successfully assigned. 48 character string.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        PrimaryAccountNumberUniqueReference:
+          description: >-
+            Unique reference to the Account PAN originally digitized.
+            Conditional field, present when successfully assigned.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'FWSPMC0000000004793dac803f190a4dca4bad33c90a11d3'
+        AccountPanSequenceNumber:
+          description: >-
+            The Account PAN Sequence Number associated with a specific token, as
+            provided to MDES previously by the issuer. It may be used to
+            distinguish between multiple cardholders for a single Account PAN,
+            to represent an issuance number of a specific card, or to
+            distinguish between different card products, such as debit or
+            credit, that share the same Account PAN. Conditional field.
+               * Present when successfully assigned. 2 characters in length, max. Supported values - 000 to 099.
+               * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 2
+          maxLength: 3
+          example: '001'
+        TokenSuffix:
+          description: >-
+            Last 4 digits of token in a 4 character string. Conditional field.
+               * Present once the token has been designated for the digitization.
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '7890'
+        ExpirationDate:
+          description: >-
+            Expiration date of token. Four digit string. Format "mmyy". Conditional field.
+               * Present once the token has been designated for the digitization.
+               * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '1026'
+        DigitizationRequestDateTime:
+          description: >-
+            Date and time of the initial request for digitization of the Account
+            PAN for this token. string, in ISO 8601 format - YYYY-MM-DDThh:mm:ssTZD. Conditional field.
+               * Not present for CoF tokens.
+               * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 20
+          maxLength: 29
+          example: '2022-01-21T00:04:35.000Z'
+        ActivationCodeExpirationDateTime:
+          description: >-
+            Date and time when an Activation Code will expire. Conditional field.
+               * Not present for CoF tokens, and only present when an Activation Code has been generated and activation has not yet occurred. The date and time may be in the future or past. string in ISO 8601 format - YYYY-MM-DDThh:mm:ssTZD.
+               * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 20
+          maxLength: 29
+          example: '2022-01-21T00:04:35.000Z'
+        Auxiliary:
+          description: >-
+            Indicator set to true if the token is an auxiliary token.
+            Supported values - true, false. Conditional field.
+               * Present only if this is an auxiliary token.
+               * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: 'true'
+        CorrelationId:
+          description: >-
+            Value linking pre-digitization messages generated during
+            provisioning. 14 char string. Conditional field.
+               * Not present for CoF tokens.
+               * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 14
+          maxLength: 14
+          example: '98765432101234'
+        CurrentStatusCode:
+          description: |
+            Current status of the Token. Valid values:
+              * "U" - Unmapped. The token has not yet been linked to the Account PAN. The process of tokenization is In Progress.
+              * "A" - Active. The token is linked to the Account PAN and may initiate new transactions to be authorized.
+              * "S" - Suspended. The token is linked to the Account PAN but may not perform transactions at the request of one or more suspenders.
+              * "D" - Deleted. The token is logically deleted but is still linked to the Account PAN for the purposes of post-authorization transaction processing.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'A'
+        CurrentStatusDescription:
+          description: Description of the current status. <br>Conditional field, not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: 'Active'
+        CurrentStatusDateTime:
+          description: >-
+            Date and time the status was updated.  string, ISO 8601 format -
+            YYYY-MM-DDThh:mm:ssTZD. <br>Conditional field, not present when CompactResponse field is set to true in response.
+          type: string
+          example: '2022-01-21T00:04:35.000Z'
+          minLength: 20
+          maxLength: 29
+        FinalTokenizationDecision:
+          description: >
+            Final decision related to the digitization of the Account PAN for
+            this token. One character string. Valid values:
+              * "D" - Digitization was declined
+              * "A" - Digitization wasapproved
+              * "R" - Digitization was approved but required authentication prior to activation.
+            <br>
+            Conditional field.
+              * Not present for CoF tokens. <br> NOTE - This information is currently subject to archival processes and will be present for only 1 year following digitization.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'A'
+        LastCommentId:
+          description: Identifier of the last comment associated with the token. <br>Conditional field, not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 1
+          maxLength: 256
+          example: 'ABC123456'
+        PaymentAppInstanceId:
+          description: >-
+            Identifier of the Payment App instance within a device that will be
+            provisioned with a token. NOTE - This may contain the identifier of
+            the Secure Element or a mobile device for some programs.
+              * Optional, not present for CoF tokens, and only present when supplied by the Payment App Provider.
+              * Conditional field, not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: '645b532a245e4723d7a9c4f62b24f24a24ba98e27d43e34e'
+        ProvisioningStatusCode:
+          description: >
+            Current provisioning status of the token. Valid values:
+              * "T" - Awaiting cardholder acceptance of Terms and Conditions
+              * "P" - Token being prepared
+              * "D" - Token being delivered to Wallet Provider or Device
+              * "A" - Awaiting Activation
+              * "S" - Provisioning successful
+              * "F" - Provisioning failed.
+            NOTE - The order of the statuses above does not indicate any order
+            of status transitions. <br> Conditional field.
+               *  Not present for CoF tokens.
+               *  Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'S'
+        ProvisioningStatusDescription:
+          description: >-
+            Description of the provisioning status. <br> Conditional field.
+              *  Not present for CoF tokens.
+              *  Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 1
+          maxLength: 256
+          example: 'Provisioning successful'
+        StorageTechnology:
+          description: |
+            The architecture or technology used for token storage. Valid values:
+              * "D" - Device memory
+              * "P" - Device memory protected by Trusted Platform Module (TPM)
+              * "H" - Server
+              * "E" - Trusted Execution Environment (TEE)
+              * "S" - Secure Element (SE)
+              * "V" - Virtual Execution Environment (VEE)
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: S
+        Source:
+          description: |
+            The source of the account information. Conditional field, not present if the source information is missing from the tokenization request. Must be one of:
+              * "ACCOUNT_ON_FILE" - Source was an existing account on file
+              * "ACCOUNT _ADDED_MANUALLY" - Source was new account entered manually by the account holder
+              * "ACCOUNT_ADDED_VIA_APPLICATION" - Source was new account added by another application (for example, Issuer banking app).
+              * "EXISTING_TOKEN_CREDENTIAL" - Source was an existing token
+              * "ACCOUNT_ADDED_VIA_BROWSER"	- Source was new account added by browser form fill
+              * "ACCOUNT_ADDED_VIA_CHIP_DATA" -	Source was new account captured by chip data
+          type: string
+          minLength: 4
+          maxLength: 64
+          example: 'ACCOUNT_ON_FILE'
+        TransactionCredentialGenerationStatus:
+          description: >
+            The status of the token's ability to generate new cryptograms by
+            calling Replenish.  Only applicable to certain Cloud tokens.
+            Valid values:
+              * "NEW" - The first cryptogram has not been generated.
+              * "AUTHENTICATED" -  Cardholder authenticated, cryptograms can be generated.
+              * "BLOCKED" - Cryptograms cannot be generated until the cardholder is authenticated. <br> <br>
+            Conditional field.
+              * Not present for non-applicable tokens.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 3
+          maxLength: 14
+          example: 'BLOCKED'
+        Suspenders:
+          $ref: '#/components/schemas/Suspenders'
+        TokenActivatedDateTime:
+          description: >-
+            Date and time that the token was activated. string in ISO 8601
+            format - YYYY-MM-DDThh:mm:ssTZD. Conditional field.
+              * Present only once the Token has been activated.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 20
+          maxLength: 29
+          example: '2015-01-21T00:04:35.000Z'
+        TokenAssuranceLevel:
+          description: >-
+            Indicates the level of Identification and Verification performed to
+            validate the Cardholder and the Cardholder's account at the time the
+            Token was issued (or at any subsequent time post-issuance).
+            Supported values are 0 (Not Authenticated) and non-zero (Authenticated).Conditional field.
+              * Only present when a token has a Token Assurance Level assigned.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 1
+          maxLength: 3
+          example: '1'
+        TokenRequestorId:
+          description: >-
+            Per EMV Co, the entity uniquely recognized by Mastercard as the
+            Token Requestor.
+          type: string
+          minLength: 6
+          maxLength: 11
+          example: '212345678'
+        TokenRequestorName:
+          description: >-
+            The legal name of the token requestor. There can be more than one
+            Token Requestor Id per Token Requester Name (legal name). So it is
+            important to use both parameters to uniquely identify a token
+            requestor.  String, up to 100 characters. <br>Conditional field, not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: 'Popular High Street Merchant'
+        TokenType:
+          description: |
+            Type of token. Valid values:
+              * "S" - Embedded Secure Element Token
+              * "C" - Mastercard Cloud-Based Payments token
+              * "F" - Cof token.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'S'
+        WalletId:
+          description: >-
+            Identifier of the Wallet Provider who requested the digitization or
+            tokenization. Always populated for any token.
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: '123'
+        Device:
+          $ref: '#/components/schemas/Device'
+        TokenDeletedFromConsumerApp:
+          description: >-
+            Indicates if the token is deleted only from the device/token requestor or both device and the MDES platform. Valid values:
+              * "true" - the token will be removed only from the device/token requestor but will remain active on the MDES platform. Any historical payments (such as subscriptions) will continue to be processed but no new payments will be possible as the token will have been removed from the device/token requestor.
+              * "false" - the token will be deleted from both the device/token requestor and the MDES platform.
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: 'false'
+        TokenRequestorConsumerFacingEntityName:
+          description: >-
+            The Token Requestor name to be displayed to the consumer
+            (consumer-facing name). UTF-8 encoding (non-English characters
+            supported). To receive this value, contact your Mastercard
+            representative and open a project with CIS
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: 'BestPay'
+        VirtualCardNumberPanSuffix:
+          description: >-
+            Last 4 digits of VCN PAN mapped (or to be mapped) to Token(s).
+            Conditional field.
+              * Present on VCN search request.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '1234'
+        VirtualCardNumberExpirationDate:
+          description: >-
+            Expiration date of VCN PAN mapped (or to be mapped) to Token(s).
+            MMYY format. Conditional field.
+              * Present on VCN search request.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '1215'
+        VirtualCardNumberIdentifier:
+          description: >-
+            A unique value assigned by InControl. Conditional field.
+              * Present on VCN search request.
+              * Not present when CompactResponse field is set to true in response.
+          type: string
+          minLength: 64
+          maxLength: 64
+          example: '123e4567-e89b-12d3-a456-w2345-r46534-f456-r6543-d764-x32w345-426'
+    Tokens:
+      type: object
+      properties:
+        Token:
+          type: array
+          description: >-
+            A collection of properties and identifiers applicable to the token
+            record.
+          items:
+            $ref: '#/components/schemas/Token'
+    TokenActivate:
+      type: object
+      properties:
+        TokenActivateRequest:
+          $ref: '#/components/schemas/TokenActivateData'
+    TokenActivateData:
+      type: object
+      required:
+        - ReasonCode
+        - AuditInfo
+      properties:
+        EncryptedAccountInformation:
+          $ref: '#/components/schemas/EncryptedAccountInformation'
+        TokenUniqueReference:
+          description: >-
+            TokenUniqueReference for the token to be activated. Conditional field, present when AccountPan and
+            PaymentAppInstanceId are not present.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c
+        PaymentAppInstanceId:
+          description: >-
+            Identifier of the Payment App instance within a device that will be
+            provisioned with a token. NOTE - This may contain the identifier of
+            the Secure Element or a mobile device for some programs. Conditional
+            field, must be present when `EncryptedAccountInformation.EncryptedData.AccountPan` is present. Must not be
+            present when TokenUniqueReference is present.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 645b532a245e4723d7a9c4f62b24f24a24ba98e27d43e34e
+        CommentText:
+          description: Comment related to activating this token.
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: Confirmed cardholder identity
+        ReasonCode:
+          description: |
+            Reason for the activation. Valid values:
+              * "A" - Cardholder successfully authenticated with an activation method (activation code by text message, email, Issuer mobile application etc...) prior to activation.
+              * "C" - Cardholder successfully authenticated with a customer service agent prior to activation.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: C
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenActivateResults:
+      type: object
+      properties:
+        TokenActivateResponse:
+          $ref: '#/components/schemas/SimpleTokenResults'
+    TokenActivationMethods:
+      type: object
+      properties:
+        TokenActivationMethodsRequest:
+          $ref: '#/components/schemas/TokenActivationMethodsData'
+    TokenActivationMethodsData:
+      type: object
+      required:
+        - TokenUniqueReference
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length 48 Characters.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenActivationMethodsResults:
+      type: object
+      properties:
+        TokenActivationMethodsResponse:
+          $ref: '#/components/schemas/TokenActivationMethodsResultsData'
+    TokenActivationMethodsResultsData:
+      type: object
+      properties:
+        ActivationMethods:
+          $ref: '#/components/schemas/ActivationMethods'
+    TokenComments:
+      type: object
+      properties:
+        TokenCommentsRequest:
+          $ref: '#/components/schemas/TokenCommentsData'
+    TokenCommentsData:
+      type: object
+      required:
+        - TokenUniqueReference
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length - 48 Characters
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenCommentsResults:
+      type: object
+      properties:
+        TokenCommentsResponse:
+          $ref: '#/components/schemas/TokenCommentsResultsData'
+    TokenCommentsResultsData:
+      type: object
+      properties:
+        Comments:
+          $ref: '#/components/schemas/Comments'
+    TokenDelete:
+      type: object
+      properties:
+        TokenDeleteRequest:
+          $ref: '#/components/schemas/TokenDeleteData'
+    TokenDeleteData:
+      type: object
+      required:
+        - TokenUniqueReference
+        - ReasonCode
+        - AuditInfo
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length 48 characters.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        CommentText:
+          description: Comment related to suspension.
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: 'Fraudulent transactions confirmed'
+        ReasonCode:
+          description: |
+            The reason for the action. Valid values:
+              * "L" - Cardholder confirmed token device lost
+              * "S" - Cardholder confirmed token device stolen
+              * "F" - Issuer or cardholder confirmed fraudulent token transactions (Deprecated)
+              * "T" - Issuer or cardholder confirmed fraudulent token transactions
+              * "C" - Account closed
+              * "D" - Issuer consumer deleted
+              * "Z" - Other
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'T'
+        DeleteFromConsumerApp:
+          description: |
+            Indicates if the token should be deleted only from the device/token requestor or both device and the MDES platform. Valid values:
+              * "true" - the token will be removed only from the device/token requestor but will remain active on the MDES platform. Any historical payments (such as subscriptions) will continue to be processed but no new payments will be possible as the token will have been removed from the device/token requestor.
+              * "false" - the token will be deleted from both the device/token requestor and the MDES platform.
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: 'false'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenDeleteResults:
+      type: object
+      properties:
+        TokenDeleteResponse:
+          $ref: '#/components/schemas/SimpleTokenResults'
+    TokenRequestorSearch:
+      type: object
+      properties:
+        TokenRequestorSearchRequest:
+          $ref: '#/components/schemas/TokenRequestorSearchData'
+    TokenRequestorSearchData:
+      type: object
+      required:
+        - TokenRequestorId
+        - AuditInfo
+      properties:
+        TokenRequestorId:
+          type: string
+          description: >-
+            When present, return token requestor information matching this token
+            requestor id.
+          example: '00212345678'
+          minLength: 6
+          maxLength: 11
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenRequestorSearchResults:
+      type: object
+      properties:
+        TokenRequestorSearchResponse:
+          $ref: '#/components/schemas/TokenRequestorSearchResultsData'
+    TokenRequestorSearchResultsData:
+      type: object
+      required:
+        - TokenRequestorId
+        - TokenRequestorName
+      properties:
+        TokenRequestorId:
+          type: string
+          description: >-
+            Per EMV Co, the entity uniquely recognized by Mastercard as the
+            Token Requestor.
+          minLength: 6
+          maxLength: 11
+          example: '00212345678'
+        TokenRequestorName:
+          type: string
+          description: The Token Requestor legal name.
+          minLength: 1
+          maxLength: 100
+          example: 'Token Requestor LLC'
+        TokenRequestorConsumerFacingEntityName:
+          type: string
+          description: >-
+            The Token Token Requestor  consumer facing display name. Present if
+            populated for the Token Requestor Id.
+          minLength: 1
+          maxLength: 100
+          example: 'Token Requestor'
+    TokenResendActivationCode:
+      type: object
+      properties:
+        TokenResendActivationCodeRequest:
+          $ref: '#/components/schemas/TokenResendActivationCodeData'
+    TokenResendActivationCodeData:
+      type: object
+      required:
+        - TokenUniqueReference
+        - ActivationMethodId
+        - AuditInfo
+      properties:
+        TokenUniqueReference:
+          description: >-
+            TokenUniqueReference of the token.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        ActivationMethodId:
+          description: Identifier of the activation code distribution method to be used when sending the activation code.
+          type: string
+          minLength: 4
+          maxLength: 64
+          example: '123123122'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenResendActivationCodeResults:
+      type: object
+      properties:
+        TokenResendActivationCodeResponse:
+          $ref: '#/components/schemas/TokenResendActivationCodeResultsData'
+    TokenResendActivationCodeResultsData:
+      type: object
+      properties:
+        Token:
+          $ref: '#/components/schemas/TokenResendActivationCodeResponseToken'
+    TokenResendActivationCodeResponseToken:
+      type: object
+      properties:
+        TokenUniqueReference:
+          description: Unique reference to the Token. Length 48 characters.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+    TokenResetMobilePin:
+      type: object
+      properties:
+        TokenResetMobilePinRequest:
+          $ref: '#/components/schemas/TokenResetMobilePinData'
+    TokenResetMobilePinData:
+      type: object
+      required:
+        - TokenUniqueReference
+        - ReasonCode
+        - AuditInfo
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length 48 characters.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        CommentText:
+          description: Comment related to suspension.
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: 'Cardholder reported fraudulent transactions'
+        ReasonCode:
+          description: |
+            The reason for the action. Valid values:
+              * "N" - Cardholder requested new Mobile PIN
+              * "R" - Mobile PIN try counter violation
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'N'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenResetMobilePinResults:
+      type: object
+      properties:
+        TokenResetMobilePinResponse:
+          $ref: '#/components/schemas/SimpleTokenResults'
+    TokenStatusHistory:
+      properties:
+        TokenStatusHistoryRequest:
+          $ref: '#/components/schemas/TokenStatusHistoryData'
+      example:
+        TokenStatusHistoryRequest:
+          TokenUniqueReference: DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c
+          AuditInfo:
+            UserId: A1435477
+            UserName: John Smith
+            Organization: Any Bank
+            Phone: '5555551234'
+    TokenStatusHistoryData:
+      type: object
+      required:
+        - TokenUniqueReference
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length - 48 Characters
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenStatusHistoryResults:
+      type: object
+      properties:
+        TokenStatusHistoryResponse:
+          $ref: '#/components/schemas/TokenStatusHistoryResultsData'
+    TokenStatusHistoryResultsData:
+      type: object
+      properties:
+        Statuses:
+          $ref: '#/components/schemas/Statuses'
+    TokenSuspend:
+      type: object
+      properties:
+        TokenSuspendRequest:
+          $ref: '#/components/schemas/TokenSuspendData'
+    TokenSuspendData:
+      type: object
+      required:
+        - TokenUniqueReference
+        - ReasonCode
+        - AuditInfo
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length - 48 Characters
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        CommentText:
+          description: Comment related to suspension.
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: 'Suspected fraudulent transactions reported'
+        ReasonCode:
+          description: |
+            The reason for the action. Valid values:
+              * "L" - Cardholder reported token device lost.
+              * "S" - Cardholder reported token device stolen.
+              * "T" - Issue or cardholder reported fraudulent token transactions.
+              * "Z" - Other.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'T'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenSuspendResults:
+      type: object
+      properties:
+        TokenSuspendResponse:
+          $ref: '#/components/schemas/SimpleTokenResults'
+    TokenUpdateTokens:
+      type: object
+      properties:
+        Token:
+          type: array
+          description: >-
+            A collection of properties and identifiers applicable to the token
+            record.
+          items:
+            $ref: '#/components/schemas/SimpleTokenCommentResults'
+    TokenUpdate:
+      type: object
+      properties:
+        TokenUpdateRequest:
+          $ref: '#/components/schemas/TokenUpdateData'
+    TokenUpdateData:
+      type: object
+      required:
+        - AuditInfo
+      properties:
+        EncryptedAccountInformation:
+          $ref: '#/components/schemas/UpdateEncryptedAccountInformation'
+        TokenUniqueReference:
+          description: >-
+            Unique reference of the token to be updated. Conditional field, used
+            for updating a single token and not used when CurrentAccountPan is
+            present. Supply either the TokenUniqueReference or the
+            CurrentAccountPan.
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        IssuerProductConfigurationId:
+          description: >-
+            New product configuration ID to be applied to the updated token(s).
+            Conditional field, must not be present if any of the following are present - NewAccountPan, ExpirationDate, AccountPanSequenceNumber, NewFinancialAccountId.
+          type: string
+          minLength: 1
+          maxLength: 10
+          example: 'ABC1020304'
+        RemoveAlternateAccountIdentifierSuffix:
+          description: >
+            Indicates whether the aleternate account identifier suffix associated to a token
+            should be removed as part of the request. Valid values:
+              * "true" - Remove the alternate account identifier associated to a token
+              * "false" - Do not remove the alternate account identifier associated to a token
+          type: string
+          minLength: 4
+          maxLength: 5
+          example: "false"
+        UpdateWalletProviderIndicator:
+          description: >
+            Indicates whether the updated token information should be provided
+            to the Wallet Provider. Valid values:
+              * "0" - Pass the updated information to the Wallet Provider
+              * "1" - Do not pass the updated information to the Wallet Provider.
+            Optional parameter. The default is 1 if not present.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: '0'
+        CommentText:
+          description: >-
+            Comment related to the updated token(s). Maximum length 500
+            characters.
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: 'Confirmed cardholder identity'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+        CurrentFinancialAccountInformation:
+          $ref: '#/components/schemas/CurrentFinancialAccountInformation'
+    TokenUpdateResults:
+      type: object
+      properties:
+        TokenUpdateResponse:
+          $ref: '#/components/schemas/TokenUpdateResultsData'
+    TokenUpdateResultsData:
+      type: object
+      properties:
+        Tokens:
+          $ref: '#/components/schemas/TokenUpdateTokens'
+    UpdateEncryptedAccountInformation:
+      description: >-
+        Used when account data is supplied in Search, Activate or Update APIs. Use only if account data is present, not required otherwise.
+      type: object
+      required:
+        - EncryptedData
+        - PublicKeyFingerprint
+        - EncryptedKey
+        - OaepHashingAlgorithm
+      properties:
+        EncryptedData:
+          $ref: '#/components/schemas/UpdateAccountData'
+        PublicKeyFingerprint:
+          type: string
+          description: >
+            The fingerprint of the public key used to encrypt the ephemeral AES
+            key.
+          minLength: 32
+          maxLength: 64
+          example: '4c4ead5927f0df8117f178eea9308daa58e27c2b'
+        EncryptedKey:
+          type: string
+          description: >
+            One-time use AES key encrypted by the MasterCard public key (as
+            identified by publicKeyFingerprint) using the OAEP or PKCS#1 v1.5
+            scheme (depending on the value of oaepHashingAlgorithm.
+          minLength: 32
+          maxLength: 512
+          example: 'A1B2C3D4E5F6112233445566778899111'
+        OaepHashingAlgorithm:
+          type: string
+          description: >
+            Hashing algorithm used with the OAEP scheme. Only present when EncryptedAccountInformation.EncryptedData is present. Must be either:
+              * SHA256
+              * SHA512.
+          minLength: 6
+          maxLength: 6
+          example: 'SHA512'
+        Iv:
+          type: string
+          description: The initialization vector used when encrypting data using the
+            one-time use AES key. Must be exactly 12 bytes (24 character hex string)
+            when using GCM and 16 bytes (32 character hex string) when using CBC to
+            match the block size. Conditional field.
+            Required when the EncryptedAccountInformation.EncryptedData object is present.
+            If not present, an IV of zero is assumed.
+          maxLength: 32
+          minLength: 24
+          example: "313233343536373839303132"
+        algorithmCipherMode:
+          type: string
+          description: The AES cipher mode used for the encrypted data. Must be one of the following value:<br>CBC - When CBC cipher mode to be used<br>GCM - When GCM cipher mode to be used
+          maxLength: 3
+          minLength: 3
+          example: "GCM"
+        tag:
+          type: string
+          description: Tag to verify during data decryption. Required when algorithmCipherMode used is GCM, not present otherwise.
+          maxLength: 36
+          minLength: 1
+          example: "a1b2c3d4e5f6789"
+        aad:
+          type: string
+          description: TAdditional authentication data used in GCM mode. Hex-encoded data (case-insensitive). Required when algorithmCipherMode used is GCM, not present otherwise.
+          maxLength: 36
+          minLength: 1
+          example: "4a6f686e446f654"
+    TokenUnsuspend:
+      type: object
+      properties:
+        TokenUnsuspendRequest:
+          $ref: '#/components/schemas/TokenUnsuspendData'
+    TokenUnsuspendData:
+      type: object
+      required:
+        - TokenUniqueReference
+        - ReasonCode
+        - AuditInfo
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length - 48 Characters
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        CommentText:
+          description: Comment related to unsuspension.
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: 'Transaction confirmed as not fraudulent'
+        ReasonCode:
+          description: |
+            The reason for the action. Valid values:
+              * "F" - Cardholder reported token device found or not stolen
+              * "T" - Issuer or cardholder confirmed no fraudulent token transactions
+              * "Z" - Other.
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: 'T'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenUnsuspendResults:
+      type: object
+      properties:
+        TokenUnsuspendResponse:
+          $ref: '#/components/schemas/SimpleTokenResults'
+    TokenTransactions:
+      type: object
+      properties:
+        TransactionsRequest:
+          $ref: '#/components/schemas/TokenTransactionsData'
+    TokenTransactionsData:
+      type: object
+      required:
+        - TokenUniqueReference
+        - AuditInfo
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length - 48 Characters
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    TokenTransactionsResults:
+      type: object
+      properties:
+        TransactionsResponse:
+          $ref: '#/components/schemas/TokenTransactionsResultsData'
+    TokenTransactionsResultsData:
+      type: object
+      properties:
+        Transactions:
+          $ref: '#/components/schemas/Transactions'
+    Transactions:
+      type: object
+      properties:
+        Transaction:
+          description: >
+            Used to retrieve transactions performed by a token. It only returns
+            transactions performed within the last 30 days, to help identify a
+            particular token, or to identify a particular recent transaction. It
+            is not intended to provide the full transaction history of a token
+            or Account PAN. NOTE: The Transaction History API response is not
+            supported for static Card on File (CoF) tokens.
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+    Transaction:
+      required:
+        - TransactionDateTime
+        - CurrencyCode
+        - TransactionAmount
+        - TransactionTypeCode
+        - TransactionTypeDescription
+        - TransactionStatusCode
+        - MerchantCategoryDescription
+      type: object
+      properties:
+        TransactionDateTime:
+          description: >-
+            Date and time the comment was updated. String,
+            YYYY-MM-DDThh:mm:ssTZD .
+          type: string
+          minLength: 20
+          maxLength: 29
+          example: '2015-01-21T00:04:35.000Z'
+        CurrencyCode:
+          description: ISO-4217 currency code (3-letter alphabetic currency code).
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: 'USD'
+        TransactionAmount:
+          description: Amount of the transaction formatted with decimal places.
+          type: string
+          minLength: 1
+          maxLength: 10
+          example: '123.45'
+        TransactionTypeCode:
+          description: |
+            Type of transaction. Valid values:
+              * "PURCH" - Purchase
+              * "PURCB" - Purchase with Cashback
+              * "REFND" - Refund
+              * "AFD" - Purchase Pre-Auth AFD
+              * "CLRRF" - Clearing Refund
+              * "NAFD" - Purchase Pre-Auth Non-AFD
+              * "ATMWD" - ATM Cash Withdrawal
+              * "CASHD" - Cash Disbursement
+              * "ATMDP" - ATM Deposit
+              * "ATMTR" - ATM Account Transfer
+              * "PAYMT" - Payment
+          type: string
+          minLength: 3
+          maxLength: 5
+          example: 'PURCH'
+        TransactionTypeDescription:
+          description: Description of the transaction type.
+          type: string
+          minLength: 3
+          maxLength: 32
+          example: Purchase
+        TransactionStatusCode:
+          description: |
+            Transaction status. Valid values:
+              * "AUTH" - Authorized
+              * "COMP" - Completed
+              * "DCLN" - Declined
+              * "PAUTH" - Pre-Authorized
+              * "PAUTC" - Pre-Authorization Completed
+              * "PAUTD" - Pre-Authorization Declined
+              * "REFND" - Refunded
+          type: string
+          minLength: 3
+          maxLength: 5
+          example: AUTH
+        MerchantName:
+          description: >-
+            Name of the merchant. Conditional field. When available, it must be
+            included in the response.
+          type: string
+          minLength: 2
+          maxLength: 256
+          example: FoodMart
+        MerchantCategoryCode:
+          description: >-
+            Merchant category of the merchant. Conditional field. When
+            available, it must be included in the response.
+          type: string
+          minLength: 3
+          maxLength: 5
+          example: '1234'
+        MerchantCategoryDescription:
+          description: Description of the merchant category.
+          minLength: 1
+          maxLength: 256
+          type: string
+          example: 'GROCERY STORES, SUPERMARKETS'
+        POSEntryMode:
+          description: >
+            Indicates the mode by which transaction data was collected at the
+            merchant. Conditional field. When available, it must be included in
+            the response.  Valid values:
+              * "07" - Contactless M/Chip transaction
+              * "09" - Digital Secure Remote Payment containing EMV data
+              * "81" - Digital Secure Remote Payment containing UCAF data or CoF
+              * "82" - CoF - PAN auto entry via server
+              * "90" - Dynamic Magnetic Strip Data
+              * "91" - Contactless magnetic stripe
+          type: string
+          minLength: 2
+          maxLength: 4
+          example: '90'
+    UpdateAccountData:
+      description: >-
+        Contains an encrypted JSON object. Encrypted by the ephemeral AES key
+        using CBC or GCM mode (IV as provided in 'Iv', or zero if none provided) and
+        PKCS#7 padding.  The JSON object being encrypted will be defined in the
+        context of the API call.
+      type: object
+      properties:
+        CurrentAccount:
+          type: object
+          properties:
+            VirtualCardNumber:
+              type: string
+              description: >-
+                The VirtualCardNumber (VCN)to be updated.
+              minLength: 9
+              maxLength: 19
+              example:  '1111111111111111'
+            AccountPan:
+              type: string
+              minLength: 0
+              description: >-
+                Used for updating all tokens mapped to a single Account PAN and must not be present
+                when TokenUniqueReference or CurrentFinancialAccountInformation is present for Token Update.
+              maxLength: 19
+              example:  '1111111111111111'
+            Token:
+              type: string
+              minLength: 0
+              description: When present, the search will return one specific token.
+              maxLength: 19
+              example: '5598765432109876'
+            AlternateAccountIdentifier:
+              type: string
+              minLength: 9
+              description: >-
+                When present, the search will return tokens matching this
+                Alternate Account Identifier, for any Wallet Provider or device.
+                Alternate Account Identifier will be minimum 9 and maximum 64
+                characters. Space characters are not allowed.
+              maxLength: 64
+              example: 'NL91ABNA0417164300'
+            FinancialAccountId:
+              type: string
+              description: >-
+                When present, return tokens for the Account matching this
+                Financial Account Information, for any Wallet Provider or
+                device. Optional for Token Search. Conditional field, used
+                for updating all tokens mapped to a single Financial Account
+                and must not be present when TokenUniqueReference or
+                CurrentAccountPan is present for Token Update.
+              minLength: 9
+              maxLength: 64
+              example: 'NL91ABNA0417164300'
+        NewAccount:
+          type: object
+          properties:
+            AccountPan:
+              description: >-
+                When present, return tokens for the account matching this
+                Primary Account Number (PAN), for any waller provider or device.
+                Optional, only present in Token Update.
+              type: string
+              minLength: 9
+              maxLength: 19
+              example: '1111000011110000'
+            NewFinancialAccountId:
+              description: >-
+                New Financial Account Identifier to be applied to the updated
+                token(s) if there is in fact new Financial Account Identifier.
+                Conditional field; must be present if
+                CurrentFinancialAccountInformation fields are present. Only present in Token Update.
+              type: string
+              minLength: 9
+              maxLength: 64
+              example: 'NL91ABNA0417164300'
+            ExpirationDate:
+              description: >-
+                New expiration date to be applied to the updated token(s).
+                Conditional field, must not be present when
+                IssuerProductConfigurationId or CurrentFinanciaAccountInformation
+                is present. Optional, if updating PAN mapping or PAN Sequence Number.
+                Only present in Token Update.
+              type: string
+              minLength: 4
+              maxLength: 4
+              example: '0125'
+            AccountPanSequenceNumber:
+              description: >-
+                New PAN sequence number to be applied to the updated token(s).
+                Conditional field, must not be present when
+                IssuerProductConfigurationId or CurrentFinanciaAccountInformation
+                is present. Optional, if updating PAN mapping or Expiration Date.
+                Only present in Token Update.
+              type: string
+              minLength: 2
+              maxLength: 3
+              example: '001'
+    UpdateTokenAssurance:
+      type: object
+      properties:
+        UpdateTokenAssuranceRequest:
+          $ref: '#/components/schemas/UpdateTokenAssuranceData'
+    UpdateTokenAssuranceData:
+      type: object
+      required:
+        - TokenUniqueReference
+        - AuditInfo
+      properties:
+        TokenUniqueReference:
+          description: The TokenUniqueReference of the token. Length - 48 Characters
+          type: string
+          minLength: 48
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        CommentText:
+          description: Comment related to the update.
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: 'Updating assurance'
+        AuditInfo:
+          $ref: '#/components/schemas/AuditInfo'
+    UpdateTokenAssuranceResults:
+      type: object
+      properties:
+        UpdateTokenAssuranceResponse:
+          $ref: '#/components/schemas/SimpleTokenResults'
+    NotifyAuthenticationDecision:
+      type: object
+      required:
+        - tokenUniqueReference
+        - authRequestCorrelationId
+        - authenticationMethod
+        - decision
+        - auditInfo
+      properties:
+        tokenUniqueReference:
+          description: A unique identifier assigned to a token when it is allocated, and this identifier is used to identify the token throughout its lifespan.
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        authRequestCorrelationId:
+          description: The correlationId value to link between multiple authentication requests.
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        authenticationMethod:
+          description: |
+            Authentication method to authenticate the cardholder. Must be one of:
+              * "Issuer Application" - Issuer application used to perform cardholder authentication
+              * "Web Portal" - Web portal application used to perform cardholder authentication
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: "Issuer Application"
+        decision:
+          description: |
+            Indicates the Issuer decision after cardholder authentication. Must be one of:
+              * "SUCCESS" - Issuer decision after cardholder authentication is successful for a token
+              * "FAILED" - Issuer decision after cardholder authentication is failed for a token
+          type: string
+          minLength: 1
+          maxLength: 10
+          example: "SUCCESS"
+        commentText:
+          description: Comment related to the updated tokens
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: 'Cardholder authentication performed post tokenization'
+        auditInfo:
+          $ref: '#/components/schemas/auditInfo'
+    NotifyAuthenticationDecisionResponse:
+      type: object
+      properties:
+        tokenUniqueReference:
+          description: A unique identifier assigned to a token when it is allocated, and this identifier is used to identify the token throughout its lifespan.
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: 'DWSPMC00000000010906a349d9ca4eb1a4d53e3c90a11d9c'
+        commentId:
+          description: Identifier of the comment added
+          type: string
+          minLength: 1
+          maxLength: 256
+          example: '123456789'
+

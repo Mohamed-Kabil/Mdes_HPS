@@ -1,0 +1,225 @@
+{
+  "_meta": {
+    "description": "Request/response schemas for the 6 MDES Customer Service APIs (Search -> Token Delete) as actually implemented in project pwc-api-sp5_api, extracted from source for comparison against the official Mastercard MDES Customer Service API reference.",
+    "sourceOfTruth": "https://developer.mastercard.com/mdes-customer-service/documentation/api-reference/",
+    "callSites": [
+      "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java",
+      "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java",
+      "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/PanLifeCycleItspWebService.java",
+      "ws-core-impl/src/main/java/com/acp/vision/pcrd/utils/ClientApiTools.java"
+    ],
+    "modelPackage": "com.acp.common.api.ITSP.model",
+    "networkGate": "All 6 calls are gated behind response.getNetworkCode() == \"02\" (MDES). \"01\" is the Visa/VTS branch and uses unrelated model classes.",
+    "endpointBase": "InitConfig mdesCSEndPoint (or mdesCustServiceEndPoint for suspend/unsuspend/delete via ClientApiTools)"
+  },
+
+  "search": {
+    "mastercardOperation": "Search",
+    "mastercardPath": "POST /{id}/search",
+    "internalPath": "/mdes/csapi/v2/search",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenInquiryRequestWebService.java",
+    "sourceLines": "147-169, 485-612",
+    "requestWrapper": "TokenActivateWrapper.SearchRequest",
+    "request": {
+      "TokenUniqueReference": "string (used for search-by-TUR variant)",
+      "ExcludeDeletedIndicator": "string (\"false\")",
+      "IncludeDeviceTokensOnly": "string (\"false\")",
+      "ExcludeTokensDeletedFromConsumerApp": "string (\"false\")",
+      "PaymentAppInstanceId": "string (used for search-by-deviceId variant)",
+      "AuditInfo": {
+        "UserId": "string",
+        "UserName": "string",
+        "Organization": "string",
+        "Phone": "string"
+      },
+      "EncryptedAccountInformation": {
+        "EncryptedData": {
+          "_plaintext_variant": {
+            "CurrentAccount": { "AccountPan": "string" }
+          },
+          "_encrypted_variant_SearchRequestString": {
+            "PublicKeyFingerprint": "string",
+            "EncryptedKey": "string",
+            "OaepHashingAlgorithm": "string",
+            "Iv": "string"
+          }
+        }
+      },
+      "_note": "Only one of TokenUniqueReference / EncryptedAccountInformation(pan) / PaymentAppInstanceId is populated per call, chosen from request.getTokenUniqueReference() / request.getEncryptData().getPan() / request.getDeviceId() in that priority order."
+    },
+    "response": {
+      "wrapper": "TokenActivateWrapper.SearchResponse",
+      "Accounts": {
+        "Account": [
+          {
+            "AccountPanSuffix": "string",
+            "ExpirationDate": "string",
+            "Tokens": {
+              "Token": [
+                {
+                  "TokenUniqueReference": "string",
+                  "PrimaryAccountNumberUniqueReference": "string",
+                  "TokenSuffix": "string",
+                  "ExpirationDate": "string",
+                  "DigitizationRequestDateTime": "string",
+                  "TokenActivatedDateTime": "string",
+                  "FinalTokenizationDecision": "string",
+                  "CorrelationId": "string",
+                  "CurrentStatusCode": "string",
+                  "CurrentStatusDescription": "string",
+                  "CurrentStatusDateTime": "string",
+                  "ProvisioningStatusCode": "string",
+                  "ProvisioningStatusDescription": "string",
+                  "TokenRequestorId": "string",
+                  "WalletId": "string",
+                  "PaymentAppInstanceId": "string",
+                  "TokenType": "string",
+                  "StorageTechnology": "string",
+                  "LastCommentId": "string",
+                  "TokenRequestorConsumerFacingEntityName": "string",
+                  "Device": {
+                    "DeviceId": "string",
+                    "DeviceName": "string",
+                    "DeviceType": "string",
+                    "DecureElementId": "string"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+
+  "tokenActivate": {
+    "mastercardOperation": "Token Activate",
+    "mastercardPath": "POST /{id}/token/activate",
+    "internalPath": "/mdes/csapi/v2/token/activate",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenLifeCycleItspWebService.java",
+    "sourceLines": "144-147, 431-453",
+    "requestWrapper": "TokenActivateWrapper.TokenActivateRequest",
+    "request": {
+      "TokenUniqueReference": "string (from request.getTspTokenId())",
+      "CommentText": "string",
+      "ReasonCode": "string (from request.getActionReason())",
+      "AuditInfo": {
+        "UserId": "string",
+        "UserName": "string",
+        "Organization": "string",
+        "Phone": "string"
+      }
+    },
+    "response": {
+      "_note": "No dedicated Mastercard response DTO consumed in code beyond HTTP status handling (200/400/401/500). On 200 the internal TokenLifeCycleItspV35Rs is returned with ResponseInfo(errorCode=00000). Mastercard error codes mapped: VSE40002->T0111, VSE40000->T0117, VSE40001->T0118, VSE40003->T0112, VSE40010->T0109, VSE40011->T0113 (these mappings are shared across activate/suspend/unsuspend/delete, see TokenLifeCycleItspWebService.java lines 264-298)."
+    }
+  },
+
+  "tokenUpdate": {
+    "mastercardOperation": "Token Update",
+    "mastercardPath": "POST /{id}/token/update",
+    "internalPath": "/mdes/csapi/v2/token/update",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/PanLifeCycleItspWebService.java",
+    "sourceLines": "122-183",
+    "requestWrapper": "built inline as raw Jackson ObjectNode (no POJO) when request.getActionReason() == \"ACCOUNT_UPDATE\"",
+    "request": {
+      "TokenUpdateRequest": {
+        "EncryptedAccountInformation": {
+          "_pre_encryption_plaintext": {
+            "EncryptedData": {
+              "CurrentAccount": { "AccountPan": "string (request.getEncryptData().getCardholderInfo().getPan())" },
+              "NewAccount": {
+                "AccountPan": "string (request.getEncryptData().getReplaceCardholderInfo().getPan())",
+                "ExpirationDate": "string, format MMyy (converted from source YYMM)"
+              }
+            }
+          },
+          "_note": "The plaintext object above is JSON-serialized then passed through encryptItspPayload(institutionCode, json, \"SC\") producing the actual EncryptedAccountInformation node sent to Mastercard."
+        }
+      },
+      "CommentText": "string",
+      "AuditInfo": {
+        "UserId": "string",
+        "UserName": "string",
+        "Organization": "string",
+        "Phone": "string"
+      }
+    },
+    "response": {
+      "_note": "Only HTTP status 200/else is checked; internal PanLifeCycleItspV35Rs.ResponseInfo is set to errorCode 00000 (success) or 99999 (error), no field-level Mastercard response mapping implemented."
+    },
+    "_alsoInThisFile_notPartOfThe6": {
+      "operation": "ACCOUNT_CLOSED branch calls a different Mastercard API entirely",
+      "internalPath": "/paa/paymentaccount/static/1/0/closeAccount (mdesPAMEndPoint, not csapi)"
+    }
+  },
+
+  "tokenSuspend": {
+    "mastercardOperation": "Token Suspend",
+    "mastercardPath": "POST /{id}/token/suspend",
+    "internalPath": "/mdes/csapi/v2/token/suspend",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenLifeCycleItspWebService.java (also path constant duplicated in ClientApiTools.java:1217)",
+    "sourceLines": "148-151, 454-475",
+    "requestWrapper": "TokenActivateWrapper.TokenSuspendRequest",
+    "request": {
+      "TokenUniqueReference": "string (from request.getTspTokenId())",
+      "CommentText": "string",
+      "ReasonCode": "string (from request.getActionReason())",
+      "AuditInfo": {
+        "UserId": "string",
+        "UserName": "string",
+        "Organization": "string",
+        "Phone": "string"
+      }
+    },
+    "response": {
+      "_note": "Same status/error handling as tokenActivate (see that section)."
+    }
+  },
+
+  "tokenUnsuspend": {
+    "mastercardOperation": "Token Unsuspend",
+    "mastercardPath": "POST /{id}/token/unsuspend",
+    "internalPath": "/mdes/csapi/v2/token/unsuspend",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenLifeCycleItspWebService.java (also path constant duplicated in ClientApiTools.java:1219)",
+    "sourceLines": "152-155, 476-497",
+    "requestWrapper": "TokenActivateWrapper.TokenUnsuspendRequest",
+    "request": {
+      "TokenUniqueReference": "string (from request.getTspTokenId())",
+      "CommentText": "string",
+      "ReasonCode": "string (from request.getActionReason())",
+      "AuditInfo": {
+        "UserId": "string",
+        "UserName": "string",
+        "Organization": "string",
+        "Phone": "string"
+      }
+    },
+    "response": {
+      "_note": "Same status/error handling as tokenActivate (see that section). Note: request.getAction() value for this operation is \"RESUME\", mapped internally to the unsuspend call."
+    }
+  },
+
+  "tokenDelete": {
+    "mastercardOperation": "Token Delete",
+    "mastercardPath": "POST /{id}/token/delete",
+    "internalPath": "/mdes/csapi/v2/token/delete",
+    "sourceFile": "ws-core-impl/.../ws/impl/v2/TokenLifeCycleItspWebService.java (also path constant duplicated in ClientApiTools.java:1221)",
+    "sourceLines": "156-159, 498-519",
+    "requestWrapper": "TokenActivateWrapper.TokenDeleteRequest",
+    "request": {
+      "TokenUniqueReference": "string (from request.getTspTokenId())",
+      "CommentText": "string",
+      "ReasonCode": "string (from request.getActionReason())",
+      "AuditInfo": {
+        "UserId": "string",
+        "UserName": "string",
+        "Organization": "string",
+        "Phone": "string"
+      }
+    },
+    "response": {
+      "_note": "Same status/error handling as tokenActivate (see that section)."
+    }
+  }
+}

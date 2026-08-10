@@ -1,0 +1,1349 @@
+{
+  "spec_source": "C:\\Users\\moham\\Desktop\\input\\mdes-customer-service.yaml",
+  "java_mapping_source": "C:\\Users\\moham\\Downloads\\pwc-api-sp5_api\\Mdes_cs_api\\generated\\mdes_cs_api_schemas.generated.json",
+  "java_mapping_generated_at": "2026-08-07T10:32:39",
+  "operations": [
+    {
+      "operation": "Search",
+      "path": "/{id}/search",
+      "total_fields": 35,
+      "counts": {
+        "implemente": 14,
+        "non_implemente": 21
+      },
+      "fields": [
+        {
+          "field": "AuditInfo",
+          "status": "implemente",
+          "required": true,
+          "type": "object",
+          "matched_java_field": "AuditInfo",
+          "variants": [
+            "searchByDeviceId",
+            "searchByPan",
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:513",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:583",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:607"
+          ]
+        },
+        {
+          "field": "AuditInfo.Organization",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Organisation",
+          "variants": [
+            "searchByDeviceId",
+            "searchByPan",
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:511",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:581",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:605"
+          ]
+        },
+        {
+          "field": "AuditInfo.Phone",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Phone",
+          "variants": [
+            "searchByDeviceId",
+            "searchByPan",
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:512",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:582",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:606"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserId",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserId",
+          "variants": [
+            "searchByDeviceId",
+            "searchByPan",
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:509",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:579",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:603"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserName",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserName",
+          "variants": [
+            "searchByDeviceId",
+            "searchByPan",
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:510",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:580",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:604"
+          ]
+        },
+        {
+          "field": "CommentId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "CompactResponse",
+          "status": "non_implemente",
+          "required": false,
+          "type": "boolean",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "CountryCode",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation",
+          "status": "implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": "EncryptedAccountInformation",
+          "variants": [
+            "searchByPan"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:502"
+          ]
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData",
+          "status": "implemente",
+          "required": true,
+          "type": "object",
+          "matched_java_field": "EncryptedAccountInformation.EncryptedData",
+          "variants": [
+            "searchByPan"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:500"
+          ]
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount",
+          "status": "implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": "EncryptedAccountInformation.EncryptedData.CurrentAccount",
+          "variants": [
+            "searchByPan"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:499"
+          ]
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.AccountPan",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.AccountPan",
+          "variants": [
+            "searchByPan"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:498"
+          ]
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.AlternateAccountIdentifier",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.FinancialAccountId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.Token",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.VirtualCardNumber",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedKey",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.Iv",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.OaepHashingAlgorithm",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.PublicKeyFingerprint",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.aad",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.algorithmCipherMode",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.tag",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "ExcludeDeletedIndicator",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "ExcludeDeletedIndicator",
+          "variants": [
+            "searchByDeviceId",
+            "searchByPan",
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:491",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:572",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:596"
+          ]
+        },
+        {
+          "field": "ExcludeTokensDeletedFromConsumerApp",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "ExcludeTokensDeletedFromConsumerApp",
+          "variants": [
+            "searchByDeviceId",
+            "searchByPan",
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:493",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:574",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:598"
+          ]
+        },
+        {
+          "field": "IncludeDeviceTokensOnly",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "IncludeDeviceTokensOnly",
+          "variants": [
+            "searchByDeviceId",
+            "searchByPan",
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:492",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:573",
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:597"
+          ]
+        },
+        {
+          "field": "InterbankCardAssociationId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "number",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "PageInfo",
+          "status": "non_implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "PageInfo.Limit",
+          "status": "non_implemente",
+          "required": true,
+          "type": "number",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "PageInfo.Offset",
+          "status": "non_implemente",
+          "required": true,
+          "type": "number",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "PaymentAppInstanceId",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "PaymentAppInstanceId",
+          "variants": [
+            "searchByDeviceId"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:595"
+          ]
+        },
+        {
+          "field": "TokenRequestorId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "TokenStatusCodes",
+          "status": "non_implemente",
+          "required": false,
+          "type": "array",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "TokenTypes",
+          "status": "non_implemente",
+          "required": false,
+          "type": "array",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "TokenUniqueReference",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "TokenUniqueReference",
+          "variants": [
+            "searchByTokenUniqueReference"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenInquiryRequestWebService.java:571"
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "Token Activate",
+      "path": "/{id}/token/activate",
+      "total_fields": 24,
+      "counts": {
+        "implemente": 8,
+        "non_implemente": 16
+      },
+      "fields": [
+        {
+          "field": "AuditInfo",
+          "status": "implemente",
+          "required": true,
+          "type": "object",
+          "matched_java_field": "AuditInfo",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:449"
+          ]
+        },
+        {
+          "field": "AuditInfo.Organization",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Organisation",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:447"
+          ]
+        },
+        {
+          "field": "AuditInfo.Phone",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Phone",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:448"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserId",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserId",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:445"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserName",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserName",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:446"
+          ]
+        },
+        {
+          "field": "CommentText",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "CommentText",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:439"
+          ]
+        },
+        {
+          "field": "EncryptedAccountInformation",
+          "status": "non_implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData",
+          "status": "non_implemente",
+          "required": true,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount",
+          "status": "non_implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.AccountPan",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.AlternateAccountIdentifier",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.FinancialAccountId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.Token",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.VirtualCardNumber",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedKey",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.Iv",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.OaepHashingAlgorithm",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.PublicKeyFingerprint",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.aad",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.algorithmCipherMode",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.tag",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "PaymentAppInstanceId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "ReasonCode",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "ReasonCode",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:440"
+          ]
+        },
+        {
+          "field": "TokenUniqueReference",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "TokenUniqueReference",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:438"
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "Token Update",
+      "path": "/{id}/token/update",
+      "total_fields": 33,
+      "counts": {
+        "non_verifiable": 1,
+        "non_implemente": 31,
+        "implemente": 1
+      },
+      "fields": [
+        {
+          "field": "AuditInfo",
+          "status": "non_verifiable",
+          "required": true,
+          "type": "object",
+          "matched_java_field": "AuditInfo",
+          "variants": [
+            "accountUpdate"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/PanLifeCycleItspWebService.java:181"
+          ]
+        },
+        {
+          "field": "AuditInfo.Organization",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "AuditInfo.Phone",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "AuditInfo.UserId",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "AuditInfo.UserName",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "CommentText",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "CommentText",
+          "variants": [
+            "accountUpdate"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/PanLifeCycleItspWebService.java:174"
+          ]
+        },
+        {
+          "field": "CurrentFinancialAccountInformation",
+          "status": "non_implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "CurrentFinancialAccountInformation.CountryCode",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "CurrentFinancialAccountInformation.InterbankCardAssociationId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation",
+          "status": "non_implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData",
+          "status": "non_implemente",
+          "required": true,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount",
+          "status": "non_implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.AccountPan",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.AlternateAccountIdentifier",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.FinancialAccountId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.Token",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.CurrentAccount.VirtualCardNumber",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.NewAccount",
+          "status": "non_implemente",
+          "required": false,
+          "type": "object",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.NewAccount.AccountPan",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.NewAccount.AccountPanSequenceNumber",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.NewAccount.ExpirationDate",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedData.NewAccount.NewFinancialAccountId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.EncryptedKey",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.Iv",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.OaepHashingAlgorithm",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.PublicKeyFingerprint",
+          "status": "non_implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.aad",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.algorithmCipherMode",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "EncryptedAccountInformation.tag",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "IssuerProductConfigurationId",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "RemoveAlternateAccountIdentifierSuffix",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "TokenUniqueReference",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "UpdateWalletProviderIndicator",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        }
+      ]
+    },
+    {
+      "operation": "Token Suspend",
+      "path": "/{id}/token/suspend",
+      "total_fields": 8,
+      "counts": {
+        "implemente": 8
+      },
+      "fields": [
+        {
+          "field": "AuditInfo",
+          "status": "implemente",
+          "required": true,
+          "type": "object",
+          "matched_java_field": "AuditInfo",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:471"
+          ]
+        },
+        {
+          "field": "AuditInfo.Organization",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Organisation",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:469"
+          ]
+        },
+        {
+          "field": "AuditInfo.Phone",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Phone",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:470"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserId",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserId",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:467"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserName",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserName",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:468"
+          ]
+        },
+        {
+          "field": "CommentText",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "CommentText",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:461"
+          ]
+        },
+        {
+          "field": "ReasonCode",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "ReasonCode",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:462"
+          ]
+        },
+        {
+          "field": "TokenUniqueReference",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "TokenUniqueReference",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:460"
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "Token Unsuspend",
+      "path": "/{id}/token/unsuspend",
+      "total_fields": 8,
+      "counts": {
+        "implemente": 8
+      },
+      "fields": [
+        {
+          "field": "AuditInfo",
+          "status": "implemente",
+          "required": true,
+          "type": "object",
+          "matched_java_field": "AuditInfo",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:493"
+          ]
+        },
+        {
+          "field": "AuditInfo.Organization",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Organisation",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:491"
+          ]
+        },
+        {
+          "field": "AuditInfo.Phone",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Phone",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:492"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserId",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserId",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:489"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserName",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserName",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:490"
+          ]
+        },
+        {
+          "field": "CommentText",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "CommentText",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:483"
+          ]
+        },
+        {
+          "field": "ReasonCode",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "ReasonCode",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:484"
+          ]
+        },
+        {
+          "field": "TokenUniqueReference",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "TokenUniqueReference",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:482"
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "Token Delete",
+      "path": "/{id}/token/delete",
+      "total_fields": 9,
+      "counts": {
+        "implemente": 8,
+        "non_implemente": 1
+      },
+      "fields": [
+        {
+          "field": "AuditInfo",
+          "status": "implemente",
+          "required": true,
+          "type": "object",
+          "matched_java_field": "AuditInfo",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:515"
+          ]
+        },
+        {
+          "field": "AuditInfo.Organization",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Organisation",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:513"
+          ]
+        },
+        {
+          "field": "AuditInfo.Phone",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "AuditInfo.Phone",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:514"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserId",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserId",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:511"
+          ]
+        },
+        {
+          "field": "AuditInfo.UserName",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "AuditInfo.UserName",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:512"
+          ]
+        },
+        {
+          "field": "CommentText",
+          "status": "implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": "CommentText",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:505"
+          ]
+        },
+        {
+          "field": "DeleteFromConsumerApp",
+          "status": "non_implemente",
+          "required": false,
+          "type": "string",
+          "matched_java_field": null,
+          "variants": [],
+          "java_source": []
+        },
+        {
+          "field": "ReasonCode",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "ReasonCode",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:506"
+          ]
+        },
+        {
+          "field": "TokenUniqueReference",
+          "status": "implemente",
+          "required": true,
+          "type": "string",
+          "matched_java_field": "TokenUniqueReference",
+          "variants": [
+            "default"
+          ],
+          "java_source": [
+            "ws-core-impl/src/main/java/com/acp/vision/pcrd/ws/impl/v2/TokenLifeCycleItspWebService.java:504"
+          ]
+        }
+      ]
+    }
+  ]
+}

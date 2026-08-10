@@ -1,0 +1,2711 @@
+openapi: 3.0.1
+info:
+  title: Mastercard Digital Enablement Service Issuer Outbound API
+  description: The MDES Issuer Outbound Pre-Digitization API supports the pre-digitization web services
+    provided by the Digitization Service. The web services are used to inform Issuers
+    of MDES services being requested by, or on-behalf of, their account holders. Issuers
+    may provide information in their responses to guide or inform the Account holder’s
+    experience through the Token Requestor.
+  version: 2.0.33 (Document version)
+  contact:
+    name: API Support
+    url: https://developer.mastercard.com/support
+    email: apisupport@mastercard.com
+servers:
+  - url: https://mybank.com/issuerServices/1/0/
+    description: Production Server URL
+tags:
+  - name: Authorize Service
+    description: Requests an Issuer to authorize a Funding Account for a Mastercard service or set of services.
+  - name: Request Activation Methods
+    description: Requests Activation Methods from the Account holder.
+  - name: Deliver Activation Code
+    description: Used to deliver an Activation Code to authenticate the Account holder or bind within TAF service.
+  - name: Notify Service Activated
+    description: Receive notifications that the provisioning and activation of a token has been completed.
+  - name: Notify Token Updated
+    description: Notify the Issuer of significant token updates, such as when the token is suspended, unsuspended or deleted or bound within TAF service.
+  - name: Validate Activation Code
+    description: Activate a Token for first-time use if the digitization decision was to ‘Require Additional Authentication’ in the Digitize response or during post-tokenization authentication.
+  - name: Get Account Information
+    description: Requests information about a funding account for a Mastercard service or set of services.
+  - name: Notify Suspicious Events
+    description: Notifies issuers of any suspicious activities.
+
+paths:
+  /requestActivationMethods:
+    post:
+      tags:
+        - Request Activation Methods
+      summary: Requests Activation Methods from the issuer to present to the Account holder.
+      description: RequestActivationMethods advises an Issuer that a service activation or post tokenization authentication.
+        has been requested and that an Issuer should provide Activation Methods for
+        the Account holder.  The Activation Methods will be presented to the Account
+        holder so they may select their preferred delivery channel to receive an Activation
+        Code only when the card eligibility decision is “Require Authentication.”  If
+        there are no methods to return then an empty ActivationMethods array is returned.  If
+        verification of the card data provided in the request fails then an empty
+        ActivationMethods array should be returned. This includes an unknown PAN or
+        if the expiration date or the CVC2 do not match.  This call is made as part
+        of the service activation flow and may be subject to strict time constraints
+        based on the service. If applicable to the service, when no methods are returned
+        or in case of service failure the MDES system will use the methods returned
+        by the pre-digitization network messages or the default methods for the account
+        range. The methods returned from this API will be combined with the activation
+        methods returned from the pre-digitization network messages and any methods
+        configured as forced. This call is also made when Token Requestor requests post-tokenization authentication.
+      operationId: Request for activation methods
+      requestBody:
+        $ref: '#/components/requestBodies/RequestActivationMethodsRequest'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/RequestActivationMethodsResponse'
+        default:
+          $ref: '#/components/responses/ErrorsData'
+  /deliverActivationCode:
+    post:
+      tags:
+        - Deliver Activation Code
+      summary: Used to deliver an Activation (authenticate) Code to authenticate the Account holder.
+      description: DeliverActivationCode is used to request an Activation Code be
+        sent to authenticate the Account holder to activate a token or authenticate cardholder post tokenization. MDES generates an Authentication Code
+        and delivers it, along with the chosen Code Distribution Method,
+        to the Issuer for transmission to the Account holder.  Alternately if the
+        Issuer wishes to generate the Code, MDES will deliver the chosen
+        Code Distribution Method to the Issuer and the Issuer will generate
+        the code and transmit it to the account holder. The Account holder
+        will then enter the Activation Code into the Mobile Payment App or Token Requestor interface. Once an Activation
+        Code has been generated, it will be valid for a limited period,
+        after which the code will expire. The Account holder may request
+        the Code again with the same or a different Code Distribution
+        Method.  This will trigger another request.
+      operationId: Deliver activation code
+      requestBody:
+        $ref: '#/components/requestBodies/DeliverActivationCodeRequest'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/DeliverActivationCodeResponse'
+        default:
+          $ref: '#/components/responses/ErrorsData'
+  /notifyServiceActivated:
+    post:
+      tags:
+        - Notify Service Activated
+      summary: Receive notifications that the provisioning and activation of a token.
+      description: NotifyServiceActivated is used to receive notifications that the
+        provisioning and activation of a token for a Funding Account has been completed
+        by the digitization service.
+      operationId: Notify service activated
+      requestBody:
+        $ref: '#/components/requestBodies/NotifyServiceActivatedRequest'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/NotifyServiceActivatedResponse'
+        default:
+          $ref: '#/components/responses/ErrorsData'
+  /authorizeService:
+    post:
+      tags:
+        - Authorize Service
+      summary: Requests an Issuer to authorize a Funding Account for a Mastercard service or set of services.
+      description: AuthorizeService requests an Issuer to authorize a Funding Account
+        for a Mastercard service or set of services.  Information about the service
+        request will be provided to assist with authorization of the account. If additional
+        authentication is required the Issuer may return a list of Activation Methods.  The
+        Activation Methods will be presented to the Account holder so they may select
+        their preferred delivery channel to receive an Activation Code.  If there
+        are no methods to return the field may be omitted.  This call is made as part
+        of the service activation flow and may be subject to strict time constraints
+        based on the service.
+      operationId: Authorize service
+      requestBody:
+        $ref: '#/components/requestBodies/AuthorizeServiceRequest'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthorizeServiceResponse'
+        default:
+          $ref: '#/components/responses/ErrorsData'
+  /notifyTokenUpdated:
+    post:
+      tags:
+        - Notify Token Updated
+      summary: Notify the Issuer of significant token updates, such as when the token is suspended, unsuspended or deleted or bound by the TAF/TAS service.
+      description: NotifyTokenUpdated is used by MDES to notify the Issuer of significant
+        token updates, such as when the token is suspended, unsuspended or deleted or bound by the TAF/TAS service;
+        or when information about the token or its product configuration has changed.
+        It may be triggered as a result of Service Provider update (for example, the
+        provider suspends or deletes the token), or if MDES changes the state of a
+        token. The state transition diagram used by MDES is presented in the figure
+        here (https://developer.mastercard.com/mdes-pre-digitization/documentation/api-basics/token_states_transition/)
+      operationId: Notify token updated
+      requestBody:
+        $ref: '#/components/requestBodies/NotifyTokenUpdatedRequest'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/NotifyTokenUpdatedResponse'
+        default:
+          $ref: '#/components/responses/ErrorsData'
+  /validateActivationCode:
+    post:
+      tags:
+        - Validate Activation Code
+      summary: Activate a Token for first-time use if the digitization decision was to ‘Require Additional Authentication’ in the Digitize response.
+      description: This API is used to activate a Token for first-time use if the
+        digitization decision was to ‘Require Additional Authentication’ in the Digitize
+        response. A Token may be activated via this API when activation is requested
+        with activationCode and Issuer have chosen the option to to generate and validate the code
+        self. If activation code validation is successful, MDES will complete the
+        provisioning process and will notify the Token Requestor when the Token is
+        ready to transact, using the Notify Token Updated API. Note that the user
+        is only given a limited number of attempts to enter a correct Activation Code
+        (typically 3 attempts), after which the Activation Code becomes invalid. In
+        this event, it may be possible to request a new Activation Code directly from
+        the Issuer via customer service or otherwise. This is dependent on individual
+        Issuer implementation and out of scope of this API.
+      operationId: Validate activation code
+      requestBody:
+        $ref: '#/components/requestBodies/ValidateActivationCodeRequest'
+
+      responses:
+        '200':
+          $ref: '#/components/responses/ValidateActivationCodeResponse'
+        default:
+          $ref: '#/components/responses/ErrorsData'
+  /getAccountInformation:
+    post:
+      tags:
+        - Get Account Information
+      summary: A transit agency requests information about a funding account from issuer for a Mastercard service or set of services.
+      description: Get Account Information requests an Issuer to return information
+        about a funding account for a Mastercard service or set of services. Balance
+        information and the status of the funding account can be returned by the transit
+        operator. Only applicable to transit operators.
+      operationId: Get account information
+      requestBody:
+        $ref: '#/components/requestBodies/GetAccountInformationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetAccountInformationResponse'
+        default:
+          $ref: '#/components/responses/ErrorsData'
+  /notifySuspiciousEvents:
+    post:
+      tags:
+        - Notify Suspicious Events
+      summary: Notifies issuers of any suspicious activities.
+      description: "This API aims to assist issuers with their risk management activities\
+        \ and detection of suspicious activity related to the use of digital wallets\
+        \ using MCBP technology. This API will notify issuers about suspicious activity\
+        \ that can be detected by MDES during MCBP replenishment process for a device-based\
+        \ Cloud token used in a digital wallet. \n<BR> Security is an important element\
+        \ of our digital strategy and MDES wants to assist Issuers making the right\
+        \ decision as part of their risk management allowing them to take any pro-active\
+        \ action through MDES Customer Service APIs/Portal, such as suspending a token.\n\
+        <ul> <li> This can be done without any delay while your Wallet Provider is\
+        \ investigating the case as Wallet Providers will also get the same notification\
+        \ message to help them investigating when these events occur.</li><li> We\
+        \ talk about suspicious activity as this can be an implementation issue on\
+        \ the wallet (or wallet server) and not necessarily a fraud case. </li></ul>\n\
+        <BR> Notification of suspicious activity is informative, and several actions\
+        \ are possible based on the strategy used by Issuers for their risk management:\
+        \ \n<ul><li>Issuers can wait for Wallet Providers to provide further details\
+        \ following analysis of the information. </li> <li> Issuers can suspend tokens\
+        \ anytime using MDES Customer Service APIs/Portal </li> </ul>\n"
+      operationId: Notify suspicious events
+      requestBody:
+        $ref: '#/components/requestBodies/NotifySuspiciousEventsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/NotifySuspiciousEventsResponse'
+        default:
+          $ref: '#/components/responses/ErrorsData'
+components:
+  requestBodies:
+    RequestActivationMethodsRequest:
+      required: true
+      description: Contains the details of the request message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/requestActivationMethodsRequestSchema'
+    DeliverActivationCodeRequest:
+      required: true
+      description: Contains the details of the request message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DeliverActivationCodeRequestSchema'
+    NotifyServiceActivatedRequest:
+      required: true
+      description: Contains the details of the request message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotifyServiceActivatedRequestSchema'
+    AuthorizeServiceRequest:
+      required: true
+      description: Contains the details of the request message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuthorizeServiceRequestSchema'
+    NotifyTokenUpdatedRequest:
+      required: true
+      description: Contains the details of the request message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotifyTokenUpdatedRequestSchema'
+          examples:
+            For TOKEN EXPIRY:
+              value:
+                requestId: "123456"
+                reasonCode: "REDIGITIZATION_COMPLETE"
+                tokens:
+                  - tokenUniqueReference: "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+                    tokenExpiry: "0726"
+                    fundingAccountInfo:
+                      encryptedPayload:
+                        encryptedData:
+                          dataValidUntilTimestamp: "2026-07-04T19:09:56.123Z"
+                          tokenData:
+                            token: "5345678901234521"
+                            expiryMonth: "07"
+                            expiryYear: "26"
+                            sequenceNumber: "01"
+                        publicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                        encryptedKey: "A1B2C3D4E5F611223344556678965434"
+                        oaepHashingAlgorithm: "SHA512"
+                        iv: "313233343536373839303132"
+                        algorithmCipherMode: "GCM"
+                        tag: "string"
+                        aad: "string"
+            For FPAN Update in Different Range:
+              value:
+                requestId: "123456"
+                reasonCode: "REDIGITIZATION_COMPLETE"
+                tokens:
+                  - tokenUniqueReference: "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+                    tokenExpiry: "0726"
+                    fundingAccountInfo:
+                      encryptedPayload:
+                        encryptedData:
+                          dataValidUntilTimestamp: "2026-07-04T19:09:56.123Z"
+                          tokenData:
+                            token: "5345678901234521"
+                            expiryMonth: "07"
+                            expiryYear: "26"
+                            sequenceNumber: "01"
+                        publicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                        encryptedKey: "A1B2C3D4E5F611223344556678965434"
+                        oaepHashingAlgorithm: "SHA512"
+                        iv: "313233343536373839303132"
+                        algorithmCipherMode: "GCM"
+                        tag: "string"
+                        aad: "string"
+            For FPAN Update in Same Range:
+              value:
+                requestId: "123456"
+                reasonCode: "FUNDING_ACCOUNT_UPDATE"
+                tokens:
+                  - tokenUniqueReference: "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+                    tokenExpiry: "0726"
+                    fundingAccountInfo:
+                      encryptedPayload:
+                        encryptedData:
+                          dataValidUntilTimestamp: "2026-07-04T19:09:56.123Z"
+                          cardAccountData:
+                            accountNumber: "5215678901236812"
+                            expiryMonth: "04"
+                            expiryYear: "28"
+                          tokenData:
+                            token: "5345678901234521"
+                            expiryMonth: "07"
+                            expiryYear: "26"
+                            sequenceNumber: "01"
+                        publicKeyFingerprint: "4c4ead5927f0df8117f178eea9308daa58e27c2b"
+                        encryptedKey: "A1B2C3D4E5F611223344556678965434"
+                        oaepHashingAlgorithm: "SHA512"
+                        iv: "313233343536373839303132"
+                        algorithmCipherMode: "GCM"
+                        tag: "string"
+                        aad: "string"
+            For Token Status Update:
+              value:
+                requestId: "123456"
+                reasonCode: "STATUS_UPDATE"
+                tokens:
+                  - tokenUniqueReference: "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+                    status: "SUSPENDED"
+                    suspendedBy:
+                      - "TOKEN_REQUESTOR"
+                    tokenExpiry: "0726"
+            For AUTHENTICATION_PERFORMED:
+              value:
+                requestId: "123456"
+                reasonCode: "AUTHENTICATION_PERFORMED"
+                tokens:
+                  - tokenUniqueReference: "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+                    tokenExpiry: "0726"
+            For DELETED_FROM_CONSUMER_APP:
+              value:
+                requestId: "123456"
+                reasonCode: "DELETED_FROM_CONSUMER_APP"
+                tokens:
+                  - tokenUniqueReference: "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+            For TOKEN_BINDING:
+              value:
+                requestId: "123456"
+                reasonCode: "TOKEN_BINDING"
+                tokens:
+                  - tokenUniqueReference: "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+                    authenticatorInfo:
+                      entityId: "A34BF"
+                      entityName: "Mastercard"
+                    certifiedMFAAuthMethodId: "A0112"
+                    bindId: "456776axjowe43-23239sd"
+                    bindingStatus: "ACTIVE"
+            For ACCOUNT_BINDING:
+              value:
+                requestId: "123456"
+                reasonCode: "ACCOUNT_BINDING"
+                tokens:
+                  - tokenUniqueReference: "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+                    authenticatorInfo:
+                      entityId: "A34BF"
+                      entityName: "Mastercard"
+                    certifiedMFAAuthMethodId: "A0112"
+                    bindId: "456776axjowe43-23239sd"
+                    bindingStatus: "ACTIVE"
+    ValidateActivationCodeRequest:
+      required: true
+      description: Contains the details of the request message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidateActivationCodeRequestSchema'
+    GetAccountInformationRequest:
+      required: true
+      description: Contains the details of the request message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/getAccountInformationRequestSchema'
+    NotifySuspiciousEventsRequest:
+      required: true
+      description: Contains the details of the request message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotifySuspiciousEventsRequestSchema'
+  responses:
+    RequestActivationMethodsResponse:
+      description: Contains the details of the response message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/requestActivationMethodsResponseSchema'
+    DeliverActivationCodeResponse:
+      description: Contains the details of the response message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DeliverActivationCodeResponseSchema'
+    NotifyServiceActivatedResponse:
+      description: Contains the details of the response message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotifyServiceActivatedResponseSchema'
+    AuthorizeServiceResponse:
+      description: Contains the details of the response message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuthorizeServiceResponseSchema'
+    NotifyTokenUpdatedResponse:
+      description: Contains the details of the response message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotifyTokenUpdatedResponseSchema'
+    ValidateActivationCodeResponse:
+      description: Contains the details of the response message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidateActivationCodeResponseSchema'
+    GetAccountInformationResponse:
+      description: Contains the details of the response message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/getAccountInformationResponseSchema'
+    NotifySuspiciousEventsResponse:
+      description: Contains the details of the response message.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotifySuspiciousEventsResponseSchema'
+    ErrorsData:
+      description: unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorsResponse'
+  schemas:
+    requestActivationMethodsRequestSchema:
+      required:
+        - correlationId
+        - fundingAccountInfo
+        - requestId
+        - services
+        - tokenType
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: The id of the request submitted. Max length - 64
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        services:
+          type: array
+          description: Array of services that are being requested for the account.
+            Must be one of ; DIGITIZATION = Provision the Funding Account to a device.
+            Max length - Not applicable. Type - Array[String].
+          items:
+            type: string
+            example: DIGITIZATION
+        fundingAccountInfo:
+          $ref: '#/components/schemas/fundingAccountInfoSchema1'
+        correlationId:
+          type: string
+          description: Value linking pre-digitization messages generated during provisioning.
+          minLength: 1
+          maxLength: 14
+          example: D98765432104
+        tokenRequestorId:
+          type: string
+          description: The party that requested the digitization. Type - String (Numeric). Conditional - Required if tokens are assigned by MDES.
+          minLength: 11
+          maxLength: 11
+          example: "12345678901"
+        walletId:
+          type: string
+          description: The identifier of the Wallet Provider who requested the digitization.
+            Only present when the token is provided to a Wallet Provider.
+          minLength: 1
+          maxLength: 3
+          example: "123"
+        paymentAppInstanceId:
+          type: string
+          description: The identifier of the payment App instance within a device
+            that will be provisioned with a token. Only present when supplied by a
+            Wallet Provider.
+          minLength: 1
+          maxLength: 48
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e
+        accountIdHash:
+          type: string
+          description: SHA-256 hash of the Account holder's account ID with the Payment
+            App Provider. Typically expected to be an email address. Type - String (Alpha-Numeric) Hex-encoded data (case-insensitive).
+          minLength: 1
+          maxLength: 64
+          example: 5ae9c9890b326bd23bfa9db9672298ae3b10a9388e56ec17a001e191f24572aa
+        mobileNumberSuffix:
+          type: string
+          description: The last few digits (typically four) of the device's mobile
+            phone number.
+          minLength: 4
+          maxLength: 32
+          example: "1234"
+        tokenType:
+          type: string
+          description: The type of token requested for this digitization. Valid values
+            are EMBEDDED_SE = Embedded Secure Element | CLOUD = Mastercard Cloud-Based
+            Payments | STATIC = Static token.
+          minLength: 1
+          maxLength: 16
+          example: CLOUD
+        reasonCodes:
+          type: array
+          description: |
+            The reason the account holder is being authenticated. New reason codes can be added at any time and should not result in a failure.
+            Possible push methods are:
+              * ADD_CARD:  The account holder is being authenticated in order to verify account ownership at the time of adding a card in token requestor system (Token might be in active state)
+              * VERIFY_ACCOUNT:  The account holder is being authenticated in order to verify account ownership to use a service
+              * TOKEN_BINDING: The account holder is being authenticated in order to bind the token with bind id as defined in TAF
+              * ACCOUNT_BINDING: The account holder is being authenticated in order to bind the card number or financial account (bank account) which is tokenized with bind id as defined in TAF.
+              * PAYMENT_TRANSACTION: the account holder is being authenticated in order to initiate payment transaction.
+              * OTHER:  The account holder is being authenticated for a reason not enumerated in this list.
+            Conditional - Only present for post tokenization authentication SCOF and TAF services
+          items:
+            type: string
+            example: ADD_CARD
+        consumerFacingEntityName:
+          type: string
+          description: Entity name that account holder recognizes as being where they
+            store their PAN (wallets, merchants, commerce platforms).
+          minLength: 1
+          maxLength: 100
+          example: My Merchant
+        deviceAcceptLanguage:
+          type: string
+          description: Language preference selected by the consumer. Formatted as an ISO-639-3 three-letter language code.
+          minLength: 3
+          maxLength: 3
+          example: eng
+        authRequestCorrelationId:
+          type: string
+          description: Value linking  different authentication requests/messages. Present for post-tokenization Authentication use cases only.
+          minLength: 1
+          maxLength: 64
+          example: "1234561234565432"
+        authenticatorInfo:
+          $ref: '#/components/schemas/authenticatorInfo'
+        bindId:
+          type: string
+          description: The unique and fixed identifier to a component of data bound to the credential. Present when reason code value is TOKEN_BINDING or ACCOUNT_BINDING
+          minLength: 1
+          maxLength: 48
+          example: "456776axjowe43-23239sd"
+        certifiedMFAAuthMethodId:
+          type: string
+          description: Mastercard certified multi-factor authentication method id that authenticator will use to authenticate cardholder for subsequent authentication after token or Account has been bound with given bind id. Present when reason code value is TOKEN_BINDING or ACCOUNT_BINDING
+          minLength: 1
+          maxLength: 5
+          example: "A0112"
+        deviceInfo:
+          $ref: '#/components/schemas/deviceInfo'
+        tokenRequestorDecisioningInfo:
+          $ref: '#/components/schemas/walletProviderDecisioningInfo'
+        paymentData:
+          $ref: '#/components/schemas/paymentData'
+        recentAuthenticationInfo:
+          $ref: '#/components/schemas/recentAuthenticationInfo'
+
+    fundingAccountInfoSchema1:
+      required:
+        - encryptedPayload
+      type: object
+      properties:
+        tokenUniqueReference:
+          type: string
+          description: A unique reference assigned following the allocation of a token used to identify the token for the duration of its lifetime. Note - It is required to be always present, even when an error occurs.
+          minLength: 1
+          maxLength: 64
+          example:  "DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532"
+        panUniqueReference:
+          type: string
+          description: Reference to the PAN that is unique per Wallet Provider.
+          minLength: 1
+          maxLength: 64
+          example: FWSPMC000000000159f71f703d2141efaf04dd26803f922b
+        encryptedPayload:
+          $ref: '#/components/schemas/encryptedPayloadIn'
+      description: Contains the information of the funding account to be tokenized or authenticated.
+        This could be a credit card, debit card, bank account, or other type of financial
+        account. The token information will also be included. Max length - Not applicable.
+        Type - FundingAccountInfo object.
+    encryptedPayloadIn:
+      required:
+        - encryptedData
+        - encryptedKey
+        - publicKeyFingerprint
+      type: object
+      properties:
+        encryptedData:
+          $ref: '#/components/schemas/fundingAccountDataSchema'
+        publicKeyFingerprint:
+          type: string
+          description: The fingerprint of the public key used to encrypt the ephemeral
+            AES key. Type - String Hex-encoded Data (case-insensitive).
+          minLength: 32
+          maxLength: 64
+          example: 4c4ead5927f0df8117f178eea9308daa58e27c2b
+        encryptedKey:
+          type: string
+          description: One-time use AES key encrypted by the Mastercard public key
+            (as identified by 'publicKeyFingerprint') using the OAEP or RSA Encryption
+            Standard PKCS 1 v1.5 (depending on the value of 'oaepHashingAlgorithm').
+            Requirement is for a 128-bit key (with 256-bit key supported as an option).
+            Max length - 512. Type - String Hex-encoded Data (case-insensitive).
+          minLength: 32
+          maxLength: 512
+          example: A1B2C3D4E5F611223344556678965434
+        oaepHashingAlgorithm:
+          type: string
+          description: Hashing algorithm used with the OAEP scheme. If omitted, then
+            the RSA Encryption Standard PKCS 1 v1.5 will be used. You must use one
+            of the following algorithms; SHA256 - Use the SHA-256 algorithm | SHA512
+            - Use the SHA-512 algorithm.
+          minLength: 6
+          maxLength: 6
+          example: SHA512
+        iv:
+          type: string
+          description: The initialization vector used when encrypting data using the
+            one-time use AES key. Must be exactly 12 bytes (24 character hex string)
+            when using GCM and 16 bytes (32 character hex string) when using CBC to
+            match the block size. If not present, an IV of zero is assumed.
+          minLength: 24
+          maxLength: 32
+          example: "313233343536373839303132"
+        algorithmCipherMode:
+          type: string
+          description: The AES cipher mode used for the encrypted data. Must be one of the following value:<br>CBC - When CBC cipher mode to be used<br>GCM - When GCM cipher mode to be used
+          minLength: 3
+          maxLength: 3
+          example: "GCM"
+        tag:
+          type: string
+          description: Tag to verify during data decryption. Required when algorithmCipherMode used is GCM, not present otherwise.
+          minLength: 1
+          maxLength: 36
+        aad:
+          type: string
+          description: Additional authentication data used in GCM mode. Hex-encoded data (case-insensitive). Required when algorithmCipherMode used is GCM, not present otherwise.
+          minLength: 1
+          maxLength: 36
+      description: Contains an encrypted object. Data Type - EncryptedPayload object
+        containing a FundingAccountData object. Max length - N/A.
+    fundingAccountDataSchema:
+      required:
+        - cardAccountData
+      type: object
+      properties:
+        source:
+          type: string
+          description: >
+            The source of this account information. Must be one of
+              - ACCOUNT_ON_FILE : Source was an existing account on file,
+              - ACCOUNT_ADDED_MANUALLY:  Source was a new account entered manually be the account holder,
+              - ACCOUNT_ADDED_VIA_APPLICATION: Source was new account added by another application (for example, Issuer banking app),
+              - EXISTING_TOKEN_CREDENTIAL: Source was an existing token.
+              - ACCOUNT_ADDED_VIA_BROWSER: Source was browser.
+              - ACCOUNT_ADDED_VIA_CHIP_DATA: Source is chip or contactless M/Chip
+          minLength: 1
+          maxLength: 32
+          example: ACCOUNT_ON_FILE
+        dataValidUntilTimestamp:
+          type: string
+          description: >
+            The date/time after which this encrypted object is considered invalid. If present, all systems must reject this encrypted object after this time and treat it as invalid data. Must be expressed in ISO 8601 extended format as one of the following:
+              - YYYY-MM-DDThh:mm:ss[.sss]Z
+              - YYYY-MM-DDThh:mm:ss[.sss]±hh:mm
+
+            Where [.sss] is optional and can be 1 to 3 digits. Must be a value no more than 30 days in the future. Mastercard recommends using a value of (Current Time + 30 minutes).
+          minLength: 20
+          maxLength: 29
+          example: 2026-07-04T12:09:56.123-07:00
+        cardAccountData:
+          $ref: '#/components/schemas/cardAccountDataSchema'
+        financialAccountData:
+          $ref: '#/components/schemas/financialAccountDataSchema'
+        tokenData:
+          $ref: '#/components/schemas/tokenDataSchema'
+        paymentAccountReference:
+          type: string
+          description: The unique account reference assigned to the PAN.
+          minLength: 29
+          maxLength: 29
+          example: 512381d9f8e0629211e3949a08002
+        sourceTokenNumber:
+          type: string
+
+          description: >
+            The source token account number used for the provision request. Conditional – required when a token is created from another token and sourceProvisioningData is present
+          minLength: 12
+          maxLength: 19
+          example: "54123467890123"
+        accountHolderData:
+          $ref: '#/components/schemas/accountHolderDataSchema'
+        chipData:
+          $ref: '#/components/schemas/chipDataSchema'
+      description: Contains an encrypted JSON object. Encrypted by the ephemeral AES
+        key using CBC mode (IV as provided in 'iv', or zero if none provided) and
+        PKCS#7 padding. The JSON object being encrypted will be defined in the context
+        of the API call. Max length - 256k.  Type - String Hex-encoded Data (case-insensitive).
+    cardAccountDataSchema:
+      required:
+        - accountNumber
+      type: object
+      description: The credit or debit card information for the account that is being
+        tokenized or authenticated. Conditional. Only present in the PAN update use case but requires to be opted in.
+      properties:
+        accountNumber:
+          type: string
+          description: The Primary Account Number of the card to be digitized or authenticated.
+          minLength: 9
+          maxLength: 19
+          example: "5412346789012345"
+        expiryMonth:
+          type: string
+          description: The month of the expiration date of the card to be digitized or authenticated.
+            Note that the expiry date may not be in the past. May be omitted if the
+            card does not have an expiry date.
+            (Numeric).
+          minLength: 2
+          maxLength: 2
+          example: "12"
+        expiryYear:
+          type: string
+          description: The year of the expiration date of the card to be digitized or authenticated.
+            Note that the expiry date may not be in the past. May be omitted if the
+            card does not have an expiry date.
+            (Numeric).
+          minLength: 2
+          maxLength: 2
+          example: "26"
+        securityCode:
+          type: string
+          description: The CVC2 for the card to be digitized, as entered by the Cardholder.
+            Verified as part of reaching the digitization decision.
+          minLength: 3
+          maxLength: 3
+          example: "123"
+    financialAccountDataSchema:
+      required:
+        - countryCode
+        - financialAccountId
+        - interbankCardAssociationId
+      type: object
+      description: The financial account information for the account that is being
+        tokenized. This could be a bank account or other type of financial account.
+        Max length - Not applicable. Conditional. Only present in the PAN update use case for Financial Account ID but requires to be opted in.
+      properties:
+        financialAccountId:
+          type: string
+          description: The identifier of the financial account being tokenized.  This
+            could be a bank account number or other types of financial accounts.
+          minLength: 9
+          maxLength: 64
+          example: "1123456789012345"
+        interbankCardAssociationId:
+          type: string
+          description: The id assigned by Mastercard to the financial institution.
+          minLength: 3
+          maxLength: 11
+          example: "1234"
+        countryCode:
+          type: string
+          description: The country of the financial account. Expressed as a 3-letter
+            (alpha-3) country code as defined in ISO 3166-1.
+          minLength: 3
+          maxLength: 3
+          example: GBR
+    tokenDataSchema:
+      required:
+        - expiryMonth
+        - expiryYear
+        - token
+      type: object
+      properties:
+        token:
+          type: string
+          description: The token issued for this service request.
+          minLength: 12
+          maxLength: 19
+          example: "5345678901234521"
+        expiryMonth:
+          type: string
+          description: The month of the expiration date.
+          minLength: 2
+          maxLength: 2
+          example: "10"
+        expiryYear:
+          type: string
+          description: The year of the expiration date.
+          minLength: 2
+          maxLength: 2
+          example: "26"
+        sequenceNumber:
+          type: string
+          description: Sequence number of the Token. Conditional – required in AuthorizeServiceResponseData.
+            Optional otherwise.
+          minLength: 2
+          maxLength: 2
+          example: "17"
+      description: The token information. Max length - Not applicable. Conditional
+        – required in NotifyServiceActivated, not present otherwise.
+    accountHolderDataSchema:
+      type: object
+      properties:
+        accountHolderName:
+          type: string
+          description: The name of the account holder in the format LASTNAME/FIRSTNAME
+            or FIRSTNAME LASTNAME . Max length - 27. Type - String.
+          minLength: 1
+          maxLength: 27
+          example: John Doe
+        accountHolderAddress:
+          $ref: '#/components/schemas/billingAddressSchema'
+        sourceIp:
+          type: string
+          description: The IP of the device initiating the request.
+          minLength: 7
+          maxLength: 64
+          example: 127.0.0.1
+        deviceLocation:
+          type: string
+          description: Latitude and longitude where the device the consumer is attempting
+            to authorize is located. In the format "(sign) latitude/(sign) longitude"
+            with a precision of 2 decimal places. Ex:"38.63/-90.2". Latitude is between
+            -90 and 90. Longitude between -180 and 180.
+          minLength: 1
+          maxLength: 64
+          example: 38.63/-90.2
+        consumerIdentifier:
+          type: string
+          description: Consumer Identifier provided by the token requestor. Not required – Optionally present in AuthorizeService
+            when provided by the wallet provider.
+          minLength: 1
+          maxLength: 88
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e93452c1b24f24a24b
+        accountHolderEmailAddress:
+          type: string
+          description: The email address of the account holder. Not required - Optionally present in pushAccount request.
+            Not present otherwise.
+          minLength: 6
+          maxLength: 320
+          example: abcdef@xyz.com
+        accountHolderMobilePhoneNumber:
+          $ref: '#/components/schemas/phoneNumberSchema'
+      description: Additional information that can be used to identify the account
+        holder, such as name, address, etc. Max length - Not applicable.
+    phoneNumberSchema:
+      type: object
+      properties:
+        countryDialInCode:
+          type: string
+          description: The country code for the phone number. E.g. 1 for US or 44 for UK.
+          minLength: 1
+          maxLength: 4
+          example: "1"
+        phoneNumber:
+          type: string
+          description: The phone number, may contain country code along with phone
+            number when countryDialInCode is not present.
+          minLength: 1
+          maxLength: 20
+          example: "4692392391"
+      description: The mobile phone number of the account holder. Not required.
+    billingAddressSchema:
+      type: object
+      properties:
+        line1:
+          type: string
+          description: First line of the billing address.
+          minLength: 1
+          maxLength: 64
+          example: 100 1st Street
+        line2:
+          type: string
+          description: Second line of the billing address.
+          minLength: 1
+          maxLength: 64
+          example: Apt. 4B
+        city:
+          type: string
+          description: The city of the billing address.
+          minLength: 1
+          maxLength: 32
+          example: St. Louis
+        countrySubdivision:
+          type: string
+          description: The country subdivision (for example, the state in the U.S.)
+            of the billing address.
+          minLength: 1
+          maxLength: 12
+          example: MO
+        postalCode:
+          type: string
+          description: The postal code (for example, zipcode in the U.S.) of the billing
+            address.
+          minLength: 1
+          maxLength: 16
+          example: "61000"
+        country:
+          type: string
+          description: The country of the billing address. Expressed as a 3-letter
+            (alpha-3) country code as defined in ISO 3166-1.
+          minLength: 3
+          maxLength: 3
+          example: USA
+      description: The address for the account holder. Verified as part of reaching
+        the digitization decision or post-tokenization authentication. Max length - Not applicable.
+    chipDataSchema:
+      type: object
+      description: Contains chipdata information. This parameter is present only when issuer supports Tap to Add Card and issuer has decided to receive and validate chip data by themselves.
+      required:
+        - track2Data
+        - panEntryMode
+        - iccSystemRelatedData
+      properties:
+        track2Data:
+          type: string
+          description: The track2Data of the card to be digitized. Contains Hex-encoded string.
+          minLength: 1
+          maxLength: 37
+          example: "ABC03443HF232005"
+        panEntryMode:
+          type: string
+          description: The method used for PAN entry to initiate the digitization
+          minLength: 1
+          maxLength: 4
+          example: "07"
+        iccSystemRelatedData:
+          type: string
+          description: The Account Primary Account Number of the card to be digitized. Contains Hex-encoded string.
+          minLength: 1
+          maxLength: 1024
+          example: "ABC03443HF232005"
+    chipDataValidationResult:
+      type: object
+      description: ChipDataValidationResult present only when issuer supports Tap to Add Card and issuer has decided to use Mastercard On-behalf service (OBS) for chip data validation.
+      required:
+        - OBSServiceIndicator
+        - OBSResult
+      properties:
+        OBSServiceIndicator:
+          type: string
+          description: The On-behalf Service indicator of the chipData validation
+          minLength: 1
+          maxLength: 2
+          example: "03"
+        OBSResult:
+          type: string
+          description: The On-behalf Service chipData validation result
+          minLength: 1
+          maxLength: 3
+          example: "V"
+    sourceProvisioningData:
+      type: object
+      description: Data related to the source token initiating the provisioning request of another token.
+      properties:
+        tokenUniqueReference:
+          type: string
+          description: A unique reference assigned after the allocation of a token. It is used to identify the token for the lifetime duration. Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL.
+          minLength: 1
+          maxLength: 64
+          example: "DWSPMC000000000132d72d4fcb2f4136a0532d3093ff1a45"
+        tokenRequestorId:
+          type: string
+          description: A unique identifier for a provisioned source token. Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL.
+          minLength: 11
+          maxLength: 11
+          example: "12345678901"
+        paymentAppInstanceId:
+          type: string
+          description: A unique identifier for a provisioned source token. Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL.
+          minLength: 1
+          maxLength: 48
+          example: "cGF5bWVudC1hcHAtaW5zdGFuY2UtMTIzNDU2"
+        tokenType:
+          type: string
+          description: >
+            The type of token requested for this digitization. Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL. Must be one of:
+              - EMBEDDED_SE - Embedded Secure Element
+              - CLOUD - Mastercard Cloud-Based Payments
+              - STATIC - Static token
+          minLength: 1
+          maxLength: 16
+          example: "CLOUD"
+        isoDeviceType:
+          type: string
+          description: The two digit device type provided on the ISO messages that the source token has been provisioned. Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL.
+          minLength: 1
+          maxLength: 2
+          example: "09"
+        tokenAssuranceLevel:
+          type: number
+          description: The assurance method assigned to the token. Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL.
+          minLength: 1
+          maxLength: 2
+          example: "1"
+        source:
+          type: string
+          description: >
+            The source of this account information. Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL. Must be one of:
+              - ACCOUNT_ON_FILE: Source was an existing account on file,
+              - ACCOUNT_ADDED_MANUALLY: Source was a new account entered manually be the account holder,
+              - ACCOUNT_ADDED_VIA_APPLICATION: Source was new account added by another application (for example, Issuer banking app),
+              - EXISTING_TOKEN_CREDENTIAL: Source was an existing token.
+              - ACCOUNT_ADDED_VIA_BROWSER: Source was browser.
+              - ACCOUNT_ADDED_VIA_CHIP_DATA: Source is chip or contactless M/Chip
+              - EXTERNAL_TOKEN_CREDENTIAL: Source was external account tokens provided for migration.
+          minLength: 1
+          maxLength: 32
+          example: "ACCOUNT_ON_FILE"
+        tokenActivatedDateTime:
+          type: string
+          description: >
+            Expressed in ISO 8601 extended format as one of the following
+              - YYYY-MM-DDThh:mm:ss[ .sss ]Z
+              - YYYY-MM-DDThh:mm:ss[ .sss ]±hh:mm, where [ .sss ] is optional and can be 1 to 3 digits.
+              Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL.
+          minLength: 20
+          maxLength: 29
+          example: "2026-07-04T12:09:57.123-07:00"
+        pushAccountReceipt:
+          type: string
+          description: >
+            A receipt returned from a pushAccount request.
+            It is used to retrieve financial account details.
+            When valid, it includes a 3‑character product prefix
+            followed by a UUID in the format prefix-UUID. Conditional – Only present when source is EXISTING_TOKEN_CREDENTIAL. Prefix values are:
+              - MCC (Mastercard Credit)
+              - DMC (Mastercard Debit)
+              - MSI (Maestro)
+              - PVL (Private Label)
+          minLength: 1
+          maxLength: 64
+          example: "MCC"
+    requestActivationMethodsResponseSchema:
+      type: object
+      required:
+        - responseId
+      properties:
+        responseId:
+          type: string
+          description: The id of the response sent.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        activationMethods:
+          type: array
+          description: The activation methods to be used for this digitization. Return
+            empty array if no methods are to be returned. Max length - Not applicable.
+            Type - Array [ActivationMethod]. Required.
+          items:
+            $ref: '#/components/schemas/activationMethod'
+        authenticationDecision:
+          type: string
+          description: "Issuer decision for post tokenization authentication decision. Supported Values \n * REQUIRE_ADDITIONAL_AUTHENTICATION -  Cardholder Authentication is required  \n * APPROVED: Requested use case approved and Cardholder Authentication is not required. \n * DECLINED: Requested use case is not approved."
+          minLength: 1
+          maxLength: 24
+          example: "REQUIRE_ADDITIONAL_AUTHENTICATION"
+    activationMethod:
+      required:
+        - type
+        - value
+      type: object
+      properties:
+        type:
+          type: string
+          description: "Specifies the activation method type to activate a token and authenticate cardholder after tokenization. \
+            \  Must be one of \n  * TEXT_TO_CARDHOLDER_NUMBER = Text message to Account\
+            \ holder's mobile phone number. Value will be the Account holder's masked\
+            \ mobile phone number\n  * EMAIL_TO_CARDHOLDER_ADDRESS = Email to Account\
+            \ holder's email address. Value will be the Account holder's masked email\
+            \ address\n  * CARDHOLDER_TO_CALL_AUTOMATED_NUMBER = Account holder-initiated\
+            \ call to automated call center phone number. Value will be the phone\
+            \ number for the Account holder to call \n  * CARDHOLDER_TO_CALL_MANNED_NUMBER\
+            \ = Account holder-initiated call to manned call center phone number.\
+            \ Value will be the phone number for the Account holder to call\n  * CARDHOLDER_TO_VISIT_WEBSITE\
+            \ =  Account holder to visit a website. Value will be the website URL\n\
+            \  * CARDHOLDER_TO_USE_MOBILE_APP = Account holder to use a specific mobile app\
+            \ Value will be replaced by a formatted string. \n\
+            \ Set Value as PUSH_NOTIFICATION if an issuer wants to support application that opens through push notification along  with Android intent and iOS deep link URL. PUSH_NOTIFICATION is not applicable for activating a device token, it is only applicable for Post-tokenization authentication.\n
+            \  * ISSUER_TO_CALL_CARDHOLDER_NUMBER = Issuer-initiated voice call to\
+            \ Account holder's phone. Value will be the Account holder's masked voice\
+            \ call phone number. \n
+            \ * EMV_3DS  = Identity check using EMV 3DS will be used to authenticate the cardholder. Value will be replace by 3DS URL \
+            \ * PUSH_NOTIFICATION_TO_MOBILE_APP = Push Notification to mobile app instance of cardholder to receive authentication code, it is only applicable for Post-tokenization authentication."
+
+          minLength: 1
+          maxLength: 64
+          example: CARDHOLDER_TO_CALL_AUTOMATED_NUMBER
+        value:
+          type: string
+          description: Specifies the activation method value (meaning varies depending
+            on the activation method type).
+          minLength: 1
+          maxLength: 64
+          example: 1-800-BANK-NUMBER
+      description: The activation methods to be used for this digitization.
+    DeliverActivationCodeRequestSchema:
+      required:
+        - activationMethod
+        - correlationId
+        - requestId
+        - tokenUniqueReference
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: The id of the request submitted. Max length - 64
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        tokenUniqueReference:
+          type: string
+          description: A unique reference assigned following the allocation of a token
+            used to identify the token for the duration of its lifetime.
+          minLength: 1
+          maxLength: 64
+          example: DWSPMC000000000132d72d4fcb2f4136a0532d3093ff1a45
+        correlationId:
+          type: string
+          description: Value linking pre-digitization messages generated during provisioning.
+          minLength: 1
+          maxLength: 14
+          example: D98765432104
+        activationCode:
+          type: string
+          description: The Activation Code to be distributed for the digitization or post-tokenization authentication. Conditional - only present if Mastercard generates the activationCode.
+          minLength: 1
+          maxLength: 32
+          example: A1B2C3D4
+        expirationDateTime:
+          type: string
+          description: The DateTime when the Activation Code is no longer valid. Expressed
+            in ISO 8601 extended format as one of the following - YYYY-MM-DDThh:mm:ss[
+            .sss ]Z , YYYY-MM-DDThh:mm:ss[ .sss ]±hh:mm , Where [ .sss ] is optional
+            and can be 1 to 3 digits. Conditional
+            - only present if Mastercard generates the activationCode.
+          minLength: 20
+          maxLength: 29
+          example: 2026-07-04T12:08:56.123-07:00
+        activationMethod:
+          $ref: '#/components/schemas/activationMethod'
+        reasonCodes:
+          type: array
+          description: |
+            The reason the account holder is being authenticated.  The reason could impact the generation and validation of the code in a number of ways including but not limited to the time period of validity of the code and the number of attempts allowed to validate the code. New reason codes can be added at any time and should not result in a failure.
+            Possible push methods are:
+              * ADD_CARD:  The account holder is being authenticated after adding the card to the token requestor
+              * VERIFY_ACCOUNT:  The account holder is being authenticated in order to verify account ownership.
+              * TOKEN_BINDING: The account holder is being authenticated in order to bind the token with bind id as defined in TAF
+              * ACCOUNT_BINDING: The account holder is being authenticated in order to bind the card number or financial account (bank account) which is tokenized with bind id as defined in TAF.
+              * PAYMENT_TRANSACTION: the account holder is being authenticated in order to initiate payment transaction.
+              * OTHER:  The account holder is being authenticated for a reason not enumerated in this list.
+            Conditional - Only present for Post-tokenization authentication for SCOF and TAF Service
+          items:
+            type: string
+            example: ADD_CARD
+        consumerFacingEntityName:
+          type: string
+          description: Entity name that account holder recognizes as being where they
+            store their PAN (wallets, merchants, commerce platforms…).
+          minLength: 1
+          maxLength: 100
+          example: My Merchant
+        authRequestCorrelationId:
+          type: string
+          description: Value linking between different authentication requests/messages, Only present for Post-tokenization authentication for SCOF and TAF Service
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        deviceInfo:
+          $ref: '#/components/schemas/deviceInfo'
+    DeliverActivationCodeResponseSchema:
+      required:
+        - responseId
+      type: object
+      properties:
+        responseId:
+          type: string
+          description: The id of the response returned.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+    NotifyServiceActivatedRequestSchema:
+      required:
+        - accountPanSuffix
+        - correlationId
+        - decision
+        - fundingAccountInfo
+        - requestId
+        - serviceRequestDateTime
+        - services
+        - tokenActivatedDateTime
+        - tokenRequestorId
+        - tokenType
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: The id of the request submitted. Max length - 64
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        services:
+          type: array
+          description: Array of services that are being requested for the account.
+            Must be one of ; DIGITIZATION = Provision the Funding Account to a device.
+            Max length - Not applicable. Type - Array [String].
+          items:
+            type: string
+            example: DIGITIZATION
+        fundingAccountInfo:
+          $ref: '#/components/schemas/fundingAccountInfoSchema2'
+        deviceInfo:
+          $ref: '#/components/schemas/deviceInfo'
+        correlationId:
+          type: string
+          description: Value linking pre-digitization messages generated during provisioning.
+          minLength: 1
+          maxLength: 14
+          example: D98765432104
+        tokenRequestorId:
+          type: string
+          description: The party that requested the digitization. Type - String (Numeric).
+          minLength: 11
+          maxLength: 11
+          example: "12345678901"
+        walletId:
+          type: string
+          description: The identifier of the Wallet Provider who requested the digitization.
+            Only present when the token is provided to a Wallet Provider.
+          minLength: 1
+          maxLength: 3
+          example: "123"
+        paymentAppInstanceId:
+          type: string
+          description: The identifier of the Payment App instance within a device
+            that will be provisioned with a token. Only present when supplied by a
+            Wallet Provider. Max length - 48. Type - String.
+          minLength: 1
+          maxLength: 48
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e
+        tokenType:
+          type: string
+          description: The type of token requested for this digitization. Valid values
+            are - EMBEDDED_SE = Embedded Secure Element | CLOUD = Mastercard Cloud-Based
+            Payments | STATIC = Static token.
+          minLength: 1
+          maxLength: 16
+          example: CLOUD
+        secureElementId:
+          type: string
+          description: The identifier of the Secure Element to be provisioned with
+            the token. Present only when the token is provisioned to a Secure Element
+            and when provided by the Wallet Provider.
+          minLength: 1
+          maxLength: 128
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e93452c
+        accountPanSuffix:
+          type: string
+          description: The last few digits (typically four) of the Account PAN being
+            digitized.
+          minLength: 4
+          maxLength: 8
+          example: "1234"
+        serviceRequestDateTime:
+          type: string
+          description: The date and time the service for the PAN was requested. Expressed
+            in ISO 8601 extended format as one of the following - YYYY-MM-DDThh:mm:ss[
+            .sss ]Z, YYYY-MM-DDThh:mm:ss[ .sss ]±hh:mm . Where [ .sss ] is optional
+            and can be 1 to 3 digits.
+          minLength: 20
+          maxLength: 29
+          example: 2023-07-04T12:08:56.123-07:00
+        termsAndConditionsAssetId:
+          type: string
+          description: The Terms and Conditions as presented to and accepted by the
+            Account holder.
+          minLength: 1
+          maxLength: 64
+          example: a9f027e5-629d-11e3-949a-0800200c9a66
+        termsAndConditionsAcceptedTimestamp:
+          type: string
+          description: The date and time the Terms and Conditions were accepted by
+            the Account holder. Expressed in ISO 8601 extended format as one of the
+            following - YYYY-MM-DDThh:mm:ss[ .sss ]Z, YYYY-MM-DDThh:mm:ss[ .sss ]±hh:mm
+            . Where [ .sss ] is optional and can be 1 to 3 digits.
+          minLength: 20
+          maxLength: 29
+          example: 2023-07-04T12:09:56.123-07:00
+        productConfigurationId:
+          type: string
+          description: Freeform identifier for the product configuration as assigned
+            by the Issuer.
+          minLength: 1
+          maxLength: 64
+          example: "1234"
+        consumerLanguage:
+          type: string
+          description: Language preference selected by the consumer. Formatted as
+            an ISO-639-1 two-letter language code.
+          minLength: 2
+          maxLength: 2
+          example: en
+        decision:
+          type: string
+          description: The authorization decision for the service request. Must be
+            one of - APPROVED = Service request was approved, REQUIRE_ADDITIONAL_AUTHENTICATION
+            = Service request requires additional authentication to be approved. One
+            or more Activation Methods will be provided.
+          minLength: 1
+          maxLength: 64
+          example: REQUIRE_ADDITIONAL_AUTHENTICATION
+        decisionMadeBy:
+          type: string
+          description: The process that determined the final authorization decision
+            for the request. Must be one of -
+            * ELIGIBILITY_REQUEST = The decision was
+            made by the eligibility request to the Issuer
+            * AUTHORIZATION_REQUEST =
+            The decision was made by the authorization request to the Issuer
+            * RULES
+            = The decision was made by the rule engine.
+          minLength: 1
+          maxLength: 32
+          example: RULES
+        tokenActivatedDateTime:
+          type: string
+          description: Expressed in ISO 8601 extended format as one of the following
+            - YYYY-MM-DDThh:mm:ss[ .sss ]Z, YYYY-MM-DDThh:mm:ss[ .sss ]±hh:mm, Where
+            [ .sss ] is optional and can be 1 to 3 digits.
+          minLength: 20
+          maxLength: 29
+          example: 2026-07-04T12:09:57.123-07:00
+        numberOfActivationAttempts:
+          type: integer
+          description: The number of times an Activation Code was received to activate
+            the token. Max length - 1. Type - Number.
+          minLength: 1
+          maxLength: 1
+          example: 1
+        numberOfActiveTokens:
+          type: integer
+          description: The number of active tokens for the Funding Account. Valid
+            values are 0 to 99. A value of 99 means there are 99 or more active tokens.
+            Tokens that have been deleted from the wallet are excluded from the count.
+          minLength: 1
+          maxLength: 2
+          example: 2
+        tokenAssuranceLevel:
+          type: integer
+          description: The assurance method assigned to the token.
+            Type - Number.
+          minLength: 1
+          maxLength: 2
+          example: 1
+        consumerFacingEntityName:
+          type: string
+          description: Entity name that account holder recognizes as being where they
+            store their PAN (wallets, merchants, commerce platforms…).
+          minLength: 1
+          maxLength: 100
+          example: My Merchant
+    fundingAccountInfoSchema2:
+      required:
+        - encryptedPayload
+      type: object
+      properties:
+        panUniqueReference:
+          type: string
+          description: Reference to the PAN that is unique per Wallet Provider.
+          minLength: 1
+          maxLength: 64
+          example: FWSPMC000000000159f71f703d2141efaf04dd26803f922b
+        tokenUniqueReference:
+          type: string
+          description: A unique reference assigned following the allocation of a token
+            used to identify the token for the duration of its lifetime. Conditional - Required in NotifyServiceActivated.
+            Not present otherwise.
+          minLength: 1
+          maxLength: 64
+          example: DWSPMC000000000132d72d4fcb2f4136a0532d3093ff1a45
+        encryptedPayload:
+          $ref: '#/components/schemas/encryptedPayloadIn'
+      description: Contains the information of the funding account to be tokenized.
+        This could be a credit card, debit card, bank account, or other type of financial
+        account. The token information will also be included. Max length - Not applicable.
+        Type - FundingAccountInfo object.
+    deviceInfo:
+      description: Contain device information where card is digitized during the tokenization use case or cardholder is being authenticated for post-tokenization authentication.
+      type: object
+      properties:
+        deviceName:
+          type: string
+          description: The name that the account holder has associated to the device with the payment app provider.
+          minLength: 1
+          maxLength: 64
+          example: My Phone
+        serialNumber:
+          type: string
+          description: The serial number of the device. May be masked.
+          minLength: 1
+          maxLength: 64
+          example: 2F6D63
+        formFactor:
+          type: string
+          description: |
+            The form factor of the device to be provisioned. New values can be added without notice and should be accpeted.
+            Must be one of:
+              * PHONE: Mobile phone
+              * TABLET: Tablet computer
+              * TABLET_OR_EREADER: Tablet computer or e-reader
+              * WATCH: Watch
+              * WATCH_OR_WRISTBAND: Watch or wristband, including a fitness band, smart strap, disposable band, watch add-on, security/ ID Band
+              * CARD: Card
+              * STICKER: Sticker
+              * PC: PC or Laptop
+              * DEVICE_PERIPHERAL: Device peripherals, such as a mobile phone case or sleeve
+              * TAG: Tag such as a key fob or mobile tag
+              * JEWELRY: Jewelry, such as a ring, bracelet, necklace and cuff links
+              * FASHION_ACCESSORY: Fashion accessory, such as a handbag, bag charm, glasses, GARMENT = Garment, such as a dress
+              * DOMESTIC_APPLIANCE: Domestic appliance, such as a refrigerator, washing machine
+              * VEHICLE: Vehicle including vehicle attached devices
+              * MEDIA_OR_GAMING_DEVICE: Media or gaming device, including a set top box, media player, television
+              * UNDEFINED: Device type that is not yet defined. Used for wallets introducing a new device type that is not yet public knowledge
+              * VIRTUAL_REALITY_HEADSET: Virtual Reality Headset devices
+          minLength: 1
+          maxLength: 64
+          example: PHONE
+        isoDeviceType:
+          type: string
+          description: The 2 digit device type provided on the iso messages that the
+            token is being provisioned to. Only present when provided by a Wallet
+            Provider. See Global Communication bulletins for values.
+          minLength: 1
+          maxLength: 2
+          example: 09
+        osName:
+          type: string
+          description: |
+            The name of the device operating system.
+            Must be one of:
+              * ANDROID: Google Android operating system
+              * WINDOWS: Microsoft Windows operating system
+              * TIZEN: Tizen operating system
+              * IOS: Apple iOS operating system
+              * PAGARE_EMBEDDED_OS: FitPay embedded operating system
+              * ANDROID_WEAR: Android wear operating system
+              * EMBEDDED_OS: All embedded and real time operating systems
+          minLength: 1
+          maxLength: 32
+          example: ANDROID
+        osVersion:
+          type: string
+          description: The version of the device operating system.
+          minLength: 1
+          maxLength: 32
+          example: 4.4.4
+        imei:
+          type: string
+          description: The IMEI number of the device being provisioned.
+          minLength: 15
+          maxLength: 15
+          example: 352099001761481
+        msisdn:
+          type: string
+          description: The MSISDN of the device being provisioned.
+          minLength: 1
+          maxLength: 15
+          example: 7307406945
+        paymentTypes:
+          type: array(string)
+          description: |
+            Different types of Payments supported for the token. Must be one of:
+              * NFC: The token is NFC capable
+              * DSRP: The token is DSRP capable
+              * ECOMMERCE: The token can be used for e-commerce transactions
+          minLength: 1
+          maxLength: NA
+          example: NFC
+        storageTechnology:
+          type: string
+          description: |
+            The architecture or technology used for token storage.
+            Must be one of:
+              * DEVICE_MEMORY: Device memory
+              * DEVICE_MEMORY_PROTECTED_TPM: Device memory using a protected trust platform module
+              * TEE: Trusted execution environment
+              * SE: Secure element
+              * SERVER: Server host
+              * VEE: Virtual Execution Environment
+          minLength: 1
+          maxLength: 32
+          example: SE
+        cardCaptureTechnology:
+          type: string
+          description: |
+            The technology used to capture the card details. New values
+            can be added at any time and must not result in an error.
+            Must be one of:
+              * CAMERA: The card details were captured using the device camera
+              * MANUAL: The card details were manually entered
+              * UNKNOWN: It is not known how the card details were entered
+              * READER_MODE: The card details were captured using reader mode
+          minLength: 1
+          maxLength: 32
+          example: CAMERA
+    NotifyServiceActivatedResponseSchema:
+      type: object
+      required:
+        - responseId
+      properties:
+        responseId:
+          type: string
+          description: The Id of the response returned.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+    AuthorizeServiceRequestSchema:
+      required:
+        - correlationId
+        - fundingAccountInfo
+        - requestId
+        - services
+        - tokenType
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: The id of the request submitted. Max length - 64
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        services:
+          type: array
+          description: Array of services that are being requested for the account.
+            Must be one of ; DIGITIZATION = Provision the Funding Account to a device.
+            Max length - not applicable. Type - Array[String].
+          items:
+            type: string
+            example: DIGITIZATION
+        fundingAccountInfo:
+          $ref: '#/components/schemas/fundingAccountInfoSchema1'
+        correlationId:
+          type: string
+          description: Value linking pre-digitization messages generated during provisioning.
+          minLength: 1
+          maxLength: 14
+          example: D98765432104
+        tokenRequestorId:
+          type: string
+          description: The party that requested the digitization. Type - String (Numeric). Conditional - Required if tokens are
+            assigned by MDES.
+          minLength: 11
+          maxLength: 11
+          example: "12345678901"
+        walletId:
+          type: string
+          description: The identifier of the Wallet Provider who requested the digitization.
+            Only present when the token is provided to a Wallet Provider.
+          minLength: 1
+          maxLength: 3
+          example: "123"
+        paymentAppInstanceId:
+          type: string
+          description: The identifier of the Payment App instance within a device
+            that will be provisioned with a token. Only present when supplied by a
+            Wallet Provider.
+          minLength: 1
+          maxLength: 48
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e
+        accountIdHash:
+          type: string
+          description: SHA-256 hash of the Account holder's account ID with the Payment
+            App Provider. Typically expected to be an email address. Type - string (Alpha Numeric) Hex-encoded data (case-insensitive).
+          minLength: 1
+          maxLength: 64
+          example: 5ae9c9890b326bd23bfa9db9672298ae3b10a9388e56ec17a001e191f24572aa
+        mobileNumberSuffix:
+          type: string
+          description: The last few digits (typically four) of the device's mobile
+            phone number.
+          minLength: 4
+          maxLength: 32
+          example: "1234"
+        activeTokenCount:
+          type: string
+          description: The number of active tokens that already exist for the Funding
+            Account based on the token type. Secure Element and Cloud tokens are counted
+            together. Valid values are 0 to 99. A value of 99 means there are 99 or
+            more active tokens. Tokens that have been deleted from the wallet are
+            excluded from the count. Max length - 2. Type - String (Numeric).
+          minLength: 1
+          maxLength: 2
+          example: "3"
+        deviceInfo:
+          $ref: '#/components/schemas/deviceInfo'
+        walletProviderDecisioningInfo:
+          $ref: '#/components/schemas/walletProviderDecisioningInfo'
+        tokenType:
+          type: string
+          description: The type of token requested for this digitization. Valid values
+            are EMBEDDED_SE = Embedded Secure Element | CLOUD = Mastercard Cloud-Based
+            Payments | STATIC = Static token.
+          minLength: 1
+          maxLength: 16
+          example: CLOUD
+        consumerFacingEntityName:
+          type: string
+          description: Entity name that account holder recognizes as being where they
+            store their PAN (wallets, merchants, commerce platforms…).
+          minLength: 1
+          maxLength: 100
+          example: My Merchant
+        chipDataValidationResult:
+          $ref: '#/components/schemas/chipDataValidationResult'
+        panSequenceNumber:
+          type: string
+          description: The pan sequence number for the card.  Acceptable values are in the range 000 – 099. present only if chip data is present in the encryption payload.
+          minLength: 3
+          maxLength: 3
+          example: "001"
+        virtualCardNumberIdentifier:
+          type: string
+          description: The opaque identifier for the virtual card number being tokenized.
+          minLength: 1
+          maxLength: 100
+          example: 12340023ABD134
+        deviceAcceptLanguage:
+          type: string
+          description: Language preference selected by the consumer. Formatted as an ISO-639-3 three-letter language code.
+          minLength: 3
+          maxLength: 3
+          example: eng
+        accountStatusInquirySentFor:
+          type: string
+          description: |
+            Indicates if the chip data and PIN data are sent on ASI ISO when issuer has opted ASI ISO for specific data validation.
+            Conditionaly present when tokenization is requested with chip data and PIN and when issuer has opted to validate chip and PIN data on ASI ISO, not present otherwise. Must be one of the following:
+               * CHIP_AND_PIN = Chip data and PIN data
+          minLength: 1
+          maxLength: 32
+          example: CHIP_AND_PIN
+        sourceProvisioningData:
+          $ref: '#/components/schemas/sourceProvisioningData'
+        provisioningContext:
+          type: string
+          description: >
+            Indicates the contextual information for a provisioning request which is applicable to device wallets. Valid values are:
+              * ADP (Authorized Device Provisioning): The wallet authenticates the user on both devices before initiating the tokenization request. The wallet shares existing token information as account data.
+              * MDP (Multi Device Provisioning): After provisioning to one device, the cardholder requests to push the same account to additional devices. The wallet shares existing token information as account data.
+          minLength: 3
+          maxLength: 10
+          example: ADP
+    walletProviderDecisioningInfo:
+      type: object
+      properties:
+        recommendedDecision:
+          type: string
+          description: The decision recommended by the Wallet Provider. Must be one
+            of; APPROVED = Services request was approved, DECLINED = Services request
+            was declined, REQUIRE_ADDITIONAL_AUTHENTICATION = Services request requires
+            additional authentication to be approved.
+          minLength: 1
+          maxLength: 64
+          example: REQUIRE_ADDITIONAL_AUTHENTICATION
+        recommendationStandardVersion:
+          type: string
+          description: The standards version used by the Wallet Provider to determine
+            the recommended decision.
+          minLength: 1
+          maxLength: 64
+          example: 1.0.0
+        deviceScore:
+          type: string
+          description: Score given to the device by the Wallet Provider. Value between
+            1 and 5.
+          minLength: 1
+          maxLength: 64
+          example: "3"
+        accountScore:
+          type: string
+          description: Score given to the account by the Wallet Provider. Value between
+            1 and 5.
+          minLength: 1
+          maxLength: 64
+          example: "4"
+        phoneNumberScore:
+          type: string
+          description: Score given to the phone number by the Wallet Provider. Value
+            between 1 and 5.
+          minLength: 1
+          maxLength: 64
+          example: "4"
+        accountLifeTime:
+          type: string
+          description: The lifetime of the account with the Token Requestor. Vale is in months.
+          minLength: 1
+          maxLength: 2
+          example: "4"
+        recommendationReasons:
+          type: array
+          description: Reasons provided to the Wallet Provider on how the recommended
+            decision was reached.  Please refer to "Reason Codes" tab for all eligible
+            values. Max length - Not applicable. Type - Array [String].
+          items:
+            type: string
+            example: ACCOUNT_TOO_NEW
+      description: Contains information about the decision recommended by the Wallet
+        Provider. Max length - Not applicable. Type - Map (DecisioningInfo).
+    AuthorizeServiceResponseSchema:
+      type: object
+      required:
+        - responseId
+      properties:
+        responseId:
+          type: string
+          description: The Id of the response returned.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        services:
+          type: array
+          description: Array of services for the account that the authorization decision
+            applies to. Must be a subset of the services in the request object. Services
+            that are not approved for the account will be omitted. Possible values
+            are; DIGITIZATION = Provision the Funding Account to a device. Max length
+            - Not applicable.  Type - Array[String]. Required.
+          items:
+            type: string
+            example: DIGITIZATION
+        decision:
+          type: string
+          description: The authorization decision for the authorization of the requested
+            services. Must be one of ; APPROVED = Services request was approved, DECLINED
+            = Services request was declined, REQUIRE_ADDITIONAL_AUTHENTICATION = Services
+            request requires additional authentication to be approved. One or more
+            ActivationMethods may be provided.
+          minLength: 1
+          maxLength: 64
+          example: REQUIRE_ADDITIONAL_AUTHENTICATION
+        activationMethods:
+          type: array
+          description: The activation methods to be used for this digitization. Return
+            empty array if no methods are to be returned. Max length - Not applicable.
+            Type - Array [ActivationMethod]. Optional.
+          items:
+            $ref: '#/components/schemas/activationMethod'
+        panSequenceNumber:
+          type: string
+          description: The pan sequence number for the card. Acceptable values are
+            in the range 000-099.
+          minLength: 3
+          maxLength: 3
+          example: "001"
+        issuerProductConfigId:
+          type: string
+          description: The unique Issuer identifier assigned to the product configuration
+            in MDES Manager. It is provided for the Digitization service only.
+          minLength: 1
+          maxLength: 10
+          example: I1234D7890
+        encryptedPayload:
+          $ref: '#/components/schemas/EncryptedPayloadOut'
+        cvcResponse:
+          type: string
+          description: The result of the CVC2 validation performed against the value
+            provided by the Account holder. Must be one of ; MATCH = Valid CVC2, INVALID
+            = Invalid CVC2, NOT_PROCESSED = CVC2 was not processed (issuer temporarily
+            unavailable).
+          minLength: 1
+          maxLength: 32
+          example: MATCH
+        avsResponse:
+          type: string
+          description: The result of the address validation performed against the
+            values provided by the Account holder. Must be one of ; POSTAL_DOES_NOT_MATCH
+            = Address matches, postal code does not, ADDRESS_AND_POSTAL_DO_NOT_MATCH
+            = Neither address nor postal code matches, RETRY = Retry, system unable
+            to process, AVS_NOT_SUPPORTED = AVS currently not supported, NO_DATA =
+            No data from issuer/Authorization Platform, ADDRESS_DOES_NOT_MATCH = W
+            - For U.S. addresses, nine-digit postal code matches, address does not;
+            for address outside the U.S., postal code matches, address does not, ADDRESS_AND_POSTAL_MATCH
+            = X - For U.S. addresses, nine-digit postal code and address matches;
+            for addresses outside the U.S., postal code and address match; US5_ADDRESS_AND_POSTAL_MATCH
+            = Y - For U.S. addresses, five-digit postal code and address matches,
+            US5_ ADDRESS_DOES_NOT_MATCH = Z - For U.S. addresses, five-digit postal
+            code matches, address does not.
+          minLength: 1
+          maxLength: 32
+          example: ADDRESS_AND_POSTAL_MATCH
+        tokenRequestorId:
+          type: string
+          description: The party that requested the digitization. Type - String (Numeric). Conditional - Required if tokens are assigned by external provider, not present otherwise.
+          minLength: 11
+          maxLength: 11
+          example: "12345678901"
+        tcis:
+          type: array
+          description: Terminal Capability Identifier. This parameter is defined as
+            an array of strings designating the primary city or cities where the transit
+            solution will operate. Max length - Not applicable. Type - Array [String].
+            Optional.
+          items:
+            type: string
+            example: New York
+        auxTcis:
+          type: array
+          description: auxiliary Terminal Capability Identifier. This parameter is
+            defined as an array of strings designating an additional city or cities
+            where the transit solution will operate. Max length - Not applicable.
+            Type - Array [String]. Optional.
+          items:
+            type: string
+            example: Chicago
+        chipDataValidationResponse:
+          type: string
+          description: The Issuer validated chipData validation result code. Must present if issuer is validating chip data. Must be one of ; VALID = Chip data provided is valid, INVALID
+            = Chip data provided is not valid, NOT_PROCESSED = Unable to process Chip data validation (issuer temporarily unavailable).
+          minLength: 1
+          maxLength: 32
+          example: "VALID"
+        merchantAdviceCode:
+          type: string
+          description: Indicator to notify the merchant whether the Issuer VCN is intended for single or multiple use in the payment transaction. Must be one of the following
+            SINGLE USE =  Consumer single-use virtual card number
+            MULTI  USE  = Consumer multi-use virtual card number
+          minLength: 1
+          maxLength: 32
+          example: "SINGLE USE"
+        declineReasonCode:
+          type: string
+          description: >
+            Reason for declining a tokenization request as described below:
+              - LOST: The card has been lost.
+              - EXPIRED: The card is expired.
+              - RESTRICTED: The account or card is currently restricted.
+              - SEC_VIOLATION: A security violation has been detected.
+              - CRYPTO_FAIL: Cryptogram validation for the account failed.
+              - UNACCEPTABLE_PIN: The entered PIN is not acceptable.
+              - EXCEEDS_PIN_TRIES: The maximum number of PIN attempts has been exceeded.
+              - STOLEN: The card has been reported stolen.
+              - INVAL_CARD: The card is invalid.
+              - CLOSED_ACCOUNT: The account is closed.
+              - INVAL_ACCT: The account is invalid.
+              - INVAL_PIN: The PIN entered is invalid.
+              - RCVR_NOTPERM: The token authorization is not permitted.
+              - SNDR_NOTPERM: The token requestor is not permitted.
+              - EXCEEDS_CNT: Validation attempts exceeded.
+              - DO_NOT_HONOR: None of the above.
+          minLength: 1
+          maxLength: 64
+          example: "LOST"
+    EncryptedPayloadOut:
+      required:
+        - encryptedData
+        - encryptedKey
+        - publicKeyFingerprint
+      type: object
+      properties:
+        publicKeyFingerprint:
+          type: string
+          description: The fingerprint of the public key used to encrypt the ephemeral
+            AES key. Max length - 64. Type - String Hex-encoded Data (case-insensitive).
+            Required - Yes.
+          minLength: 32
+          maxLength: 64
+          example: 4c4ead5927f0df8117f178eea9308daa58e27c2b
+        encryptedKey:
+          type: string
+          description: One-time use AES key encrypted by the Mastercard public key
+            (as identified by 'publicKeyFingerprint') using the OAEP or RSA Encryption
+            Standard PKCS 1 v1.5 (depending on the value of 'oaepHashingAlgorithm').
+            Requirement is for a 128-bit key (with 256-bit key supported as an option).
+            Data Type - String. Hex-encoded data (case-insensitive).
+          minLength: 32
+          maxLength: 512
+          example: A1B2C3D4E5F611223344556678965434
+        oaepHashingAlgorithm:
+          type: string
+          description: Hashing algorithm used with the OAEP scheme. If omitted, then
+            the RSA Encryption Standard PKCS 1 v1.5 will be used. You must use one
+            of the following algorithms; SHA256 - Use the SHA-256 algorithm | SHA512
+            - Use the SHA-512 algorithm.
+          minLength: 6
+          maxLength: 6
+          example: SHA512
+        iv:
+          type: string
+          description: The initialization vector used when encrypting data using the
+            one-time use AES key. Must be exactly 12 bytes (24 character hex string)
+            when using GCM and 16 bytes (32 character hex string) when using CBC to
+            match the block size. If not present, an IV of zero is assumed.
+          minLength: 24
+          maxLength: 32
+          example: "313233343536373839303132"
+        algorithmCipherMode:
+          type: string
+          description: The AES cipher mode used for the encrypted data. Must be one of the following value:<br>CBC - When CBC cipher mode to be used<br>GCM - When GCM cipher mode to be used
+          minLength: 3
+          maxLength: 3
+          example: "GCM"
+        tag:
+          type: string
+          description: Tag to verify during data decryption. Required when algorithmCipherMode used is GCM, not present otherwise.
+          minLength: 1
+          maxLength: 36
+        aad:
+          type: string
+          description: Additional authentication data used in GCM mode. Hex-encoded data (case-insensitive). Required when algorithmCipherMode used is GCM, not present otherwise.
+          minLength: 1
+          maxLength: 36
+        encryptedData:
+          $ref: '#/components/schemas/AuthorizeServiceResponseDataSchema'
+      description: Contains the encrypted AuthorizeServiceResponseData object. Type
+        - EncryptedPayload object containing an AuthorizeServiceResponseData object.
+        Max length - Not Applicable. Optional.
+    AuthorizeServiceResponseDataSchema:
+      type: object
+      properties:
+        dataValidUntilTimestamp:
+          type: string
+          description: >
+            The date/time after which this encrypted object is considered invalid. If present, all systems must reject this encrypted object after this time and treat it as invalid data. Must be expressed in ISO 8601 extended format as one of the following:
+              - YYYY-MM-DDThh:mm:ss[.sss]Z
+              - YYYY-MM-DDThh:mm:ss[.sss]±hh:mm
+
+            Where [.sss] is optional and can be 1 to 3 digits. Must be a value no more than 30 days in the future. Mastercard recommends using a value of (Current Time + 30 minutes).
+          minLength: 20
+          maxLength: 29
+          example: 2026-07-04T12:09:56.123-07:00
+        paymentAccountReference:
+          type: string
+          description: The payment account reference assigned to the PAN. This should
+            only be returned if Mastercard is not the BIN controller.  It will be
+            ignored if Mastercard is the BIN controller for the PAN.
+          minLength: 29
+          maxLength: 29
+          example: 512381d9f8e0629211e3949a08002
+        alternateAccountIdentifier:
+          type: string
+          description: Account holder-friendly reference to a bank account. Typically
+            used when the account holder is not aware of their Account PAN.
+          minLength: 9
+          maxLength: 64
+          example: GB82WEST12345698765432
+        issuerSpecificPersonalizationData:
+          type: array
+          description: The operator specific data to add to token personalization profile.  Not applicable. Type - Array [String]. Optional.
+          items:
+            type: string
+            example: "OUY0RDEyMzQ1NjQ3"
+            description: Operator specific data in base 64 encoded hex string
+            minLength: 1
+            maxLength: 200
+        cardAccountData:
+          $ref: '#/components/schemas/cardAccountDataSchema'
+        externalToken:
+          $ref: '#/components/schemas/tokenDataSchema'
+      description: Contains an encrypted JSON object. Encrypted by the ephemeral AES
+        key using CBC mode (IV as provided in 'iv', or zero if none provided) and
+        PKCS#7 padding. The JSON object being encrypted will be defined in the context
+        of the API call. Max length - 256k.  Type - String Hex-encoded Data (case-insensitive).
+        Required - Yes.
+    NotifyTokenUpdatedRequestSchema:
+      required:
+        - requestId
+        - reasonCode
+        - tokens
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: The Id of the request submitted. Max length - 64
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        reasonCode:
+          type: string
+          description: |
+            The reason code for why the notification is being sent. This
+            applies to all tokens in the Tokens array. Must be one of:
+              * STATUS_UPDATE - The status of the tokens has been changed when the token is activated, suspended, deleted, or inactivated.
+              * REDIGITIZATION_COMPLETE - The token has been re-digitized to the device in the token expiry and FPAN update to a new range use cases.
+              * DELETED_FROM_CONSUMER_APP - The token has been deleted from the consumer application. The token may still be active in MDES.
+              * AUTHENTICATION_PERFORMED - Account holder authentication was performed on the token. The status did not change as a result
+              * PAYMT_CHANNEL_PREFERENCE_UPDATED - Cardholder has updated the payment channels the token is allowed to be used for (India only).
+              * FUNDING_ACCOUNT_UPDATE - Token and FPAN mapping has been updated due to FPAN or expiry or Financial account has been changed but Token is not changed. The status did not change as a result.
+              * TOKEN_BINDING: Token has been bound with bind ID.
+              * ACCOUNT_BINDING: Account corresponding to the token has been bound with bind ID.
+              * PAYMENT_ACCOUNT_REFERENCE_UPDATED: Payment account reference value was updated.
+          minLength: 1
+          maxLength: 32
+          example: STATUS_UPDATE
+        tokens:
+          type: array
+          description: Contains the Tokens which were updated.
+          items:
+            $ref: '#/components/schemas/token'
+    token:
+      required:
+        - tokenUniqueReference
+      type: object
+      properties:
+        tokenUniqueReference:
+          type: string
+          description: A unique reference assigned following the allocation of a token used to identify the token for the duration of its lifetime. Note; It is required to be always present, even when an error occurs.
+          minLength: 1
+          maxLength: 64
+          example: DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532
+        status:
+          type: string
+          description: |
+            The current status of token. Conditional - required for notifyTokenUpdated if reasonCode = "STATUS_UPDATE". Not
+            present otherwise. Must be one of;
+            * INACTIVE - Token has not yet been activated,
+            * ACTIVE - Token is active and ready to transact,
+            * SUSPENDED - Token is suspended and unable to transact,
+            * DEACTIVATED - Token has been permanently deactivated.
+          minLength: 1
+          maxLength: 32
+          example: SUSPENDED
+        suspendedBy:
+          type: array
+          description: |
+            Who or what caused the token to be suspended. Conditional - required if status = SUSPENDED.
+            One or more values of;
+            * ISSUER = Suspended by the Issuer. PaymentAppProvider unable to unsuspend
+            this token,
+            * PAYMENT_APP_PROVIDER (Deprecated) = Suspended by the PaymentAppProvider,
+            * TOKEN_REQUESTOR = Suspended by the Token Requestor,
+            * MOBILE_PIN_LOCKED = Suspended  due to the Mobile PIN being locked,
+            * CARDHOLDER = Suspended by the Cardholder.
+          items:
+            type: string
+            example:
+              - TOKEN_REQUESTOR
+              - ISSUER
+        tokenExpiry:
+          type: string
+          description: The expiry of the Token PAN given in MMYY format.
+            Conditional - Required for notifyTokenUpdated if
+            reasonCode = "REDIGITIZATION_COMPLETE". Not present otherwise.
+          minLength: 4
+          maxLength: 4
+          example: "0726"
+        fundingAccountInfo:
+          $ref: '#/components/schemas/fundingAccountInfoSchemaForNTU'
+        authenticatorInfo:
+          $ref: '#/components/schemas/authenticatorInfo'
+        bindId:
+          type: string
+          description: The unique and fixed identifier to a component of data bound to the credential. Present when reason code value is TOKEN_BINDING or ACCOUNT_BINDING
+          minLength: 1
+          maxLength: 48
+          example: "456776axjowe43-23239sd"
+        certifiedMFAAuthMethodId:
+          type: string
+          description: Mastercard certified multi-factor authentication method id that authenticator will use to authenticate cardholder for subsequent authentication after token or Account has been bound with given bind id. Present when reason code value is TOKEN_BINDING or ACCOUNT_BINDING
+          minLength: 1
+          maxLength: 5
+          example: "A0112"
+        bindingStatus:
+          type: string
+          description: |
+            Status of Token Binding or Account Binding. Present when reason code value is TOKEN_BINDING or ACCOUNT_BINDING
+            * ACTIVE - Token or Account is bound with bindId
+            * DEACTIVATED - Token or Account is NOT bound with bindId
+          minLength: 1
+          maxLength: 8
+          example: "ACTIVE"
+    fundingAccountInfoSchemaForNTU:
+      required:
+        - encryptedPayload
+      type: object
+      description: Contains the information of the token after redigitization. Conditional – required
+        if reasonCode = "REDIGITIZATION_COMPLETE". If an issuer is still configured
+        to receive cardinfo (deprecated) and opt in to receive NTU for re-digitization, they will
+        get cardinfo (deprecated) in the NTU.
+      properties:
+        encryptedPayload:
+          $ref: '#/components/schemas/encryptedPayloadSchemaForNTU'
+    encryptedPayloadSchemaForNTU:
+      required:
+        - encryptedData
+        - encryptedKey
+        - publicKeyFingerprint
+      type: object
+      properties:
+        encryptedData:
+          $ref: '#/components/schemas/fundingAccountDataSchemaForNTU'
+        publicKeyFingerprint:
+          type: string
+          description: The fingerprint of the public key used to encrypt the ephemeral
+            AES key. Type - String Hex-encoded Data (case-insensitive).
+          minLength: 32
+          maxLength: 64
+          example: 4c4ead5927f0df8117f178eea9308daa58e27c2b
+        encryptedKey:
+          type: string
+          description: One-time use AES key encrypted by the Mastercard public key
+            (as identified by 'publicKeyFingerprint') using the OAEP or RSA Encryption
+            Standard PKCS 1 v1.5 (depending on the value of 'oaepHashingAlgorithm').
+            Requirement is for a 128-bit key (with 256-bit key supported as an option).
+            Max length - 512. Type - String Hex-encoded Data (case-insensitive).
+          minLength: 32
+          maxLength: 512
+          example: A1B2C3D4E5F611223344556678965434
+        oaepHashingAlgorithm:
+          type: string
+          description: Hashing algorithm used with the OAEP scheme. If omitted, then
+            the RSA Encryption Standard PKCS 1 v1.5 will be used. You must use one
+            of the following algorithms; SHA256 - Use the SHA-256 algorithm | SHA512
+            - Use the SHA-512 algorithm.
+          minLength: 6
+          maxLength: 6
+          example: SHA512
+        iv:
+          type: string
+          description: The initialization vector used when encrypting data using the
+            one-time use AES key. Must be exactly 12 bytes (24 character hex string)
+            when using GCM and 16 bytes (32 character hex string) when using CBC to
+            match the block size. If not present, an IV of zero is assumed.
+          minLength: 24
+          maxLength: 32
+          example: "313233343536373839303132"
+        algorithmCipherMode:
+          type: string
+          description: The AES cipher mode used for the encrypted data. Must be one of the following value:<br>CBC - When CBC cipher mode to be used<br>GCM - When GCM cipher mode to be used
+          minLength: 3
+          maxLength: 3
+          example: "GCM"
+        tag:
+          type: string
+          description: Tag to verify during data decryption. Required when algorithmCipherMode used is GCM, not present otherwise.
+          minLength: 1
+          maxLength: 36
+        aad:
+          type: string
+          description: Additional authentication data used in GCM mode. Hex-encoded data (case-insensitive). Required when algorithmCipherMode used is GCM, not present otherwise.
+          minLength: 1
+          maxLength: 36
+      description: Contains an encrypted object. Data Type - EncryptedPayload object
+        containing a FundingAccountData object. Max length - N/A.
+    fundingAccountDataSchemaForNTU:
+      type: object
+      required:
+        -  tokenData
+      properties:
+        dataValidUntilTimestamp:
+          type: string
+          description: >
+            The date/time after which this encrypted object is considered invalid. If present, all systems must reject this encrypted object after this time and treat it as invalid data. Must be expressed in ISO 8601 extended format as one of the following:
+              - YYYY-MM-DDThh:mm:ss[.sss]Z
+              - YYYY-MM-DDThh:mm:ss[.sss]±hh:mm
+            Where [.sss] is optional and can be 1 to 3 digits. Must be a value no more than 30 days in the future. Mastercard recommends using a value of (Current Time + 30 minutes).
+          minLength: 20
+          maxLength: 29
+          example: 2026-07-04T12:09:56.123-07:00
+        cardAccountData:
+          $ref: '#/components/schemas/cardAccountDataSchema'
+        tokenData:
+          $ref: '#/components/schemas/tokenDataSchemaforNTU'
+        financialAccountData:
+          $ref: '#/components/schemas/financialAccountDataSchema'
+    tokenDataSchemaforNTU:
+      required:
+        - expiryMonth
+        - expiryYear
+        - token
+      type: object
+      description: The token information. Conditional
+        – required if reasonCode = "REDIGITIZATION_COMPLETE" or "FUNDING_ACCOUNT_UPDATE", not present otherwise. Max length - Not applicable.
+      properties:
+        token:
+          type: string
+          description: The token issued for this service request.
+          minLength: 12
+          maxLength: 19
+          example: "5345678901234521"
+        expiryMonth:
+          type: string
+          description: The month of the expiration date.
+          minLength: 2
+          maxLength: 2
+          example: "07"
+        expiryYear:
+          type: string
+          description: The year of the expiration date.
+          minLength: 2
+          maxLength: 2
+          example: "26"
+    NotifyTokenUpdatedResponseSchema:
+      type: object
+      required:
+        - responseId
+      properties:
+        responseId:
+          type: string
+          description: The Id of the response returned.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+    tokenDataSchema1:
+      required:
+        - expiryMonth
+        - expiryYear
+        - token
+      type: object
+      properties:
+        token:
+          type: string
+          description: The token issued for this service request.
+          minLength: 12
+          maxLength: 19
+          example: "5345678901234521"
+        expiryMonth:
+          type: string
+          description: The month of the expiration date.
+          minLength: 2
+          maxLength: 2
+          example: "07"
+        expiryYear:
+          type: string
+          description: The year of the expiration date.
+          minLength: 2
+          maxLength: 2
+          example: "26"
+        sequenceNumber:
+          type: string
+          description: Sequence number of the Token. Conditional – required in AuthorizeServiceResponseData.
+            Optional otherwise.
+          minLength: 2
+          maxLength: 2
+          example: "01"
+      description: The token information. Max length - Not applicable. Conditional
+        – required if reason code is Redigitization, not present otherwise.
+    ValidateActivationCodeRequestSchema:
+      required:
+        - activationCode
+        - correlationId
+        - requestId
+        - tokenUniqueReference
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: The id of the request submitted. Max length - 64
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        tokenUniqueReference:
+          type: string
+          description: A unique reference assigned following the allocation of a token
+            used to identify the token for the duration of its lifetime.
+          minLength: 1
+          maxLength: 64
+          example: DWSPMC000000000132d72d4fcb2f4136a0532d3093ff1a45
+        correlationId:
+          type: string
+          description: Value linking pre-digitization messages generated during provisioning.
+          minLength: 1
+          maxLength: 14
+          example: D98765432104
+        activationCode:
+          type: string
+          description: The Activation Code entered by the consumer.
+          minLength: 1
+          maxLength: 32
+          example: A1B2C3D4
+    ValidateActivationCodeResponseSchema:
+      type: object
+      required:
+        - responseId
+      properties:
+        responseId:
+          type: string
+          description: The Id of the response returned.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        result:
+          type: string
+          description: Whether the activation request was successful. Success will
+            result in MDES attempting to complete the provisioning process. MDES will
+            notify the Token Requestor when the Token is ready to transact. Must be
+            one of; SUCCESS = Activation was successful, INCORRECT_CODE = Activation
+            Code was incorrect and rejected. Retries permitted,  INCORRECT_CODE_RETRIES_EXCEEDED
+            =  Activation Code was incorrect and the maximum number of retries now
+            exceeded, EXPIRED_CODE = Activation Code has expired or was invalidated. In post-tokenization authentication informs MDES if account holder successfully completed authentication.
+            Max length - 32. Type - String. Required.
+          minLength: 1
+          maxLength: 32
+          example: SUCCESS
+    getAccountInformationRequestSchema:
+      required:
+        - fundingAccountInfo
+        - requestId
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: The id of the request submitted. Max length - 64
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        fundingAccountInfo:
+          $ref: '#/components/schemas/fundingAccountInfoSchema1'
+    getAccountInformationResponseSchema:
+      type: object
+      required:
+        - responseId
+      properties:
+        responseId:
+          type: string
+          description: The Id of the response returned.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        encryptedPayload:
+          $ref: '#/components/schemas/EncryptedPayloadOut1'
+    EncryptedPayloadOut1:
+      required:
+        - encryptedData
+        - encryptedKey
+        - publicKeyFingerprint
+      type: object
+      properties:
+        publicKeyFingerprint:
+          type: string
+          description: The fingerprint of the public key used to encrypt the ephemeral
+            AES key. Type - String Hex-encoded Data (case-insensitive).
+            Required - Yes.
+          minLength: 32
+          maxLength: 64
+          example: 4c4ead5927f0df8117f178eea9308daa58e27c2b
+        encryptedKey:
+          type: string
+          description: One-time use AES key encrypted by the Mastercard public key
+            (as identified by 'publicKeyFingerprint') using the OAEP or RSA Encryption
+            Standard PKCS 1 v1.5 (depending on the value of 'oaepHashingAlgorithm').
+            Requirement is for a 128-bit key (with 256-bit key supported as an option).
+            Data Type - String. Hex-encoded data (case-insensitive). Max Length -
+            512. Required - Yes.
+          minLength: 32
+          maxLength: 512
+          example: A1B2C3D4E5F611223344556678965434
+        oaepHashingAlgorithm:
+          type: string
+          description: Hashing algorithm used with the OAEP scheme. If omitted, then
+            the RSA Encryption Standard PKCS 1 v1.5 will be used. You must use one
+            of the following algorithms; SHA256 - Use the SHA-256 algorithm | SHA512
+            - Use the SHA-512 algorithm.
+          minLength: 6
+          maxLength: 6
+          example: SHA512
+        iv:
+          type: string
+          description: The initialization vector used when encrypting data using the
+            one-time use AES key. Must be exactly 12 bytes (24 character hex string)
+            when using GCM and 16 bytes (32 character hex string) when using CBC to
+            match the block size. If not present, an IV of zero is assumed.
+          minLength: 24
+          maxLength: 32
+          example: "313233343536373839303132"
+        algorithmCipherMode:
+          type: string
+          description: The AES cipher mode used for the encrypted data. Must be one of the following value:<br>CBC - When CBC cipher mode to be used<br>GCM - When GCM cipher mode to be used
+          minLength: 3
+          maxLength: 3
+          example: "GCM"
+        tag:
+          type: string
+          description: Tag to verify during data decryption. Required when algorithmCipherMode used is GCM, not present otherwise.
+          minLength: 1
+          maxLength: 36
+        aad:
+          type: string
+          description: Additional authentication data used in GCM mode. Hex-encoded data (case-insensitive). Required when algorithmCipherMode used is GCM, not present otherwise.
+          minLength: 1
+          maxLength: 36
+        encryptedData:
+          $ref: '#/components/schemas/AccountInformationDataSchema'
+    AccountInformationDataSchema:
+      type: object
+      properties:
+        dataValidUntilTimestamp:
+          type: string
+          description: >
+            The date/time after which this encrypted object is considered invalid. If present, all systems must reject this encrypted object after this time and treat it as invalid data. Must be expressed in ISO 8601 extended format as one of the following:
+              - YYYY-MM-DDThh:mm:ss[.sss]Z
+              - YYYY-MM-DDThh:mm:ss[.sss]±hh:mm
+
+            Where [.sss] is optional and can be 1 to 3 digits. Must be a value no more than 30 days in the future. Mastercard recommends using a value of (Current Time + 30 minutes).
+          minLength: 20
+          maxLength: 29
+          example: 2026-07-04T12:09:56.123-07:00
+        balanceInformation:
+          $ref: '#/components/schemas/balanceInformationSchema'
+        accountStatus:
+          type: string
+          description: The status of the account. Must be one of ACTIVE = The account
+            is active | EXPIRED = The account is expired | INVALID = The account is
+            not recognized | UNKNOWN = The account is in an unknown state | CANCELLED
+            = The account is cancelled.
+          minLength: 1
+          maxLength: 24
+          example: INVALID
+    balanceInformationSchema:
+      type: object
+      required:
+        - amount
+        - currencyCode
+        - balanceDateTime
+      properties:
+        amount:
+          type: string
+          description: The amount of the balance. Numeric including the decimal positions.
+          minLength: 1
+          maxLength: 16
+          example: "25.36"
+        currencyCode:
+          type: string
+          description: The currency code defined using ISO 4217.
+          minLength: 3
+          maxLength: 3
+          example: USD
+        balanceDateTime:
+          type: string
+          description: The DateTime when the balance was checked. Expressed in ISO
+            8601 extended format as one of the following YYYY-MM-DDThh:mm:ss[.sss]Z
+            | YYYY-MM-DDThh:mm:ss[.sss]±hh:mm, Where [.sss] is optional and can be
+            1 to 3 digits. Type - TokenData.
+          minLength: 20
+          maxLength: 29
+          example: 2023-07-04T12:08:56.123-07:00
+    NotifySuspiciousEventsRequestSchema:
+      required:
+        - events
+        - requestId
+        - status
+        - tokenUniqueReference
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: The id of the request submitted. Max length - 64
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        tokenUniqueReference:
+          type: string
+          description: A Unique reference assigned following the allocation of a token
+            used to identify the token for the duration of its lifetime.
+          minLength: 1
+          maxLength: 64
+          example: DWSPMC000000000fcb2f4136b2f4136a0532d2f4136a0532
+        paymentAppInstanceId:
+          type: string
+          description: The identifier of the Payment App instance within a device
+            that will be provisioned with a token. Only present when supplied by a
+            Wallet Provider.
+          minLength: 1
+          maxLength: 48
+          example: 1b24f24a24ba98e27d43e345b532a245e4723d7a9c4f624e
+        status:
+          type: string
+          description: The current status of token. Must be one of; INACTIVE - Token
+            has not yet been activated, ACTIVE - Token is active and ready to transact,
+            SUSPENDED - Token is suspended and unable to transact, DEACTIVATED - Token
+            has been permanently deactivated. Max length - 32. Type - String. Conditional
+            - required for notifyTokenUpdated if reasonCode = "STATUS_UPDATE". Not
+            present otherwise.
+          minLength: 1
+          maxLength: 32
+          example: ACTIVE
+        events:
+          type: array
+          description: List of suspicious event - Array[SuspiciousEvent].
+          items:
+            $ref: '#/components/schemas/SuspiciousEvent'
+    SuspiciousEvent:
+      required:
+        - eventName
+      type: object
+      properties:
+        eventName:
+          type: string
+          description: The name of the suspicious event. Must be one of; REPLENISH
+            - There were suspicious ATC values reporting during Replenish
+          minLength: 1
+          maxLength: 32
+          example: REPLENISH
+        walletAtcStatus:
+          $ref: '#/components/schemas/WalletAtcStatus'
+        systemAtcStatus:
+          $ref: '#/components/schemas/SystemAtcStatus'
+    SystemAtcStatus:
+      type: object
+      properties:
+        atcNotFound:
+          type: array
+          description: The ATCs reported by the authorization network as not found.
+            Max length - Not applicable. Type - Array[String].
+          items:
+            type: string
+            example: "1234"
+        atcAlreadyProcessed:
+          type: array
+          description: The ATCs reported by the authorization network as processed
+            for a transaction. Max length - Not applicable. Type - Array[String].
+          items:
+            type: string
+            example: "1234"
+        atcReportedUsedByWallet:
+          type: array
+          description: The ATCs prviously reported by the wallet as processed or discarded.
+            Max length - Not applicable. Type - Array[String]
+          items:
+            type: string
+            example: "1234"
+        unusedActive:
+          type: array
+          description: The ATCs reported by the wallet that are unused active. Max
+            length - Not applicable. Type - Array[String]
+          items:
+            type: string
+            example: "1234"
+      description: The ATCs statuses as reported by authorization network. Conditional
+        – required if EventName is REPLENISH
+    WalletAtcStatus:
+      type: object
+      properties:
+        unusedDiscarded:
+          type: array
+          description: The ATCs reported by the wallet that are unused discarded.
+            Max length - Not applicable. Type - Array[String].
+          items:
+            type: string
+            example: "1234"
+        usedForContactless:
+          type: array
+          description: The ATCs reported by the wallet that are used for contactless
+            transaction. Max length - Not applicable. Type - Array[String].
+          items:
+            type: string
+            example: "1234"
+        usedForDsrp:
+          type: array
+          description: The ATCs reported by the wallet that are used for DSRP transaction.
+            Max length - Not applicable. Type - Array[String]
+          items:
+            type: string
+            example: "1234"
+        unusedActive:
+          type: array
+          description: The ATCs reported by the wallet that are unused active. Max
+            length - Not applicable. Type - Array[String]
+          items:
+            type: string
+            example: "1234"
+      description: The ATCs statuses are reported by the wallet. Conditional – required
+        if EventName is REPLENISH
+    NotifySuspiciousEventsResponseSchema:
+      type: object
+      required:
+        - responseId
+      properties:
+        responseId:
+          type: string
+          description: The Id of the response returned.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+    authenticatorInfo:
+      description: Contains authenticator information that authenticate cardholder for subsequent payment transaction. Present when reason code value is TOKEN_BINDING or ACCOUNT_BINDING
+      type: object
+      required:
+        - entityId
+      properties:
+        entityId:
+          type: string
+          description: Identification of authenticating entity id
+          minLength: 1
+          maxLength: 5
+          example: "A34BF"
+        entityName:
+          type: string
+          description: Name of Authenticator
+          minLength: 1
+          maxLength: 25
+          example: "Mastercard"
+    paymentData:
+      description: Contains payment meta information. Present for post-tokenization Authentication use cases and reason code is PAYMENT_TRANSACTION.
+      type:  object
+      required:
+        - transactionId
+        - transactionAmount
+        - currencyCode
+      properties:
+        transactionId:
+          type: string
+          description: Unique identification of transaction shared by token requestor
+          minLength: 1
+          maxLength: 32
+          example: "2323232"
+        transactionAmount:
+          type: string
+          description: transaction amount
+          minLength: 1
+          maxLength: 32
+          example: "1234"
+        currencyCode:
+          type: string
+          description: currency code ISO format
+          minLength: 3
+          maxLength: 3
+          example: "USD"
+    recentAuthenticationInfo:
+      description: Cardholder recently authenticated by this entity. Applicable only for post-tokenization authentication.
+      required:
+        - trustedAuthorityId
+        - authenticationTime
+      type: object
+      properties:
+        trustedAuthorityName:
+          type: string
+          description: Name of Mastercard trusted authenticator who recently authenticated cardholder
+          minLength: 1
+          maxLength: 64
+          example: "Mastercard"
+        trustedAuthorityId:
+          type: string
+          description: Identification of Mastercard trusted authenticator who recently authenticated cardholder
+          minLength: 1
+          maxLength: 5
+          example: "456"
+        authenticationProof:
+          type: string
+          description: Authentication Proof shared by the trusted authenticator
+          minLength: 1
+          maxLength: 35
+          example: "OTP"
+        authenticationTime:
+          type: string
+          description: Date and time when this authentication happened. Expressed
+            in ISO 8601 extended format as one of the following - YYYY-MM-DDThh:mm:ss[
+            .sss ]Z , YYYY-MM-DDThh:mm:ss[ .sss ]±hh:mm , Where [ .sss ] is optional
+            and can be 1 to 3 digits.
+          minLength: 20
+          maxLength: 29
+          example:
+    ErrorsResponse:
+      required:
+        - responseId
+      type: object
+      properties:
+        responseId:
+          type: string
+          description: The id of the response returned.
+          minLength: 1
+          maxLength: 64
+          example: "123456"
+        errorCode:
+          type: string
+          description: Error code for the reason the operation failed.Conditional – required if an error occurred performing
+            the operation.
+          minLength: 1
+          maxLength: 32
+          example: INVALID_JSON
+        errorDescription:
+          type: string
+          description: Error description of the reason the operation failed.
+          minLength: 1
+          maxLength: 256
+          example: Invalid JSON

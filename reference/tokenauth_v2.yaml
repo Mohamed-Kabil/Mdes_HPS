@@ -1,0 +1,236 @@
+path: /TokenAuthentication/V2
+method: POST
+operationId: authentication_1
+summary: Token Authentication
+description: Token Authentication WebService
+tags:
+- Authentification2WebService
+requestBody:
+  description: Authentification Request
+  required: true
+  content_types:
+  - application/json
+  schema_name (application/json): '#/components/schemas/Authentification2Rq'
+  schema_resolved (application/json):
+    required:
+    - institutionCode
+    - providerLogin
+    - providerPassword
+    - requestInfo
+    - userLanguage
+    type: object
+    properties:
+      keyValues:
+        maxItems: 50
+        minItems: 0
+        type: array
+        xml:
+          name: KeyValues
+        items:
+          required:
+          - data
+          - key
+          type: object
+          properties:
+            key:
+              maxLength: 30
+              minLength: 0
+              pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+              type: string
+              xml:
+                name: Key
+            data:
+              maxLength: 64
+              minLength: 0
+              pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+              type: string
+              xml:
+                name: Data
+            type:
+              pattern: ^[A-Za-z0-9]*$
+              type: string
+              xml:
+                name: Type
+      requestInfo:
+        required:
+        - requestDate
+        - requestUID
+        type: object
+        properties:
+          keyValues:
+            maxItems: 50
+            minItems: 0
+            type: array
+            xml:
+              name: KeyValues
+            items:
+              required:
+              - data
+              - key
+              type: object
+              properties:
+                key:
+                  maxLength: 30
+                  minLength: 0
+                  pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+                  type: string
+                  xml:
+                    name: Key
+                data:
+                  maxLength: 64
+                  minLength: 0
+                  pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+                  type: string
+                  xml:
+                    name: Data
+                type:
+                  pattern: ^[A-Za-z0-9]*$
+                  type: string
+                  xml:
+                    name: Type
+          requestUID:
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            type: string
+            xml:
+              name: RequestUID
+          userID:
+            maxLength: 15
+            minLength: 0
+            pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+            type: string
+            xml:
+              name: UserID
+          requestDate:
+            type: string
+            format: date-time
+            xml:
+              name: RequestDate
+      providerLogin:
+        maxLength: 22
+        minLength: 0
+        pattern: ^[a-zA-Z0-9-#$_@&*.%+\s\/]*$
+        type: string
+        xml:
+          name: ProviderLogin
+      providerPassword:
+        maxLength: 128
+        minLength: 0
+        pattern: ^[a-zA-Z0-9-#$_@&*.%+\s\/]*$
+        type: string
+        xml:
+          name: ProviderPassword
+      userLanguage:
+        maxLength: 5
+        minLength: 0
+        pattern: ^[a-zA-Z0-9-#$_@&*.%+\s\/]*$
+        type: string
+        xml:
+          name: UserLanguage
+      institutionCode:
+        maxLength: 6
+        minLength: 0
+        pattern: ^[a-zA-Z0-9-#$_@&*.%+\s\/]*$
+        type: string
+responses:
+  '200':
+    description: ProceedWithSuccess
+    schema_name (application/json): '#/components/schemas/AuthentificationRs'
+    schema_resolved (application/json):
+      required:
+      - responseInfo
+      type: object
+      properties:
+        keyValues:
+          maxItems: 50
+          minItems: 0
+          type: array
+          xml:
+            name: KeyValues
+          items:
+            required:
+            - data
+            - key
+            type: object
+            properties:
+              key:
+                maxLength: 30
+                minLength: 0
+                pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+                type: string
+                xml:
+                  name: Key
+              data:
+                maxLength: 64
+                minLength: 0
+                pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+                type: string
+                xml:
+                  name: Data
+              type:
+                pattern: ^[A-Za-z0-9]*$
+                type: string
+                xml:
+                  name: Type
+        responseInfo:
+          required:
+          - errorCode
+          - errorDescription
+          - responseUID
+          - resultID
+          type: object
+          properties:
+            keyValues:
+              maxItems: 50
+              minItems: 0
+              type: array
+              xml:
+                name: KeyValues
+              items:
+                required:
+                - data
+                - key
+                type: object
+                properties:
+                  key:
+                    maxLength: 30
+                    minLength: 0
+                    pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+                    type: string
+                    xml:
+                      name: Key
+                  data:
+                    maxLength: 64
+                    minLength: 0
+                    pattern: ^[a-zA-Z0-9-#$_@&*.%+,;\s\/]*$
+                    type: string
+                    xml:
+                      name: Data
+                  type:
+                    pattern: ^[A-Za-z0-9]*$
+                    type: string
+                    xml:
+                      name: Type
+            responseUID:
+              type: string
+              xml:
+                name: ResponseUID
+            resultID:
+              type: string
+              xml:
+                name: ResultID
+              enum:
+              - ProceedWithSuccess
+              - ProceedWithSuccessMC
+              - Error
+              - SystemError
+            errorCode:
+              type: string
+              xml:
+                name: ErrorCode
+            errorDescription:
+              type: string
+              xml:
+                name: ErrorDescription
+        token:
+          type: string
+      description: Authentification Response

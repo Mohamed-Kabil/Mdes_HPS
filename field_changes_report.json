@@ -1,0 +1,643 @@
+[
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "FundingAccountInfo->EncryptedPayload->EncryptedData->SourceTokenNumber",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.encryptedData.sourceTokenNumber"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "FundingAccountInfo->EncryptedPayload->algorithmCypherMode",
+    "change_type": "New field",
+    "comment": "May impact the decryption mechanism (truncated in source)",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.algorithmCipherMode"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "FundingAccountInfo->EncryptedPayload->tag",
+    "change_type": "New field",
+    "comment": "May impact the decryption mechanism (truncated in source)",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.tag"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "FundingAccountInfo->EncryptedPayload->aad",
+    "change_type": "New field",
+    "comment": "May impact the decryption mechanism (truncated in source)",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.aad"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "authRequestCorrelationId",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.authRequestCorrelationId"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.authRequestCorrelationId"
+      ]
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "authenticatorInfo",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.authenticatorInfo"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.authenticatorInfo"
+      ]
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "bindId",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.bindId"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.bindId"
+      ]
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "certifiedMFAAuthMethodId",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.certifiedMFAAuthMethodId"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.certifiedMFAAuthMethodId"
+      ]
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "deviceInfo",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.deviceInfo"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.deviceInfo"
+      ]
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "tokenRequestorDecisioningInfo",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.tokenRequestorDecisioningInfo"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "paymentData",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.paymentData"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.paymentData"
+      ]
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "recentAuthenticationInfo",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.recentAuthenticationInfo"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.recentAuthenticationInfo"
+      ]
+    }
+  },
+  {
+    "endpoint": "RequestActivationMethods",
+    "path": "/requestActivationMethods",
+    "field_path": "reasonCodes",
+    "change_type": "New values",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.reasonCodes"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.reasonCodes"
+      ]
+    }
+  },
+  {
+    "endpoint": "DeliverActivationCode",
+    "path": "/deliverActivationCode",
+    "field_path": "authRequestCorrelationId",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.authRequestCorrelationId"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.AuthRequestCorrelationId"
+      ]
+    }
+  },
+  {
+    "endpoint": "DeliverActivationCode",
+    "path": "/deliverActivationCode",
+    "field_path": "deviceInfo",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.deviceInfo"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "DeliverActivationCode",
+    "path": "/deliverActivationCode",
+    "field_path": "reasonCode",
+    "change_type": "New values",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.reasonCodes"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.reasonCodes"
+      ]
+    }
+  },
+  {
+    "endpoint": "DeliverActivationCode",
+    "path": "/deliverActivationCode",
+    "field_path": "activationMethod.type",
+    "change_type": "New values",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.activationMethod.type"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.activationMethod.type"
+      ]
+    }
+  },
+  {
+    "endpoint": "AuthoriseService",
+    "path": "/authorizeService",
+    "field_path": "FundingAccountInfo->EncryptedPayload->EncryptedData->SourceTokenNumber",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.encryptedData.sourceTokenNumber"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "AuthoriseService",
+    "path": "/authorizeService",
+    "field_path": "FundingAccountInfo->EncryptedPayload->algorithmCypherMode",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.algorithmCipherMode",
+        "response[200].encryptedPayload.algorithmCipherMode"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "AuthoriseService",
+    "path": "/authorizeService",
+    "field_path": "FundingAccountInfo->EncryptedPayload->tag",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.tag",
+        "response[200].encryptedPayload.tag"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "AuthoriseService",
+    "path": "/authorizeService",
+    "field_path": "FundingAccountInfo->EncryptedPayload->aad",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.aad",
+        "response[200].encryptedPayload.aad"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "AuthoriseService",
+    "path": "/authorizeService",
+    "field_path": "accountStatusInquirySentFor",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.accountStatusInquirySentFor"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.AccountStatusInquirySentFor"
+      ]
+    }
+  },
+  {
+    "endpoint": "AuthoriseService",
+    "path": "/authorizeService",
+    "field_path": "sourceProvisioningData",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.sourceProvisioningData"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "AuthoriseService",
+    "path": "/authorizeService",
+    "field_path": "provisioningContext",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.provisioningContext"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "Notify Service Activated",
+    "path": "/notifyServiceActivated",
+    "field_path": "FundingAccountInfo->EncryptedPayload->EncryptedData->SourceTokenNumber",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.encryptedData.sourceTokenNumber"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "Notify Service Activated",
+    "path": "/notifyServiceActivated",
+    "field_path": "FundingAccountInfo->EncryptedPayload->algorithmCypherMode",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.algorithmCipherMode"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "Notify Service Activated",
+    "path": "/notifyServiceActivated",
+    "field_path": "FundingAccountInfo->EncryptedPayload->tag",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.tag"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "Notify Service Activated",
+    "path": "/notifyServiceActivated",
+    "field_path": "FundingAccountInfo->EncryptedPayload->aad",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.fundingAccountInfo.encryptedPayload.aad"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "NotifyTokenUpdated",
+    "path": "/notifyTokenUpdated",
+    "field_path": "authenticatorInfo",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.tokens[].authenticatorInfo"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "NotifyTokenUpdated",
+    "path": "/notifyTokenUpdated",
+    "field_path": "bindId",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.tokens[].bindId"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "NotifyTokenUpdated",
+    "path": "/notifyTokenUpdated",
+    "field_path": "certifiedMFAAuthMethodId",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.tokens[].certifiedMFAAuthMethodId"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "NotifyTokenUpdated",
+    "path": "/notifyTokenUpdated",
+    "field_path": "bindingStatus",
+    "change_type": "New field",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.tokens[].bindingStatus"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "NotifyTokenUpdated",
+    "path": "/notifyTokenUpdated",
+    "field_path": "FundingAccountInfo->EncryptedPayload->algorithmCypherMode",
+    "change_type": "New field",
+    "comment": "May impact the decryption mechanism (truncated in source)",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.tokens[].fundingAccountInfo.encryptedPayload.algorithmCipherMode"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "NotifyTokenUpdated",
+    "path": "/notifyTokenUpdated",
+    "field_path": "FundingAccountInfo->EncryptedPayload->tag",
+    "change_type": "New field",
+    "comment": "May impact the decryption mechanism (truncated in source)",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.tokens[].fundingAccountInfo.encryptedPayload.tag"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "NotifyTokenUpdated",
+    "path": "/notifyTokenUpdated",
+    "field_path": "FundingAccountInfo->EncryptedPayload->aad",
+    "change_type": "New field",
+    "comment": "May impact the decryption mechanism (truncated in source)",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.tokens[].fundingAccountInfo.encryptedPayload.aad"
+      ]
+    },
+    "data": {
+      "verdict": "ABSENT",
+      "matched_paths": []
+    }
+  },
+  {
+    "endpoint": "NotifyTokenUpdated",
+    "path": "/notifyTokenUpdated",
+    "field_path": "reasonCode",
+    "change_type": "New values",
+    "comment": "\u2014",
+    "pre_dig": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.reasonCode"
+      ]
+    },
+    "data": {
+      "verdict": "PRESENT",
+      "matched_paths": [
+        "request.reasonCode"
+      ]
+    }
+  }
+]

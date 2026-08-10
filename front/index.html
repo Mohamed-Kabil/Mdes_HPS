@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>MDES Divergence — Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Mastercard MDES — Divergence Dashboard</h1>
+    <p class="subtitle">Statut des 8 APIs prioritaires (pre-dig.yaml vs data.yaml) et dernière release Mastercard.</p>
+  </header>
+
+  <main>
+    <section id="phase1-section">
+      <div class="section-header">
+        <h2>APIs prioritaires</h2>
+        <div class="action-bar">
+          <button id="phase1-run-btn" class="action-btn">Relancer l'audit Phase 1</button>
+        </div>
+      </div>
+      <div id="phase1-status" class="action-status"></div>
+      <div id="phase1-content" class="loading">Chargement…</div>
+    </section>
+
+    <section id="phase2-section">
+      <div class="section-header">
+        <h2>Dernière release Mastercard</h2>
+        <div class="action-bar">
+          <button id="phase2-check-pending-btn" class="action-btn">Vérifier après le dernier pre-dig</button>
+          <button id="phase2-check-latest-btn" class="action-btn">Vérifier la dernière release</button>
+        </div>
+      </div>
+      <div id="phase2-status" class="action-status"></div>
+      <div id="phase2-content" class="loading">Chargement…</div>
+    </section>
+
+    <section id="mdes-cs-divergence-section">
+      <div class="section-header">
+        <h2>MDES Customer Service — écarts spec officiel vs Java</h2>
+      </div>
+      <div id="mdes-cs-divergence-content" class="loading">Chargement…</div>
+    </section>
+
+    <section id="mdes-cs-section">
+      <div class="section-header">
+        <h2>MDES Customer Service — mapping API → Java</h2>
+      </div>
+      <div id="mdes-cs-content" class="loading">Chargement…</div>
+    </section>
+
+    <section id="reports-section">
+      <h2>Historique des rapports</h2>
+      <div id="reports-content" class="loading">Chargement…</div>
+    </section>
+  </main>
+
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button id="modal-close" aria-label="Fermer">&times;</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
