@@ -40,6 +40,7 @@ sys.path.insert(0, PROJECT_ROOT)
 
 import fetch_mc_source
 import mdes_cs_divergence_report
+import mdes_cs_prereleases
 import send_email as send_email_module
 import phase1_historical_audit
 from phase1_historical_audit import (
@@ -281,6 +282,176 @@ def api_mdes_cs_divergence():
         mdes_cs_divergence_report.DEFAULT_CS_JAVA_MAPPING_JSON,
     )
     return jsonify(report)
+
+
+@app.post("/api/mdes_cs_divergence/run")
+def api_mdes_cs_divergence_run():
+    """Re-runs the CS divergence audit end to end and writes the Excel
+    report, same relationship to /api/mdes_cs_divergence as
+    /api/phase1/run has to /api/phase1 — this one also produces the xlsx +
+    email draft, the GET route above never writes anything. Never sends —
+    sending only happens from /api/mdes_cs_divergence/send."""
+    if not os.path.exists(mdes_cs_divergence_report.DEFAULT_CS_SPEC_YAML):
+        return jsonify({
+            "error": f"Spec introuvable : {mdes_cs_divergence_report.DEFAULT_CS_SPEC_YAML}",
+        }), 503
+    if not os.path.exists(mdes_cs_divergence_report.DEFAULT_CS_JAVA_MAPPING_JSON):
+        return jsonify({
+            "error": f"Mapping Java introuvable : {mdes_cs_divergence_report.DEFAULT_CS_JAVA_MAPPING_JSON}",
+        }), 503
+
+    report = mdes_cs_divergence_report.run(
+        mdes_cs_divergence_report.DEFAULT_CS_SPEC_YAML,
+        mdes_cs_divergence_report.DEFAULT_CS_JAVA_MAPPING_JSON,
+    )
+    mdes_cs_divergence_report.render_report_xlsx(report, mdes_cs_divergence_report.DEFAULT_REPORT_XLSX_PATH)
+
+    return jsonify({
+        "report_path": mdes_cs_divergence_report.DEFAULT_REPORT_XLSX_PATH,
+        "subject": mdes_cs_divergence_report.email_subject(report),
+        "body": mdes_cs_divergence_report.render_email_body(report),
+    })
+
+
+@app.post("/api/mdes_cs_divergence/send")
+def api_mdes_cs_divergence_send():
+    """Sends the CS divergence email via send_email.py, with the (possibly
+    user-edited) subject/body from the popup, attaching the xlsx report —
+    same pattern as /api/phase1/send."""
+    payload = request.get_json(silent=True) or {}
+    subject, body = payload.get("subject"), payload.get("body")
+    if not subject or not body:
+        return jsonify({"error": "Objet et corps requis."}), 400
+
+    report_path = payload.get("report_path")
+    attachments = [report_path] if report_path and os.path.exists(report_path) else None
+    try:
+        sent_to = send_email_module.send_email(subject, body, attachments=attachments)
+    except send_email_module.SmtpConfigError as e:
+        return jsonify({"error": str(e)}), 502
+
+    return jsonify({"sent_to": sent_to})
+
+
+# ============================================================================
+# 3d. GET /api/mdes_cs_prereleases/latest — latest CS API pre-release note,
+#     checked against the 6 tracked CS operations. Same relationship to
+#     mdes_cs_divergence_report.py as /api/phase2/latest has to /api/phase1:
+#     what Mastercard *announced* is coming, not whether the current live
+#     spec/Java already reflects it.
+# ============================================================================
+
+@app.get("/api/mdes_cs_prereleases/latest")
+def api_mdes_cs_prereleases_latest():
+    try:
+        latest = mdes_cs_prereleases.check_latest(mdes_cs_prereleases.DEFAULT_CACHE_DIR, refresh=False)
+    except Exception as e:
+        return jsonify({"error": f"Impossible de vérifier les pre-release notes CS : {e}"}), 502
+
+    if latest is None:
+        return jsonify({"error": "Aucune release trouvée dans l'index Mastercard CS."}), 502
+
+    return jsonify({
+        "title": latest["title"],
+        "url": latest["url"],
+        "upgrade_date": latest["upgrade_date"],
+        "tracked_apis": mdes_cs_prereleases.TARGET_APIS,
+        "matched_apis": latest["matched_apis"],
+    })
+
+
+def _run_cs_prerelease_check(check_result, extra_fields=None):
+    """CS equivalent of _run_phase2_check() below — same shared
+    response-building tail (writes the Excel report + shapes the outcome/
+    email-preview payload) but calling mdes_cs_prereleases's own
+    email_subject/render_email_body/render_report_xlsx. NEVER sends —
+    sending only happens from /api/mdes_cs_prereleases/send."""
+    relevant = check_result["relevant"]
+    result = {
+        "outcome": check_result["outcome"],
+        "checked_count": len(check_result["working_set"]),
+        "checked_titles": [e["title"] for e in check_result["working_set"]],
+        "relevant": bool(relevant),
+        **(extra_fields or {}),
+    }
+
+    if not relevant:
+        return jsonify(result)
+
+    matched_apis = sorted({api for r in relevant for api in r["matched_apis"]},
+                           key=mdes_cs_prereleases.TARGET_APIS.index)
+    subject = mdes_cs_prereleases.email_subject(relevant)
+    body = mdes_cs_prereleases.render_email_body(relevant)
+
+    xlsx_path = mdes_cs_prereleases.default_report_xlsx_path()
+    mdes_cs_prereleases.render_report_xlsx(relevant, xlsx_path)
+
+    result.update({
+        "report_path": xlsx_path,
+        "matched_apis": matched_apis,
+        "relevant_titles": [r["title"] for r in relevant],
+        "subject": subject,
+        "body": body,
+    })
+    return jsonify(result)
+
+
+@app.post("/api/mdes_cs_prereleases/check-pending")
+def api_mdes_cs_prereleases_check_pending():
+    """'Vérifier après le dernier audit CS' button: every release not yet
+    reflected in the live spec (Production date still in the future),
+    recomputed fresh every call — independent of the checkpoint. The ONLY
+    action that ADVANCES cache/cs/phase2_checkpoint.json afterward
+    (regardless of outcome) — same relationship as /api/phase2/check-pending
+    has to Part 1's checkpoint, isolated in its own cache_dir."""
+    try:
+        entries = mdes_cs_prereleases.get_release_notes_table(mdes_cs_prereleases.DEFAULT_CACHE_DIR, refresh=True)
+    except Exception as e:
+        return jsonify({"error": f"Impossible de vérifier les pre-release notes CS : {e}"}), 502
+    if not entries:
+        return jsonify({"error": "Aucune release trouvée dans l'index Mastercard CS."}), 502
+
+    check = mdes_cs_prereleases.check_pending(entries, mdes_cs_prereleases.DEFAULT_CACHE_DIR)
+    mdes_cs_prereleases.advance_checkpoint(mdes_cs_prereleases.DEFAULT_CACHE_DIR, entries)
+    return _run_cs_prerelease_check(check)
+
+
+@app.post("/api/mdes_cs_prereleases/check-latest")
+def api_mdes_cs_prereleases_check_latest():
+    """'Vérifier la dernière release CS' button: releases newer than
+    whatever check-pending last examined. Does NOT advance the checkpoint,
+    so repeated clicks keep re-showing the same still-new release(s) until
+    check-pending runs again. Falls back to just the single newest table
+    entry if check-pending has never been run yet."""
+    try:
+        entries = mdes_cs_prereleases.get_release_notes_table(mdes_cs_prereleases.DEFAULT_CACHE_DIR, refresh=True)
+    except Exception as e:
+        return jsonify({"error": f"Impossible de vérifier les pre-release notes CS : {e}"}), 502
+    if not entries:
+        return jsonify({"error": "Aucune release trouvée dans l'index Mastercard CS."}), 502
+
+    check = mdes_cs_prereleases.check_since_checkpoint(entries, mdes_cs_prereleases.DEFAULT_CACHE_DIR)
+    return _run_cs_prerelease_check(check, extra_fields={"used_fallback": check["used_fallback"]})
+
+
+@app.post("/api/mdes_cs_prereleases/send")
+def api_mdes_cs_prereleases_send():
+    """Sends the CS pre-release alert email, with the (possibly user-edited)
+    subject/body from the popup, attaching the xlsx report — same pattern as
+    /api/phase2/send."""
+    payload = request.get_json(silent=True) or {}
+    subject, body = payload.get("subject"), payload.get("body")
+    if not subject or not body:
+        return jsonify({"error": "Objet et corps requis."}), 400
+
+    report_path = payload.get("report_path")
+    attachments = [report_path] if report_path and os.path.exists(report_path) else None
+    try:
+        sent_to = send_email_module.send_email(subject, body, attachments=attachments)
+    except send_email_module.SmtpConfigError as e:
+        return jsonify({"error": str(e)}), 502
+
+    return jsonify({"sent_to": sent_to})
 
 
 # ============================================================================

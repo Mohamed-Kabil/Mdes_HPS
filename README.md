@@ -55,21 +55,35 @@ dashboard répondent 503 avec un message expliquant quoi régénérer/déplacer
 python front/server.py
 ```
 
-→ http://127.0.0.1:5000 — 5 sections : APIs prioritaires (volet 1),
+→ http://127.0.0.1:5000 — 6 sections : APIs prioritaires (volet 1),
 dernière release Mastercard (volet 1), écarts spec vs Java (volet 2),
-mapping API → Java brut (volet 2), historique des rapports.
+dernière pre-release Mastercard CS (volet 2), mapping API → Java brut
+(volet 2), historique des rapports.
+
+Volets 1 et 2 ont chacun un bouton "Relancer l'audit" qui régénère le
+rapport Excel et prépare un brouillon d'email (objet + corps modifiables) ;
+l'email n'est envoyé qu'après confirmation explicite dans la popup, jamais
+automatiquement. Le rapport xlsx est joint à l'email et apparaît aussi dans
+"Historique des rapports" (les deux volets partagent `mc_divergence/reports/`).
+
+Le volet 2 a aussi son propre "Vérifier la dernière release" (comme le
+volet 1), qui vérifie la dernière pre-release note CS de Mastercard contre
+les 6 opérations suivies — voir `mdes_cs_prereleases.py`. C'est un simple
+matching par mot-clé (pas de LLM), donc à vérifier au cas par cas comme le
+reste des heuristiques de ce projet.
 
 ## Vérification rapide après un clone
 
 1. `pip install -r requirements.txt`
 2. `cp mc_divergence/.env.example mc_divergence/.env` puis remplir
 3. Vérifier/créer les 3 fichiers externes du tableau ci-dessus
-4. `python front/server.py` puis ouvrir http://127.0.0.1:5000 — les 5
+4. `python front/server.py` puis ouvrir http://127.0.0.1:5000 — les 6
    sections doivent charger sans erreur 503 (sauf celles dont le fichier
    externe manque encore)
-5. `python mc_divergence/phase1_historical_audit.py --help` et
-   `python mdes_cs_divergence_report.py --help` pour confirmer que les
-   imports se résolvent
+5. `python mc_divergence/phase1_historical_audit.py --help`,
+   `python mdes_cs_divergence_report.py --help` et
+   `python mdes_cs_prereleases.py --help` pour confirmer que les imports
+   se résolvent
 
 ## Écarts connus (pas des bugs de l'outil)
 

@@ -44,8 +44,16 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, 'mc_divergence'))
 
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
+
 from diff_openapi_all import load_spec, get_operation, flatten_schema
 from diff_predig_vs_data import extract_request_schema
+from phase1_historical_audit import (
+    _safe_sheet_name, _style_header_row, _autosize,
+    HEADER_FILL, HEADER_FONT, TITLE_FONT, WRAP,
+)
+import send_email as send_email_module
 
 DEFAULT_CS_SPEC_YAML = os.environ.get(
     'MDES_CS_SPEC_YAML', r'C:\Users\moham\Desktop\input\mdes-customer-service.yaml')
@@ -54,6 +62,18 @@ DEFAULT_CS_JAVA_MAPPING_JSON = os.environ.get(
     r'C:\Users\moham\Downloads\pwc-api-sp5_api\Mdes_cs_api\generated\mdes_cs_api_schemas.generated.json')
 DEFAULT_OUTPUT = os.path.join(HERE, 'mdes_cs_divergence_report.json')
 DEFAULT_OUTPUT_MD = os.path.join(HERE, 'mdes_cs_divergence_report.md')
+DEFAULT_REPORT_XLSX_PATH = os.path.join(HERE, 'mc_divergence', 'reports', 'mdes_cs_divergence_report.xlsx')
+
+STATUS_LABEL_FR = {
+    'implemente': 'Implémenté', 'partiel': 'Partiel',
+    'non_verifiable': 'Non vérifiable', 'non_implemente': 'Non implémenté',
+}
+STATUS_FILL = {
+    'implemente': PatternFill('solid', fgColor='C6EFCE'),
+    'partiel': PatternFill('solid', fgColor='FFEB9C'),
+    'non_verifiable': PatternFill('solid', fgColor='D9D9D9'),
+    'non_implemente': PatternFill('solid', fgColor='FFC7CE'),
+}
 
 OPERATIONS = [
     ('Search', '/{id}/search'),
@@ -161,6 +181,55 @@ def audit_operation(spec_fields, java_fields_by_path):
     return results
 
 
+def group_shared_field_gaps(operations):
+    """Fields marked non_implemente identically across 2+ operations at
+    once — same relationship as phase1_historical_audit.py's
+    group_shared_schema_fixes(), but clustering directly on the field path
+    (there's no separate spec-schema-origin vs data-schema-origin pair here
+    like the pre-dig/data.yaml side has — the CS spec's own field path IS
+    the shared key, since the exact same dotted path showing up as missing
+    on 2+ operations means the exact same underlying Java gap)."""
+    by_field = {}
+    for op in operations:
+        if 'error' in op:
+            continue
+        for f in op.get('fields', []):
+            if f['status'] != 'non_implemente':
+                continue
+            entry = by_field.setdefault(f['field'], {
+                'field': f['field'], 'required': f['required'], 'type': f['type'], 'operations': [],
+            })
+            entry['operations'].append(op['operation'])
+    clusters = [c for c in by_field.values() if len(c['operations']) >= 2]
+    clusters.sort(key=lambda c: len(c['operations']), reverse=True)
+    return clusters
+
+
+def summarize_by_root_field(field_clusters):
+    """Rolls per-field clusters up to their top-level parent (e.g. every
+    'EncryptedAccountInformation.*' leaf rolls up to 'EncryptedAccountInformation')
+    — the actionable unit: one Java change (wiring up that object) resolves
+    every leaf under it, across every operation missing it. Same idea as
+    summarize_by_data_target() on the pre-dig side."""
+    rollup = {}
+    for c in field_clusters:
+        root = c['field'].split('.')[0]
+        r = rollup.setdefault(root, {'root_field': root, 'fields': [], 'operations': set()})
+        r['fields'].append(c['field'])
+        r['operations'].update(c['operations'])
+    out = []
+    for r in rollup.values():
+        out.append({
+            'root_field': r['root_field'],
+            'field_count': len(r['fields']),
+            'fields': sorted(r['fields']),
+            'operation_count': len(r['operations']),
+            'operations': sorted(r['operations']),
+        })
+    out.sort(key=lambda r: (r['operation_count'], r['field_count']), reverse=True)
+    return out
+
+
 def run(spec_path, java_mapping_path):
     spec = load_spec(spec_path, repair=True)
     java_fields_by_op, java_meta = load_java_fields(java_mapping_path)
@@ -188,11 +257,14 @@ def run(spec_path, java_mapping_path):
             'fields': fields,
         })
 
+    shared_gaps = summarize_by_root_field(group_shared_field_gaps(operations))
+
     return {
         'spec_source': spec_path,
         'java_mapping_source': java_mapping_path,
         'java_mapping_generated_at': java_meta.get('generatedAt'),
         'operations': operations,
+        'shared_gaps': shared_gaps,
     }
 
 
@@ -209,6 +281,20 @@ def render_markdown(report):
         '`partiel` = résolu par le modèle local plutôt que par un scan direct. `implemente` = trouvé directement.',
         '',
     ]
+
+    shared_gaps = report.get('shared_gaps') or []
+    if shared_gaps:
+        lines.append('## Écarts à cause commune — corriger une fois pour résoudre plusieurs opérations')
+        lines.append('')
+        for g in shared_gaps:
+            lines.append(
+                f"- Corriger `{g['root_field']}` côté Java → résout **{g['field_count']} champ(s)** "
+                f"sur **{g['operation_count']} opération(s)** d'un coup : {', '.join(g['operations'])}"
+            )
+            for field in g['fields']:
+                lines.append(f"  - `{field}`")
+        lines.append('')
+
     for op in report['operations']:
         if 'error' in op:
             lines.append(f"## {op['operation']} — {op['path']}\n\n{op['error']}\n")
@@ -231,6 +317,172 @@ def render_markdown(report):
                     f"{f['matched_java_field'] or '—'} |"
                 )
         lines.append('')
+    return '\n'.join(lines)
+
+
+# ============================================================================
+# Excel report — same styling/helpers as phase1_historical_audit.py's report,
+# reused directly rather than reimplemented (_safe_sheet_name, _style_header_row,
+# _autosize, HEADER_FILL/HEADER_FONT/TITLE_FONT/WRAP).
+# ============================================================================
+
+def _write_summary_sheet(wb, report, op_sheet_names):
+    ws = wb.create_sheet("Résumé", 0)
+    ws['A1'] = "MDES Customer Service — écarts spec officiel vs implémentation Java"
+    ws['A1'].font = TITLE_FONT
+    ws.merge_cells('A1:E1')
+    ws['A2'] = f"Spec officiel : {report['spec_source']}"
+    ws['A3'] = f"Extraction Java du {report['java_mapping_generated_at']}"
+
+    headers = ['Opération', 'Total champs', 'Implémenté', 'Partiel', 'Non vérifiable', 'Non implémenté']
+    header_row = 5
+    for col, h in enumerate(headers, start=1):
+        ws.cell(row=header_row, column=col, value=h)
+    _style_header_row(ws, header_row, len(headers))
+
+    row = header_row + 1
+    for op in report['operations']:
+        if 'error' in op:
+            continue
+        c = op['counts']
+        values = [op['operation'], op['total_fields'], c.get('implemente', 0), c.get('partiel', 0),
+                  c.get('non_verifiable', 0), c.get('non_implemente', 0)]
+        for col, v in enumerate(values, start=1):
+            ws.cell(row=row, column=col, value=v)
+        sheet_name = op_sheet_names.get(op['operation'])
+        if sheet_name:
+            ws.cell(row=row, column=1).hyperlink = f"#'{sheet_name}'!A1"
+            ws.cell(row=row, column=1).font = Font(underline='single', color='0563C1')
+        row += 1
+
+    _autosize(ws, [22, 14, 14, 12, 16, 16])
+
+
+def _write_operation_sheet(wb, sheet_name, op):
+    ws = wb.create_sheet(sheet_name)
+    ws['A1'] = op['operation']
+    ws['A1'].font = TITLE_FONT
+    ws['A2'] = f"POST {op['path']}"
+    ws['A2'].font = Font(italic=True)
+
+    headers = ['Champ (spec officiel)', 'Statut', 'Requis', 'Type', 'Champ Java correspondant',
+               'Variante(s)', 'Source Java']
+    header_row = 4
+    for col, h in enumerate(headers, start=1):
+        ws.cell(row=header_row, column=col, value=h)
+    _style_header_row(ws, header_row, len(headers))
+
+    fields_sorted = sorted(op['fields'], key=lambda f: (f['status'] == 'implemente', f['field']))
+    row = header_row + 1
+    for f in fields_sorted:
+        values = [
+            f['field'], STATUS_LABEL_FR[f['status']], 'Oui' if f['required'] else 'Non',
+            f.get('type') or '', f.get('matched_java_field') or '—',
+            ', '.join(f.get('variants') or []), '; '.join(f.get('java_source') or []),
+        ]
+        for col, v in enumerate(values, start=1):
+            cell = ws.cell(row=row, column=col, value=v)
+            cell.alignment = WRAP
+            cell.fill = STATUS_FILL[f['status']]
+        row += 1
+
+    ws.freeze_panes = f"A{header_row + 1}"
+    _autosize(ws, [45, 16, 9, 12, 45, 30, 60])
+
+
+def _write_shared_gaps_sheet(wb, shared_gaps):
+    if not shared_gaps:
+        return
+    ws = wb.create_sheet("Écarts à cause commune")
+    ws['A1'] = "Un seul changement côté Java résout plusieurs opérations à la fois"
+    ws['A1'].font = TITLE_FONT
+    ws.merge_cells('A1:D1')
+
+    headers = ['Champ racine', 'Champs concernés', 'Nb champs', 'Nb opérations', 'Opérations concernées']
+    header_row = 3
+    for col, h in enumerate(headers, start=1):
+        ws.cell(row=header_row, column=col, value=h)
+    _style_header_row(ws, header_row, len(headers))
+
+    row = header_row + 1
+    for g in shared_gaps:
+        values = [g['root_field'], ', '.join(g['fields']), g['field_count'], g['operation_count'],
+                  ', '.join(g['operations'])]
+        for col, v in enumerate(values, start=1):
+            cell = ws.cell(row=row, column=col, value=v)
+            cell.alignment = WRAP
+        row += 1
+
+    ws.freeze_panes = f"A{header_row + 1}"
+    _autosize(ws, [26, 60, 11, 13, 40])
+
+
+def render_report_xlsx(report, xlsx_path):
+    wb = Workbook()
+    wb.remove(wb.active)
+
+    used_names = set()
+    op_sheet_names = {}
+    for op in report['operations']:
+        if 'error' in op:
+            continue
+        sheet_name = _safe_sheet_name(op['operation'], used_names)
+        op_sheet_names[op['operation']] = sheet_name
+
+    _write_summary_sheet(wb, report, op_sheet_names)
+    for op in report['operations']:
+        if 'error' in op:
+            continue
+        _write_operation_sheet(wb, op_sheet_names[op['operation']], op)
+    _write_shared_gaps_sheet(wb, report.get('shared_gaps') or [])
+
+    os.makedirs(os.path.dirname(xlsx_path), exist_ok=True)
+    wb.save(xlsx_path)
+
+
+# ============================================================================
+# Email draft — same relationship to render_report_xlsx() as
+# phase1_historical_audit.render_email_draft() has to its own xlsx report:
+# short readable summary, full detail travels as the attached workbook.
+# ============================================================================
+
+def email_subject(report):
+    total_issues = sum(
+        (op['counts'].get('non_implemente', 0) + op['counts'].get('non_verifiable', 0)
+         + op['counts'].get('partiel', 0))
+        for op in report['operations'] if 'error' not in op
+    )
+    return f"[MDES Customer Service] Audit divergences — {total_issues} écart(s) à traiter"
+
+
+def render_email_body(report):
+    lines = [
+        "Bonjour,", "",
+        "L'audit MDES Customer Service (spec officiel Mastercard vs implémentation Java) "
+        "a été relancé. Résumé ci-dessous, détail champ par champ en pièce jointe.",
+        "",
+    ]
+
+    for op in report['operations']:
+        if 'error' in op:
+            lines.append(f"- **{op['operation']}** : {op['error']}")
+            continue
+        c = op['counts']
+        issues = c.get('non_implemente', 0) + c.get('non_verifiable', 0) + c.get('partiel', 0)
+        lines.append(f"- **{op['operation']}** : {issues} écart(s) sur {op['total_fields']} champ(s) "
+                     f"({c.get('non_implemente', 0)} non implémenté(s), "
+                     f"{c.get('non_verifiable', 0)} non vérifiable(s), {c.get('partiel', 0)} partiel(s))")
+    lines.append('')
+
+    shared_gaps = report.get('shared_gaps') or []
+    if shared_gaps:
+        lines.append("### Écarts à cause commune — corriger une fois pour résoudre plusieurs opérations")
+        lines.append('')
+        for g in shared_gaps:
+            lines.append(f"- Corriger `{g['root_field']}` côté Java → résout {g['field_count']} champ(s) "
+                         f"sur {g['operation_count']} opération(s) d'un coup : {', '.join(g['operations'])}")
+        lines.append('')
+
     return '\n'.join(lines)
 
 

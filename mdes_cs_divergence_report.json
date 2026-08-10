@@ -1345,5 +1345,34 @@
         }
       ]
     }
+  ],
+  "shared_gaps": [
+    {
+      "root_field": "EncryptedAccountInformation",
+      "field_count": 15,
+      "fields": [
+        "EncryptedAccountInformation",
+        "EncryptedAccountInformation.EncryptedData",
+        "EncryptedAccountInformation.EncryptedData.CurrentAccount",
+        "EncryptedAccountInformation.EncryptedData.CurrentAccount.AccountPan",
+        "EncryptedAccountInformation.EncryptedData.CurrentAccount.AlternateAccountIdentifier",
+        "EncryptedAccountInformation.EncryptedData.CurrentAccount.FinancialAccountId",
+        "EncryptedAccountInformation.EncryptedData.CurrentAccount.Token",
+        "EncryptedAccountInformation.EncryptedData.CurrentAccount.VirtualCardNumber",
+        "EncryptedAccountInformation.EncryptedKey",
+        "EncryptedAccountInformation.Iv",
+        "EncryptedAccountInformation.OaepHashingAlgorithm",
+        "EncryptedAccountInformation.PublicKeyFingerprint",
+        "EncryptedAccountInformation.aad",
+        "EncryptedAccountInformation.algorithmCipherMode",
+        "EncryptedAccountInformation.tag"
+      ],
+      "operation_count": 3,
+      "operations": [
+        "Search",
+        "Token Activate",
+        "Token Update"
+      ]
+    }
   ]
 }

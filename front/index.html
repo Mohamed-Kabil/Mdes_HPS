@@ -38,8 +38,24 @@
     <section id="mdes-cs-divergence-section">
       <div class="section-header">
         <h2>MDES Customer Service — écarts spec officiel vs Java</h2>
+        <div class="action-bar">
+          <button id="mdes-cs-run-btn" class="action-btn">Relancer l'audit CS</button>
+        </div>
       </div>
+      <div id="mdes-cs-divergence-status" class="action-status"></div>
       <div id="mdes-cs-divergence-content" class="loading">Chargement…</div>
+    </section>
+
+    <section id="mdes-cs-prereleases-section">
+      <div class="section-header">
+        <h2>MDES Customer Service — dernière pre-release Mastercard</h2>
+        <div class="action-bar">
+          <button id="mdes-cs-prereleases-check-pending-btn" class="action-btn">Vérifier après le dernier audit CS</button>
+          <button id="mdes-cs-prereleases-check-latest-btn" class="action-btn">Vérifier la dernière release CS</button>
+        </div>
+      </div>
+      <div id="mdes-cs-prereleases-status" class="action-status"></div>
+      <div id="mdes-cs-prereleases-content" class="loading">Chargement…</div>
     </section>
 
     <section id="mdes-cs-section">

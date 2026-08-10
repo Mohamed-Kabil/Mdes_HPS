@@ -282,6 +282,51 @@ function worstCsStatus(counts) {
   return "implemente";
 }
 
+// ---------------------------------------------------------------------------
+// "Fix once" pour le volet CS — champs non_implemente identiques partagés
+// par 2+ opérations à la fois (voir group_shared_field_gaps() /
+// summarize_by_root_field() dans mdes_cs_divergence_report.py). Même idée
+// que renderSharedFixes() côté pre-dig, mais sans le double niveau
+// schéma pre-dig/data.yaml -- ici la clé partagée est directement le champ.
+// ---------------------------------------------------------------------------
+
+function renderCsSharedGaps(sharedGaps, container) {
+  if (!sharedGaps || !sharedGaps.length) return;
+
+  const section = document.createElement("div");
+  section.className = "shared-fixes";
+
+  const heading = document.createElement("h3");
+  heading.className = "shared-fixes-heading";
+  heading.textContent = "Écarts à cause commune — corriger une fois pour résoudre plusieurs opérations";
+  section.appendChild(heading);
+
+  for (const g of sharedGaps) {
+    const card = document.createElement("details");
+    card.className = "shared-fix-card";
+
+    const summary = document.createElement("summary");
+    summary.innerHTML = `Corriger <code>${g.root_field}</code> côté Java → résout
+      <strong>${g.field_count} champ(s)</strong> sur <strong>${g.operation_count} opération(s)</strong>
+      d'un coup : ${g.operations.join(", ")}`;
+    card.appendChild(summary);
+
+    const body = document.createElement("div");
+    body.className = "shared-fix-body";
+    const list = document.createElement("ul");
+    for (const field of g.fields) {
+      const li = document.createElement("li");
+      li.textContent = field;
+      list.appendChild(li);
+    }
+    body.appendChild(list);
+    card.appendChild(body);
+    section.appendChild(card);
+  }
+
+  container.appendChild(section);
+}
+
 function renderMdesCsDivergence(data, el) {
   el.className = "";
   el.innerHTML = "";
@@ -321,6 +366,7 @@ function renderMdesCsDivergence(data, el) {
   }
 
   el.appendChild(grid);
+  renderCsSharedGaps(data.shared_gaps || [], el);
 }
 
 function openMdesCsDivergenceModal(op) {
@@ -577,6 +623,113 @@ function renderPhase2(data, el) {
 }
 
 // ---------------------------------------------------------------------------
+// MDES Customer Service — dernière pre-release Mastercard (mdes_cs_prereleases.py)
+// ---------------------------------------------------------------------------
+
+async function loadMdesCsPrereleases() {
+  const el = document.getElementById("mdes-cs-prereleases-content");
+  try {
+    const res = await fetch("/api/mdes_cs_prereleases/latest");
+    const data = await res.json();
+    if (!res.ok) {
+      el.className = "error";
+      el.textContent = data.error || "Erreur inconnue.";
+      return;
+    }
+    renderCsPrereleases(data, el);
+  } catch (e) {
+    el.className = "error";
+    el.textContent = "Impossible de contacter le serveur (" + e.message + ").";
+  }
+}
+
+function renderCsPrereleases(data, el) {
+  el.className = "";
+  el.innerHTML = "";
+
+  const card = document.createElement("div");
+  card.className = "release-card";
+
+  const chips = data.tracked_apis
+    .map((api) => {
+      const matched = data.matched_apis.includes(api);
+      return `<span class="chip ${matched ? "matched" : "unmatched"}">${api}</span>`;
+    })
+    .join("");
+
+  const matchNote = data.matched_apis.length
+    ? `<div class="matched-apis">${chips}</div>`
+    : `<div class="no-match-note">Aucune des ${data.tracked_apis.length} opérations suivies n'est mentionnée dans cette release.</div>
+       <div class="matched-apis">${chips}</div>`;
+
+  card.innerHTML = `
+    <div class="release-title">${data.title}</div>
+    <div class="release-meta">
+      <span><strong>Date :</strong> ${data.upgrade_date}</span>
+    </div>
+    ${matchNote}
+    <a class="release-link" href="${data.url}" target="_blank" rel="noopener">Voir la release note sur developer.mastercard.com →</a>
+  `;
+
+  el.appendChild(card);
+}
+
+function handleCsPrereleaseCheckResult(data, statusEl, contextLabel) {
+  statusEl.innerHTML = "";
+
+  if (data.outcome === "no_new") {
+    setStatus(statusEl, "success", "Aucune nouvelle release CS à signaler.");
+    openInfoModal(
+      "Aucune nouvelle release",
+      `Aucune nouvelle release Mastercard CS depuis la dernière vérification (${contextLabel}).`
+    );
+  } else if (data.outcome === "new_no_impact") {
+    setStatus(
+      statusEl,
+      "success",
+      `${data.checked_count} nouvelle(s) release(s) CS — aucune n'affecte les opérations suivies.`
+    );
+    openInfoModal(
+      "Aucun impact sur les opérations suivies",
+      `${data.checked_count} nouvelle(s) release(s) CS trouvée(s) (${contextLabel}), mais aucune ne mentionne une opération suivie :`,
+      data.checked_titles
+    );
+  } else {
+    setStatus(statusEl, "success", `${data.relevant_titles.length} release(s) touchent ${data.matched_apis.join(", ")} — `);
+    const sendBtn = document.createElement("button");
+    sendBtn.className = "action-btn inline-action-btn";
+    sendBtn.textContent = "Vérifier et envoyer l'email…";
+    sendBtn.addEventListener("click", () => {
+      openEmailPreviewModal("/api/mdes_cs_prereleases/send", data.subject, data.body, { report_path: data.report_path }, () => loadReports());
+    });
+    statusEl.appendChild(sendBtn);
+  }
+  loadMdesCsPrereleases();
+  loadReports();
+}
+
+document.getElementById("mdes-cs-prereleases-check-pending-btn").addEventListener("click", () => {
+  const btn = document.getElementById("mdes-cs-prereleases-check-pending-btn");
+  const statusEl = document.getElementById("mdes-cs-prereleases-status");
+
+  runAction(btn, statusEl, "/api/mdes_cs_prereleases/check-pending", {}, (data) => {
+    handleCsPrereleaseCheckResult(data, statusEl, "toutes les releases après le dernier audit CS");
+  });
+});
+
+document.getElementById("mdes-cs-prereleases-check-latest-btn").addEventListener("click", () => {
+  const btn = document.getElementById("mdes-cs-prereleases-check-latest-btn");
+  const statusEl = document.getElementById("mdes-cs-prereleases-status");
+
+  runAction(btn, statusEl, "/api/mdes_cs_prereleases/check-latest", {}, (data) => {
+    const contextLabel = data.used_fallback
+      ? "aucun contrôle 'après le dernier audit CS' n'a encore été fait — dernière release uniquement"
+      : "depuis le dernier contrôle 'après le dernier audit CS'";
+    handleCsPrereleaseCheckResult(data, statusEl, contextLabel);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Actions — re-run Phase 1 / Phase 2 on demand (step 4)
 // ---------------------------------------------------------------------------
 
@@ -792,6 +945,25 @@ document.getElementById("phase1-run-btn").addEventListener("click", () => {
   });
 });
 
+document.getElementById("mdes-cs-run-btn").addEventListener("click", () => {
+  const btn = document.getElementById("mdes-cs-run-btn");
+  const statusEl = document.getElementById("mdes-cs-divergence-status");
+
+  runAction(btn, statusEl, "/api/mdes_cs_divergence/run", {}, (data) => {
+    statusEl.innerHTML = "";
+    setStatus(statusEl, "success", "Audit CS terminé — ");
+    const sendBtn = document.createElement("button");
+    sendBtn.className = "action-btn inline-action-btn";
+    sendBtn.textContent = "Vérifier et envoyer l'email…";
+    sendBtn.addEventListener("click", () => {
+      openEmailPreviewModal("/api/mdes_cs_divergence/send", data.subject, data.body, { report_path: data.report_path }, () => loadReports());
+    });
+    statusEl.appendChild(sendBtn);
+    loadMdesCsDivergence();
+    loadReports();
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Reports history (step 5)
 // ---------------------------------------------------------------------------
@@ -907,5 +1079,6 @@ async function openReportModal(name) {
 loadPhase1();
 loadPhase2();
 loadMdesCsDivergence();
+loadMdesCsPrereleases();
 loadMdesCsMapping();
 loadReports();

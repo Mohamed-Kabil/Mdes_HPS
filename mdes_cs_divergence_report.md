@@ -5,6 +5,25 @@ Extraction Java : `C:\Users\moham\Downloads\pwc-api-sp5_api\Mdes_cs_api\generate
 
 `non_implemente` = champ du spec absent de tout ce que le code Java construit actuellement. `non_verifiable` = un champ Java correspondant existe mais son identité n'a pas pu être résolue (voir MDES_CS_API_JAVA_MAPPING_LINK.md) — écart dans la donnée, pas une absence confirmée. `partiel` = résolu par le modèle local plutôt que par un scan direct. `implemente` = trouvé directement.
 
+## Écarts à cause commune — corriger une fois pour résoudre plusieurs opérations
+
+- Corriger `EncryptedAccountInformation` côté Java → résout **15 champ(s)** sur **3 opération(s)** d'un coup : Search, Token Activate, Token Update
+  - `EncryptedAccountInformation`
+  - `EncryptedAccountInformation.EncryptedData`
+  - `EncryptedAccountInformation.EncryptedData.CurrentAccount`
+  - `EncryptedAccountInformation.EncryptedData.CurrentAccount.AccountPan`
+  - `EncryptedAccountInformation.EncryptedData.CurrentAccount.AlternateAccountIdentifier`
+  - `EncryptedAccountInformation.EncryptedData.CurrentAccount.FinancialAccountId`
+  - `EncryptedAccountInformation.EncryptedData.CurrentAccount.Token`
+  - `EncryptedAccountInformation.EncryptedData.CurrentAccount.VirtualCardNumber`
+  - `EncryptedAccountInformation.EncryptedKey`
+  - `EncryptedAccountInformation.Iv`
+  - `EncryptedAccountInformation.OaepHashingAlgorithm`
+  - `EncryptedAccountInformation.PublicKeyFingerprint`
+  - `EncryptedAccountInformation.aad`
+  - `EncryptedAccountInformation.algorithmCipherMode`
+  - `EncryptedAccountInformation.tag`
+
 ## Search — `POST /{id}/search`
 35 champ(s) au total — 14 implémenté(s), 0 partiel(s), 0 non vérifiable(s), 21 non implémenté(s).
 
