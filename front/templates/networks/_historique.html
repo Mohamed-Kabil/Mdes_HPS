@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Historique — {{ network_name }}{% endblock %}
+{% block content %}
+<h1>Historique — {{ network_name }}</h1>
+<p class="caption">Rapports Excel et brouillons d'email déjà générés (dossier partagé mc_divergence/reports/).</p>
+
+{% if not reports %}
+<p class="caption">Aucun rapport généré pour l'instant.</p>
+{% else %}
+<table class="detail-table">
+  <tr><th>Fichier</th><th>Modifié le</th><th>Taille</th><th></th></tr>
+  {% for r in reports %}
+  <tr>
+    <td class="field-name">{{ r.name }}</td>
+    <td>{{ r.modified_at }}</td>
+    <td>{{ r.size }}</td>
+    <td><a href="{{ url_for(network_key ~ '.historique_download', name_=r.name) }}" download>Télécharger</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

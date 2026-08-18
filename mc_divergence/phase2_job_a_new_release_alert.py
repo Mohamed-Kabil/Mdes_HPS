@@ -88,7 +88,6 @@ TARGET_APIS = [
     "NotifyTokenUpdated",
     "ValidateActivationCode",
     "GetAccountInformation",
-    "NotifySuspiciousEvents",
 ]
 
 # Simple keyword matching per API: the camel-case name split into words
@@ -107,7 +106,6 @@ API_KEYWORDS = {
     "NotifyTokenUpdated": ["Notify Token Updated", "(NTU)"],
     "ValidateActivationCode": ["Validate Activation Code", "(VAC)"],
     "GetAccountInformation": ["Get Account Information", "(GAI)"],
-    "NotifySuspiciousEvents": ["Notify Suspicious Events", "(NSE)"],
 }
 
 

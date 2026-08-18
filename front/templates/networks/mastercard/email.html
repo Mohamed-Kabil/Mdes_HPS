@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Email — Systeme de conformite reseaux{% endblock %}
+{% block content %}
+<h1>Envoyer par email</h1>
+
+<div class="view-switch">
+  <a href="{{ url_for('mastercard.email_view', view='comparison') }}" class="{{ 'active' if view == 'comparison' else '' }}">Comparaison</a>
+  <a href="{{ url_for('mastercard.email_view', view='releases') }}" class="{{ 'active' if view == 'releases' else '' }}">Releases</a>
+</div>
+
+{% if not has_data %}
+  <p class="caption">
+    Aucune analyse {{ 'Comparaison' if view == 'comparison' else 'Releases' }} n'a encore ete lancee.
+    <a href="{{ url_for('mastercard.' ~ ('comparison_view' if view == 'comparison' else 'releases_view'), refresh=1) }}">Lancer l'analyse</a>
+  </p>
+{% else %}
+
+{% if result %}
+  {% if result[0] == 'success' %}
+    <p class="conforme">{{ result[1] }}</p>
+  {% else %}
+    <p class="card-status">{{ result[1] }}</p>
+  {% endif %}
+{% endif %}
+
+{% if pending_confirm %}
+  <div class="confirm-box">
+    <p>Confirmer l'envoi a : <strong>{{ recipients }}</strong><br>Objet : <strong>{{ subject }}</strong><br>Piece jointe : <strong>{{ attachment_name }}</strong></p>
+    <form method="post">
+      <input type="hidden" name="view" value="{{ view }}">
+      <input type="hidden" name="subject" value="{{ subject }}">
+      <textarea name="intro" hidden>{{ intro }}</textarea>
+      <input type="hidden" name="recipients" value="{{ recipients }}">
+      <input type="hidden" name="confirmed" value="1">
+      <button type="submit">Confirmer l'envoi</button>
+    </form>
+    <a href="{{ url_for('mastercard.email_view', view=view) }}">Annuler</a>
+  </div>
+{% else %}
+  <form method="post" class="email-form">
+    <input type="hidden" name="view" value="{{ view }}">
+    <label>Objet
+      <input type="text" name="subject" value="{{ subject }}">
+    </label>
+    <label>Message d'introduction
+      <textarea name="intro" rows="6">{{ intro }}</textarea>
+    </label>
+    <label>Destinataires (separes par des virgules)
+      <input type="text" name="recipients" value="{{ recipients }}">
+    </label>
+    <button type="submit">Envoyer</button>
+  </form>
+{% endif %}
+
+<h2>Apercu de l'email (ce qui sera reellement envoye)</h2>
+<div class="email-preview">
+  {{ preview_html | safe }}
+  <p class="attachment-note">&#128206; {{ attachment_name }} (piece jointe)</p>
+</div>
+{% endif %}
+{% endblock %}

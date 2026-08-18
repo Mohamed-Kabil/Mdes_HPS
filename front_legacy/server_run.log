@@ -1,0 +1,61 @@
+ * Serving Flask app 'server'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+127.0.0.1 - - [10/Aug/2026 14:20:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:20:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:20:34] "GET /app.js HTTP/1.1" 200 -
+  [repair] 'C:\Users\moham\Desktop\input\data.yaml' failed to parse as-is; fixed 2815 corrupted list-item indentation(s) and retrying
+127.0.0.1 - - [10/Aug/2026 14:20:42] "GET /api/phase1 HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:20:42] "GET /api/phase2/latest HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:20:42] "GET /api/reports HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:20:42] "GET /api/mdes_cs_mapping HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:20:42] "GET /api/mdes_cs_divergence HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:20:42] "GET /api/mdes_cs_prereleases/latest HTTP/1.1" 200 -
+  [fetch-cs] release notes table -> C:\Users\moham\Desktop\MDES_Project\mc_divergence\cache\cs\known_releases.json (14 entries)
+  [cs-prereleases] checking September 2026 - Customer Service API Release Notes (https://developer.mastercard.com/mdes-customer-service/documentation/release-history/pre-release-sep2026/index.md)
+  [cs-prereleases] checking September 2024 - Customer Service API Release Notes (https://developer.mastercard.com/mdes-customer-service/documentation/release-history/release-notes-sep2024/index.md)
+127.0.0.1 - - [10/Aug/2026 14:21:01] "POST /api/mdes_cs_prereleases/check-pending HTTP/1.1" 200 -
+  [fetch-cs] release notes table -> C:\Users\moham\Desktop\MDES_Project\mc_divergence\cache\cs\known_releases.json (14 entries)
+127.0.0.1 - - [10/Aug/2026 14:21:15] "POST /api/mdes_cs_prereleases/check-latest HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:21:38] "GET /api/reports HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:22:05] "POST /api/mdes_cs_prereleases/send HTTP/1.1" 400 -
+127.0.0.1 - - [10/Aug/2026 14:23:04] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:04] "GET /style.css HTTP/1.1" 304 -
+127.0.0.1 - - [10/Aug/2026 14:23:04] "GET /app.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:04] "GET /api/mdes_cs_mapping HTTP/1.1" 200 -
+  [repair] 'C:\Users\moham\Desktop\input\data.yaml' failed to parse as-is; fixed 2815 corrupted list-item indentation(s) and retrying
+127.0.0.1 - - [10/Aug/2026 14:23:04] "GET /api/phase2/latest HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:05] "GET /api/mdes_cs_prereleases/latest HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:05] "GET /api/mdes_cs_divergence HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:05] "GET /api/reports HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:11] "GET /api/phase1 HTTP/1.1" 200 -
+  [fetch-cs] release notes table -> C:\Users\moham\Desktop\MDES_Project\mc_divergence\cache\cs\known_releases.json (14 entries)
+  [cs-prereleases] checking September 2026 - Customer Service API Release Notes (https://developer.mastercard.com/mdes-customer-service/documentation/release-history/pre-release-sep2026/index.md)
+  [cs-prereleases] checking September 2024 - Customer Service API Release Notes (https://developer.mastercard.com/mdes-customer-service/documentation/release-history/release-notes-sep2024/index.md)
+127.0.0.1 - - [10/Aug/2026 14:23:27] "POST /api/mdes_cs_prereleases/check-pending HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:27] "GET /api/reports HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:27] "GET /api/mdes_cs_prereleases/latest HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:40] "POST /api/mdes_cs_prereleases/send HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:23:40] "GET /api/reports HTTP/1.1" 200 -
+  [fetch-cs] release notes table -> C:\Users\moham\Desktop\MDES_Project\mc_divergence\cache\cs\known_releases.json (14 entries)
+127.0.0.1 - - [10/Aug/2026 14:24:16] "POST /api/mdes_cs_prereleases/check-latest HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:24:16] "GET /api/reports HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:24:16] "GET /api/mdes_cs_prereleases/latest HTTP/1.1" 200 -
+  [fetch] release notes table -> C:\Users\moham\Desktop\MDES_Project\mc_divergence\cache\known_releases.json (19 entries)
+  [fetch] pre-dig.yaml -> C:\Users\moham\Desktop\MDES_Project\mc_divergence\cache\pre-dig.yaml (122023 chars)
+  [phase1] 11 release(s) depuis (2025, 1)
+  [phase1] loading data.yaml <- C:\Users\moham\Desktop\input\data.yaml
+  [repair] 'C:\Users\moham\Desktop\input\data.yaml' failed to parse as-is; fixed 2815 corrupted list-item indentation(s) and retrying
+127.0.0.1 - - [10/Aug/2026 14:25:07] "POST /api/mdes_cs_divergence/run HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:25:09] "GET /api/mdes_cs_divergence HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:25:09] "GET /api/reports HTTP/1.1" 200 -
+  [phase1] loading pre-dig.yaml <- C:\Users\moham\Desktop\MDES_Project\mc_divergence\cache\pre-dig.yaml
+  [phase1] direct structural diff: pre-dig.yaml vs data.yaml (8 priority APIs)
+  [phase1] report (xlsx) -> C:\Users\moham\Desktop\MDES_Project\mc_divergence\reports\phase1_divergence_report.xlsx
+  [phase1] xlsx report -> C:\Users\moham\Desktop\MDES_Project\mc_divergence\reports\phase1_divergence_report.xlsx (NOT sent — pass --send to actually email it)
+127.0.0.1 - - [10/Aug/2026 14:25:14] "POST /api/phase1/run HTTP/1.1" 200 -
+  [repair] 'C:\Users\moham\Desktop\input\data.yaml' failed to parse as-is; fixed 2815 corrupted list-item indentation(s) and retrying
+127.0.0.1 - - [10/Aug/2026 14:25:15] "GET /api/reports HTTP/1.1" 200 -
+127.0.0.1 - - [10/Aug/2026 14:25:37] "GET /api/phase1 HTTP/1.1" 200 -

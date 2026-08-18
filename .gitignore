@@ -1,10 +1,18 @@
 mc_divergence/.env
 notifications.db
+
+# External spec file (proprietary PowerCARD data) -- referenced by absolute
+# path / DATA_YAML_PATH env var, never vendored in the repo (see README.md)
+mc_divergence/data.yaml
 __pycache__/
 *.pyc
 
-# Local dev logs (front/server.py runs), regenerated on every launch
+# Local dev logs (front/app.py runs), regenerated on every launch
 front/*.log
+
+# front/app.py's local caches + user-entered notes -- generated/session
+# state, not source (see front/INTEGRATION_NOTES.md)
+front/data/
 
 # Claude Code local permission overrides -- machine-specific, not shared config
 .claude/settings.local.json

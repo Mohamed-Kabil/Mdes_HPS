@@ -1,0 +1,1001 @@
+:root {
+  --navy: #14163C;
+  --bg: #F7F7FB;
+  --accent-start: #E8542A;
+  --accent-end: #F5A623;
+  --critique: #D9412E;
+  --important: #E8952B;
+  --mineur: #5A6B7A;
+  --white: #FFFFFF;
+  --conforme: #2E9E6D;
+  --line: rgba(20, 22, 60, 0.15);
+  --line-soft: rgba(20, 22, 60, 0.08);
+
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-body: "Inter", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, monospace;
+
+  --radius: 8px;
+  --nav-height: 84px;
+  --sidebar-width: 200px;
+
+  /* Valeurs "plateforme" par defaut, utilisees quand aucune classe
+     theme-<reseau> n'est posee sur <body> (pages globales : accueil
+     plateforme, Parametres, Aide). Les blocs body.theme-* ci-dessous les
+     surchargent normalement sur les pages reseau. */
+  --brand-nav-bg: var(--navy);
+  --brand-accent: var(--accent-start);
+  --brand-accent-hover: #CF4620;
+  --brand-heading-font: var(--font-heading);
+  --brand-header-bg: var(--white);
+  --brand-header-fg: var(--navy);
+}
+
+/* Themes distincts par reseau — un bloc de variables par reseau, scope par
+   la classe posee sur <body>. Ajouter un theme pour un futur 3eme reseau =
+   ajouter un bloc ici, rien a dupliquer ailleurs. Les couleurs de severite
+   (critique/important/mineur/conforme) restent globales : elles portent un
+   sens fonctionnel, pas une identite de marque. */
+body.theme-mastercard {
+  --brand-nav-bg: #1A1A1A;
+  --brand-accent: #E8542A;
+  --brand-accent-hover: #CF4620;
+  --brand-heading-font: var(--font-heading);
+  --brand-header-bg: var(--white);
+  --brand-header-fg: var(--navy);
+}
+body.theme-visa {
+  --brand-nav-bg: #1A1F71;
+  --brand-accent: #C9A227;
+  --brand-accent-hover: #A9861B;
+  --brand-heading-font: "Source Serif 4", serif;
+  --brand-header-bg: var(--white);
+  --brand-header-fg: var(--navy);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--navy);
+  background: var(--bg);
+  margin: 0;
+}
+
+h1, h2 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.topbar {
+  /* Couleur fixe, jamais themee par reseau (contrairement a
+     --brand-nav-bg, utilisee ailleurs pour des elements de contenu
+     comme la sidebar active) — la barre du haut est globale a toute
+     l'application, y compris l'accueil plateforme. */
+  background: var(--navy);
+  color: var(--white);
+  height: var(--nav-height);
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  forced-color-adjust: none;
+}
+/* Le logo HPS de la barre du haut est deja blanc/detoure - pas besoin de la
+   boite de fond neutre utilisee pour les logos reseau (Mastercard/Visa,
+   eux non retouches) ailleurs sur le site. */
+.nav-brand .network-logo-wrap {
+  background: none;
+}
+.nav-brand .network-logo-img {
+  background: none;
+}
+.nav-brand-subtitle {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 19px;
+  color: var(--white);
+  opacity: 0.9;
+}
+
+/* Menu deroulant "Reseaux" */
+.nav-menu-group {
+  position: relative;
+}
+/* "Reseaux" est un <span role="button">, ni <button> ni <a> : sous le
+   mode Contraste de Windows, un <button> recoit une bordure native et un
+   <a> non-visite un soulignement force — deux habillages d'accessibilite
+   imposes par le navigateur, differents entre eux, qu'aucun CSS (outline,
+   border, box-shadow, forced-color-adjust) ne peut lever proprement.
+   Un element neutre + role="button" (accessibilite clavier geree via
+   keydown dans app.js) evite les deux a la source. */
+.network-menu-trigger {
+  color: var(--white);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  opacity: 0.9;
+  cursor: pointer;
+  outline: none;
+  forced-color-adjust: none;
+}
+.network-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 41;
+}
+.network-menu-panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.network-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--navy);
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+a.network-menu-item:hover {
+  background: var(--line-soft);
+}
+.network-menu-item.active {
+  background: var(--bg);
+  font-weight: 500;
+}
+.network-menu-item .network-name {
+  flex: 1;
+}
+.network-add {
+  color: var(--mineur);
+  font-style: italic;
+  cursor: default;
+}
+
+/* Liens de menu globaux (Parametres, Aide) — pousses a droite de la barre */
+.nav-link {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  opacity: 0.85;
+  forced-color-adjust: none;
+}
+.nav-link:first-of-type {
+  margin-left: auto;
+}
+
+/* Etat survol/actif commun aux 3 elements de la barre du haut (Reseaux,
+   Parametres, Aide) : fond legerement eclairci + soulignement fin colore
+   (accent du theme actif — orange Mastercard, or Visa, orange par defaut
+   sur les pages globales), avec une transition douce plutot qu'un
+   changement instantane. */
+.network-menu-trigger,
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+.network-menu-trigger::after,
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 0;
+  height: 0;
+  background: var(--brand-accent);
+  transition: height 0.2s ease;
+}
+.network-menu-trigger:hover,
+.network-menu-trigger.active,
+.nav-link:hover,
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+.network-menu-trigger:hover::after,
+.network-menu-trigger.active::after,
+.nav-link:hover::after,
+.nav-link.active::after {
+  height: 3px;
+}
+
+/* Logo d'un reseau — boite a taille fixe, lettre de repli en dessous */
+.network-logo-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.network-logo-fallback {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--mineur);
+}
+.network-logo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--white);
+}
+
+.app-layout {
+  display: flex;
+  align-items: flex-start;
+}
+
+.section-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  position: sticky;
+  top: var(--nav-height);
+  align-self: flex-start;
+  min-height: calc(100vh - var(--nav-height));
+  padding: 20px 12px;
+  border-right: 1px solid var(--line);
+  background: var(--white);
+}
+.sidebar-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mineur);
+  margin: 0 0 10px 8px;
+}
+.section-item {
+  display: block;
+  padding: 8px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--navy);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+a.section-item:hover {
+  background: var(--line-soft);
+}
+.section-item.active {
+  background: var(--brand-nav-bg);
+  color: var(--white);
+}
+
+/* Page d'accueil d'un reseau — logo + nom en grand + actions.
+   Fond/texte suivent l'identite de marque (anthracite chez Mastercard,
+   bleu marine chez Visa) ; le titre suit la police de marque (classique
+   chez Visa, Space Grotesk inchange chez Mastercard) ; la bordure du haut
+   reprend l'accent du reseau (orange/or) pour une touche de marque nette,
+   coherente avec le reste du systeme (pas d'ombre, bordures franches). */
+.home-hero {
+  text-align: center;
+  padding: 48px 24px;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--brand-accent);
+  border-radius: 12px;
+  background: var(--brand-header-bg);
+  color: var(--brand-header-fg);
+}
+.home-hero .network-logo-wrap {
+  margin: 0 auto 16px;
+}
+.home-hero h1 {
+  margin: 0 0 8px;
+  font-family: var(--brand-heading-font);
+  color: var(--brand-header-fg);
+}
+.home-hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+.hero-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.hero-btn-primary {
+  background: var(--brand-accent);
+  color: var(--white);
+}
+.hero-btn-primary:hover { background: var(--brand-accent-hover); }
+.hero-btn-secondary {
+  background: var(--white);
+  color: var(--navy);
+  border: 1px solid var(--line);
+}
+.hero-btn-secondary:hover { background: var(--line-soft); }
+.hero-btn-disabled {
+  background: var(--bg);
+  color: var(--mineur);
+  border: 1px dashed var(--line);
+  cursor: default;
+}
+
+/* Etat de chargement du bouton "Lancer l'analyse" (voir app.js) */
+.js-loading-btn.is-loading {
+  pointer-events: none;
+  opacity: 0.85;
+  cursor: default;
+}
+.btn-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-right: 8px;
+  vertical-align: -2px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: var(--white);
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+}
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Accueil plateforme — grand titre + sous-titre + illustration de fond
+   discrete. Scope a cette page uniquement (ne touche pas la regle
+   globale h1 utilisee partout ailleurs). */
+.platform-hero {
+  position: relative;
+  min-height: calc(100vh - var(--nav-height));
+  display: flex;
+  align-items: center;
+}
+.platform-hero::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("img/background.png") no-repeat right bottom / cover;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+.platform-hero-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+.platform-hero-text {
+  margin-bottom: 32px;
+}
+.platform-hero-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 48px;
+  margin: 0 0 8px;
+}
+.platform-hero-subtitle {
+  font-size: 16px;
+  color: var(--mineur);
+  margin: 0;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 24px;
+  max-width: 1100px;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.caption {
+  color: var(--mineur);
+  font-size: 13px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Boutons — Appliquer / Actualiser l'analyse / Envoyer / Confirmer.
+   Couleur pleine, pas de degrade, coins a peine arrondis. */
+.caption a,
+.filter-form button,
+.email-form button,
+.confirm-box button {
+  display: inline-block;
+  background: var(--brand-accent);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+.caption a:hover,
+.filter-form button:hover,
+.email-form button:hover,
+.confirm-box button:hover {
+  background: var(--brand-accent-hover);
+}
+
+/* Filtres */
+.filter-form {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+.filter-form label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.filter-form button {
+  margin-left: auto;
+}
+
+/* Filtres rapides (page Releases) — chips cliquables (periode relative +
+   une par annee presente dans les donnees) plutot qu'un formulaire de
+   dates a remplir a la main. */
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.filter-chip {
+  display: inline-block;
+  background: var(--white);
+  color: var(--navy);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+.filter-chip:hover {
+  border-color: var(--brand-accent);
+}
+.filter-chip.active {
+  background: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: var(--white);
+}
+.filter-chip-select-form {
+  display: inline-flex;
+}
+/* Element+class selectors here to out-specificity .filter-chip.active's
+   `background:` shorthand above (0,0,2,0) -- otherwise it resets
+   background-repeat/position to their initial values and the arrow icon
+   tiles across the whole pill instead of sitting once on the right. */
+select.filter-chip.filter-chip-select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: var(--font-body);
+  cursor: pointer;
+  background-color: var(--white);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235A6B7A'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+}
+select.filter-chip.filter-chip-select.active {
+  background-color: var(--brand-accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23FFFFFF'/%3E%3C/svg%3E");
+}
+
+/* Barre de stats — une seule ligne compacte, pas de boites flottantes */
+.stat-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--mineur);
+}
+.stat-bar strong {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--navy);
+}
+.stat-bar .sep {
+  color: var(--line);
+}
+
+/* Grille de cartes — coins bien arrondis, bordure fine, pas d'ombre */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+a.card {
+  display: block;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--conforme);
+  border-radius: 12px;
+  padding: 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.12s ease;
+}
+a.card:hover {
+  background: var(--line-soft);
+}
+.card.sev-critique { border-left-color: var(--critique); }
+.card.sev-important { border-left-color: var(--important); }
+.card.sev-mineur { border-left-color: var(--mineur); }
+.card.sev-conforme { border-left-color: var(--conforme); }
+.card.sev-na { border-left-color: var(--mineur); }
+.card.sev-accent { border-left-color: var(--accent-start); }
+
+/* Carte de selection de reseau (accueil plateforme) — variante centree de
+   .card, sans barre de severite (pas de conformite a signaler ici).
+   Selecteur a.card.network-pick-card (specificite superieure a a.card
+   seul) : necessaire pour vraiment surcharger le border-left du raccourci
+   defini sur a.card, une classe seule n'y suffit pas. */
+.network-pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+a.card.network-pick-card {
+  border-left: none;
+  box-shadow: 0 2px 10px rgba(20, 22, 60, 0.08);
+}
+.network-pick-card .card-title {
+  margin-bottom: 0;
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+.card-status {
+  font-size: 13px;
+  color: var(--critique);
+}
+.card-badges {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  color: var(--white);
+  border-radius: var(--radius);
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.badge-critique { background: var(--critique); }
+.badge-important { background: var(--important); }
+.badge-mineur { background: var(--mineur); }
+.card-count {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--mineur);
+}
+
+/* Notes de portee Visa (page "Portee", remplace les Releases Mastercard —
+   pas de lien/panneau de detail, juste un texte complet par carte, donc un
+   <article> plutot qu'un <a> : les regles de boite de a.card ne s'y
+   appliquent pas, on les reprend ici pour ce cas precis uniquement. */
+.scope-notes {
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+}
+.scope-note {
+  display: block;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-start);
+  border-radius: 12px;
+  padding: 20px;
+}
+.scope-note p {
+  margin: 0;
+  color: var(--mineur);
+  line-height: 1.5;
+}
+
+/* Page de detail */
+.conforme {
+  color: var(--conforme);
+  font-weight: 600;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.detail-table th {
+  text-align: left;
+  font-size: 12px;
+  padding: 10px 14px;
+  color: var(--mineur);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.detail-table td {
+  padding: 10px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: top;
+}
+.field-name {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+/* Ecarts a cause commune (page Comparaison) — un seul changement (schema
+   data.yaml partage / champ Java partage) resout plusieurs endpoints ou
+   operations a la fois. <details>/<summary> natifs, pas de JS necessaire. */
+.shared-fixes-heading {
+  margin-top: 28px;
+  font-size: 16px;
+}
+.shared-fixes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.shared-fix-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+}
+.shared-fix-card summary {
+  cursor: pointer;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.shared-fix-card summary code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.shared-fix-fields {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.shared-fix-fields li {
+  word-break: break-word;
+}
+
+/* Chronologie des releases (page Releases > Chronologie complete) — liste
+   triee, une carte par changement de release, contenu copie de la note
+   Mastercard (titre + description). */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+.timeline-entry {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+.timeline-entry-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.timeline-entry-title {
+  font-size: 15px;
+  margin: 0;
+}
+.timeline-entry-description {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* Accordeon (page Configuration) — une carte repliable par endpoint,
+   plusieurs cartes peuvent etre ouvertes en meme temps. Le corps s'anime
+   via max-height calcule en JS (voir app.js) pour une transition CSS
+   fluide independamment de la longueur de la description. */
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.accordion-item {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(20, 22, 60, 0.08);
+  overflow: hidden;
+}
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.accordion-header:hover {
+  background: var(--line-soft);
+}
+.accordion-chevron {
+  color: var(--mineur);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.accordion-item.open .accordion-chevron {
+  transform: rotate(180deg);
+}
+.accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+.accordion-body-inner {
+  padding: 0 20px 18px;
+  color: var(--navy);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Email */
+.view-switch {
+  margin-bottom: 16px;
+}
+.view-switch a {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--navy);
+  text-decoration: none;
+  font-size: 13px;
+  margin-right: 8px;
+  background: var(--white);
+}
+.view-switch a.active {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+}
+.email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 640px;
+  margin-bottom: 24px;
+}
+.email-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--mineur);
+}
+.email-form input[type="text"],
+.email-form textarea {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--navy);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+}
+.email-form button,
+.confirm-box button {
+  align-self: flex-start;
+}
+.confirm-box {
+  border: 1px solid var(--important);
+  background: #FEF3E2;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 24px;
+}
+.confirm-box form {
+  display: inline-block;
+  margin-right: 10px;
+}
+.email-preview {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.attachment-note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 13px;
+  color: var(--mineur);
+}
+
+/* Panneau de detail — modale centree */
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 22, 60, 0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 45;
+}
+.panel-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.detail-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  max-height: 82vh;
+  width: min(640px, 92vw);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  z-index: 50;
+  padding: 28px;
+  overflow-y: auto;
+  transform: translate(-50%, -50%) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.detail-panel.open {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.detail-panel h2 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 16px;
+  word-break: break-word;
+}
+.panel-close {
+  display: inline-block;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--navy);
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+.panel-close:hover {
+  background: var(--line-soft);
+}
+
+/* Reseaux non-automatises (ex. Visa) — bandeau, depot de fichier, mention
+   d'exemple, filigrane sur les donnees placeholder. */
+.network-banner {
+  background: #FEF3E2;
+  border: 1px solid var(--important);
+  border-left: 3px solid var(--important);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+.file-drop {
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  color: var(--mineur);
+  font-size: 13px;
+  margin-bottom: 16px;
+  background: var(--white);
+}
+.example-notice {
+  font-size: 12.5px;
+  color: var(--important);
+  font-weight: 500;
+  margin: 0 0 16px;
+}
+.example-grid {
+  position: relative;
+}
+.example-grid .card {
+  position: relative;
+  z-index: 2;
+}
+.example-grid::before {
+  content: "EXEMPLE";
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-20deg);
+  font-family: var(--font-heading);
+  font-size: 64px;
+  font-weight: 700;
+  color: rgba(20, 22, 60, 0.06);
+  pointer-events: none;
+  z-index: 1;
+  white-space: nowrap;
+}

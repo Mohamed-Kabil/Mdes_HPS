@@ -52,34 +52,37 @@ dashboard répondent 503 avec un message expliquant quoi régénérer/déplacer
 ## Lancer le tableau de bord
 
 ```
-python front/server.py
+python front/app.py
 ```
 
-→ http://127.0.0.1:5000 — 6 sections : APIs prioritaires (volet 1),
-dernière release Mastercard (volet 1), écarts spec vs Java (volet 2),
-dernière pre-release Mastercard CS (volet 2), mapping API → Java brut
-(volet 2), historique des rapports.
+→ http://127.0.0.1:5000 — interface "Système de conformité réseaux"
+(templates Jinja2, voir `front/INTEGRATION_NOTES.md`), avec deux "réseaux" :
+MDES Pre-Digitization (volet 1) et MDES Customer Service (volet 2). Chacun a
+6 sections dans sa sidebar : Comparaison, Releases, Email, Historique,
+Configuration, Notes.
 
-Volets 1 et 2 ont chacun un bouton "Relancer l'audit" qui régénère le
-rapport Excel et prépare un brouillon d'email (objet + corps modifiables) ;
-l'email n'est envoyé qu'après confirmation explicite dans la popup, jamais
-automatiquement. Le rapport xlsx est joint à l'email et apparaît aussi dans
-"Historique des rapports" (les deux volets partagent `mc_divergence/reports/`).
+Comparaison/Releases ont chacun un lien "Actualiser l'analyse" qui
+régénère le rapport Excel ; Email prépare un brouillon (objet/intro/
+destinataires modifiables) avec confirmation explicite avant tout envoi
+réel — jamais automatique. Le rapport xlsx joint apparaît aussi dans
+Historique (les deux volets partagent `mc_divergence/reports/`).
 
-Le volet 2 a aussi son propre "Vérifier la dernière release" (comme le
-volet 1), qui vérifie la dernière pre-release note CS de Mastercard contre
-les 6 opérations suivies — voir `mdes_cs_prereleases.py`. C'est un simple
-matching par mot-clé (pas de LLM), donc à vérifier au cas par cas comme le
-reste des heuristiques de ce projet.
+**L'ancien tableau de bord** (JS/JSON, un seul écran) est archivé intact
+dans `front_legacy/` — rien n'a été supprimé, juste remplacé comme frontend
+actif. Voir `front/INTEGRATION_NOTES.md` pour le détail complet de ce qui a
+changé, ce qui est nouveau (Historique réel, Notes, Parametres SMTP) et les
+simplifications faites en cours de route.
 
 ## Vérification rapide après un clone
 
 1. `pip install -r requirements.txt`
 2. `cp mc_divergence/.env.example mc_divergence/.env` puis remplir
 3. Vérifier/créer les 3 fichiers externes du tableau ci-dessus
-4. `python front/server.py` puis ouvrir http://127.0.0.1:5000 — les 6
-   sections doivent charger sans erreur 503 (sauf celles dont le fichier
-   externe manque encore)
+4. `python front/app.py` puis ouvrir http://127.0.0.1:5000 — les deux
+   réseaux (MDES Pre-Digitization, MDES Customer Service) doivent charger,
+   Comparaison affichant les KPI/cartes dès la première visite (pas besoin
+   de cliquer "Actualiser" — seule la donnée déjà en cache est utilisée sauf
+   demande explicite)
 5. `python mc_divergence/phase1_historical_audit.py --help`,
    `python mdes_cs_divergence_report.py --help` et
    `python mdes_cs_prereleases.py --help` pour confirmer que les imports

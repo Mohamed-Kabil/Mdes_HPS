@@ -1,0 +1,324 @@
+{
+  "openapi_source": "C:\\Users\\moham\\Desktop\\MDES_Project\\openapi_full.json",
+  "data_source": "C:\\Users\\moham\\Desktop\\MDES_Project\\mc_divergence\\data.yaml",
+  "openapi_title": "Visa Installment Solutions Seller API (generated)",
+  "openapi_version": "2.0.0",
+  "total": 13,
+  "counts": {
+    "absent": 7,
+    "present_fuzzy": 5,
+    "present_exact": 1
+  },
+  "fuzzy_match_threshold": 0.3,
+  "results": [
+    {
+      "path": "/installments/v2/candidates/batch/match",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "matchedCandidatesAPIBatch",
+      "summary": "Matched Candidates API (Batch)",
+      "status": "absent",
+      "matched_data_yaml_paths": [],
+      "other_candidates": [
+        {
+          "path": "/VisMatchedCandidates/V2",
+          "score": 0.29,
+          "overlap": [
+            "candidates",
+            "matched"
+          ]
+        },
+        {
+          "path": "/VisNotificationBatchCompleted/V2",
+          "score": 0.11,
+          "overlap": [
+            "batch"
+          ]
+        },
+        {
+          "path": "/VisMatchedEligibleInstallmentPlans/V2",
+          "score": 0.1,
+          "overlap": [
+            "matched"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/installments/v2/candidates/batch/{vBatchID}",
+      "method": "GET",
+      "malformed_path": false,
+      "operation_id": "matchedCandidatesBatchResultAPI",
+      "summary": "Matched Candidates Batch Result API",
+      "status": "present_fuzzy",
+      "matched_data_yaml_paths": [
+        "/VisMatchedCandidates/V2"
+      ],
+      "match_score": 0.4,
+      "match_overlap_words": [
+        "candidates",
+        "matched"
+      ],
+      "other_candidates": [
+        {
+          "path": "/VisNotificationBatchCompleted/V2",
+          "score": 0.14,
+          "overlap": [
+            "batch"
+          ]
+        },
+        {
+          "path": "/VisMatchedEligibleInstallmentPlans/V2",
+          "score": 0.12,
+          "overlap": [
+            "matched"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/installments/v2/plans/match",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "matchedEligibleInstallmentPlansAPI",
+      "summary": "Matched Eligible Installment Plans API",
+      "status": "present_fuzzy",
+      "matched_data_yaml_paths": [
+        "/VisMatchedEligibleInstallmentPlans/V2"
+      ],
+      "match_score": 0.67,
+      "match_overlap_words": [
+        "eligible",
+        "installment",
+        "matched",
+        "plans"
+      ],
+      "other_candidates": [
+        {
+          "path": "/VisMatchedCandidates/V2",
+          "score": 0.14,
+          "overlap": [
+            "matched"
+          ]
+        },
+        {
+          "path": "/VisNotificationInstallmentTransactionsStatusChange/V2",
+          "score": 0.1,
+          "overlap": [
+            "installment"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/installments/v2/planAcceptances",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "planSelectionAPI",
+      "summary": "Plan Selection API",
+      "status": "present_fuzzy",
+      "matched_data_yaml_paths": [
+        "/VisPlanSelection/V2"
+      ],
+      "match_score": 0.5,
+      "match_overlap_words": [
+        "plan",
+        "selection"
+      ],
+      "other_candidates": [
+        {
+          "path": "/VisPlanAcceptancesIrregularPayments/V2",
+          "score": 0.33,
+          "overlap": [
+            "acceptances",
+            "plan"
+          ]
+        },
+        {
+          "path": "/VisPlanCancellation/V2",
+          "score": 0.2,
+          "overlap": [
+            "plan"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/installments/v2/planAcceptances/{vPlanAcceptanceID}/transactions",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "transactionAssociationAPI",
+      "summary": "Transaction Association API",
+      "status": "absent",
+      "matched_data_yaml_paths": [],
+      "other_candidates": [
+        {
+          "path": "/VisPlanAcceptancesIrregularPayments/V2",
+          "score": 0.22,
+          "overlap": [
+            "acceptances",
+            "plan"
+          ]
+        },
+        {
+          "path": "/VisNotificationPlanAcceptanceStatusChange/V2",
+          "score": 0.2,
+          "overlap": [
+            "acceptance",
+            "plan"
+          ]
+        },
+        {
+          "path": "/VisPlanSelection/V2",
+          "score": 0.12,
+          "overlap": [
+            "plan"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/installments/v2/planAcceptances/cancel",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "planCancellationAPI",
+      "summary": "Plan Cancellation API",
+      "status": "present_fuzzy",
+      "matched_data_yaml_paths": [
+        "/VisPlanCancellation/V2"
+      ],
+      "match_score": 0.4,
+      "match_overlap_words": [
+        "cancellation",
+        "plan"
+      ],
+      "other_candidates": [
+        {
+          "path": "/VisPlanAcceptancesIrregularPayments/V2",
+          "score": 0.29,
+          "overlap": [
+            "acceptances",
+            "plan"
+          ]
+        },
+        {
+          "path": "/VisPlanSelection/V2",
+          "score": 0.17,
+          "overlap": [
+            "plan"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/installments/v2/clients",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "clientOnboardingAPI",
+      "summary": "Client Onboarding API",
+      "status": "present_fuzzy",
+      "matched_data_yaml_paths": [
+        "/VisClientOnboarding/V2"
+      ],
+      "match_score": 0.5,
+      "match_overlap_words": [
+        "client",
+        "onboarding"
+      ],
+      "other_candidates": []
+    },
+    {
+      "path": "/installments/v2/plans/search",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "retrievePlansAPISearch",
+      "summary": "Retrieve Plans API (Search)",
+      "status": "absent",
+      "matched_data_yaml_paths": [],
+      "other_candidates": [
+        {
+          "path": "/VisMatchedEligibleInstallmentPlans/V2",
+          "score": 0.11,
+          "overlap": [
+            "plans"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/installments/v2/merchantPreferences",
+      "method": "PUT",
+      "malformed_path": false,
+      "operation_id": "updateMerchantPreferencesAPI",
+      "summary": "Update Merchant Preferences API",
+      "status": "absent",
+      "matched_data_yaml_paths": [],
+      "other_candidates": []
+    },
+    {
+      "path": "{postbackNotificationUrl}",
+      "method": "POST",
+      "malformed_path": true,
+      "operation_id": "updateMerchantPreferencesAPIPostbackNotifications",
+      "summary": "Update Merchant Preferences API",
+      "status": "present_exact",
+      "matched_data_yaml_paths": [
+        "/postbacknotificationurl"
+      ]
+    },
+    {
+      "path": "/installments/v2/planAcceptances/transactions/search",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "retrievePlanAcceptanceTransactionsSearch",
+      "summary": "Retrieve Plan Acceptance Transactions (Search)",
+      "status": "absent",
+      "matched_data_yaml_paths": [],
+      "other_candidates": [
+        {
+          "path": "/VisPlanAcceptancesIrregularPayments/V2",
+          "score": 0.2,
+          "overlap": [
+            "acceptances",
+            "plan"
+          ]
+        },
+        {
+          "path": "/VisNotificationPlanAcceptanceStatusChange/V2",
+          "score": 0.18,
+          "overlap": [
+            "acceptance",
+            "plan"
+          ]
+        },
+        {
+          "path": "/VisPlanSelection/V2",
+          "score": 0.11,
+          "overlap": [
+            "plan"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/installments/v2/devices",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "enrollPaymentTerminalAPI",
+      "summary": "Enroll Payment Terminal API",
+      "status": "absent",
+      "matched_data_yaml_paths": [],
+      "other_candidates": []
+    },
+    {
+      "path": "/apn/installments/oauth2/token",
+      "method": "POST",
+      "malformed_path": false,
+      "operation_id": "retrieveOAuthCredentialsForTerminal",
+      "summary": "Retrieve OAuth Credentials for Terminal",
+      "status": "absent",
+      "matched_data_yaml_paths": [],
+      "other_candidates": []
+    }
+  ]
+}

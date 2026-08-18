@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "networks/_macros.html" import stat_bar %}
+{% block title %}Releases — Systeme de conformite reseaux{% endblock %}
+{% block content %}
+<h1>Releases Mastercard a venir</h1>
+
+{% if not has_run %}
+<p class="caption">Aucune analyse lancee pour le moment.</p>
+<p class="caption"><a href="{{ refresh_url }}">Lancer l'analyse</a></p>
+{% else %}
+<p class="caption">
+  Genere le {{ generated_at }} &middot;
+  <a href="{{ url_for('mastercard.releases_view', refresh=1) }}">Actualiser l'analyse</a>
+  <a href="{{ export_url }}">Exporter en Excel</a>
+</p>
+
+{{ stat_bar([
+  (kpis.total_releases, "releases detectees"),
+  (kpis.n_with_releases, "endpoints avec releases"),
+  (kpis.n_without_releases, "sans release"),
+  (kpis.n_total, "suivis"),
+]) }}
+
+<div class="card-grid">
+  {% for card in cards %}
+  <a class="card sev-{{ card.severity_class }}" href="{{ url_for('mastercard.release_detail', endpoint_name=card.ep_name) }}" data-detail-id="{{ card.ep_name }}">
+    <div class="card-title">/{{ card.ep_name }}</div>
+    <div class="card-count">{{ card.release_count }} release(s) detectee(s)</div>
+  </a>
+  {% endfor %}
+</div>
+
+<div hidden>
+  {% for card in cards %}
+  <div id="detail-data-{{ card.ep_name }}">
+    <h2>/{{ card.ep_name }}</h2>
+    {% if not card.releases %}
+      <p class="conforme">Aucune release trouvee mentionnant cet endpoint.</p>
+    {% else %}
+      <table class="detail-table">
+        <tr><th>Release</th><th>MTF</th><th>Production</th><th>Champs detectes</th></tr>
+        {% for r in card.releases %}
+        <tr>
+          <td>{{ r.name }}</td>
+          <td>{{ r.mtf or "?" }}</td>
+          <td>{{ r.production or "?" }}</td>
+          <td class="field-name">{{ r.fields|join(", ") if r.fields else "(aucun detecte)" }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}/{{ ep_name }} — Releases{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('mastercard.releases_view') }}">&larr; Retour</a></p>
+<h1>/{{ ep_name }}</h1>
+
+{% if not releases %}
+  <p class="conforme">Aucune release trouvee mentionnant cet endpoint.</p>
+{% else %}
+  <table class="detail-table">
+    <tr><th>Release</th><th>MTF</th><th>Production</th><th>Champs detectes</th></tr>
+    {% for r in releases %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.mtf or "?" }}</td>
+      <td>{{ r.production or "?" }}</td>
+      <td class="field-name">{{ r.fields|join(", ") if r.fields else "(aucun detecte)" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+{% endblock %}

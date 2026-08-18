@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "networks/_macros.html" import stat_bar %}
+{% block title %}Releases — {{ network_name }}{% endblock %}
+{% block content %}
+<h1>Releases Mastercard — {{ network_name }}</h1>
+<p class="caption">Contenu des notes de release Mastercard (titre + description), toutes releases confondues, triees de la plus recente a la plus ancienne.</p>
+
+{% if not has_run %}
+<p class="caption">Aucune analyse lancee pour le moment.</p>
+<p class="caption"><a href="{{ refresh_url }}">Lancer l'analyse</a></p>
+{% else %}
+<p class="caption">
+  Genere le {{ generated_at }} &middot;
+  <a href="{{ url_for(network_key ~ '.releases_view', refresh=1, **{'from': date_from, 'to': date_to, 'ep': endpoint}) }}">Actualiser l'analyse</a>
+  <a href="{{ export_url }}">Exporter en Excel</a>
+</p>
+
+{{ stat_bar([
+  (kpis.total_releases, "releases detectees"),
+  (kpis.n_with_releases, "endpoints avec releases"),
+  (kpis.n_without_releases, "sans release"),
+  (kpis.n_total, "suivis"),
+]) }}
+
+<div class="filter-chips">
+  {% for label, preset_from, preset_to in presets %}
+  <a class="filter-chip {% if preset_from == date_from and preset_to == date_to %}active{% endif %}"
+     href="{{ url_for(network_key ~ '.releases_view', **({'ep': endpoint} if not preset_from else {'from': preset_from, 'to': preset_to, 'ep': endpoint})) }}">{{ label }}</a>
+  {% endfor %}
+  <form method="get" class="filter-chip-select-form">
+    {% if date_from %}<input type="hidden" name="from" value="{{ date_from }}">{% endif %}
+    {% if date_to %}<input type="hidden" name="to" value="{{ date_to }}">{% endif %}
+    <select name="ep" class="filter-chip filter-chip-select {% if endpoint %}active{% endif %}" onchange="this.form.submit()">
+      <option value="">Tous les endpoints</option>
+      {% for ep in endpoints %}
+      <option value="{{ ep }}" {% if ep == endpoint %}selected{% endif %}>/{{ ep }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{% if not releases %}
+<p class="caption">Aucune release ne correspond a cette periode.</p>
+{% else %}
+<div class="timeline">
+  {% for r in releases %}
+  <article class="timeline-entry">
+    <header class="timeline-entry-header">
+      <h2 class="timeline-entry-title">{{ r.mdes_release }} &mdash; {{ r.title }}</h2>
+      {% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener">Voir sur mastercardconnect &#8599;</a>{% endif %}
+    </header>
+    <p class="caption">
+      MTF : {{ r.mtf or "?" }} &middot; Production : {{ r.production or "?" }}
+      {% if r.published_date %}&middot; Publie le {{ r.published_date }}{% endif %}
+    </p>
+    {% if r.description %}
+    <p class="timeline-entry-description">{{ r.description }}</p>
+    {% endif %}
+    {% if r.endpoints %}
+    <p class="caption">Endpoints concernes : {% for ep in r.endpoints %}<span class="field-name">/{{ ep }}</span>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {% endif %}
+    {% if r.fields %}
+    <p class="caption">Champs detectes : <span class="field-name">{{ r.fields|join(", ") }}</span></p>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

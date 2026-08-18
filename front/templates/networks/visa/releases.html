@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Portee — Visa{% endblock %}
+{% block content %}
+<h1>Portee et limites de la comparaison</h1>
+<p class="caption">
+  Visa n'a pas d'equivalent aux releases Mastercard a venir (pas de source
+  automatique comme llms-full.txt) — cette page regroupe a la place les
+  notes de portee et les limites deja identifiees dans le rapport de
+  comparaison.
+</p>
+
+<div class="card-grid scope-notes">
+  {% for note in notes %}
+  <article class="card sev-accent scope-note">
+    <div class="card-title">{{ note.title }}</div>
+    <p>{{ note.body }}</p>
+  </article>
+  {% endfor %}
+</div>
+{% endblock %}

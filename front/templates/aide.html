@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Aide — Systeme de conformite reseaux{% endblock %}
+{% block content %}
+<h1>Aide</h1>
+<p class="caption">Ce que fait chaque section, pour un nouveau membre de l'equipe.</p>
+
+<table class="detail-table">
+  <tr><th>Section</th><th>Role</th></tr>
+  <tr>
+    <td class="field-name">Comparaison</td>
+    <td>Compare l'implementation HPS (data.yaml) a la specification actuelle du reseau (ex. pre-dig.yaml pour Mastercard) et liste les champs manquants par endpoint, classes par severite (Critique/Important/Mineur).</td>
+  </tr>
+  <tr>
+    <td class="field-name">Releases</td>
+    <td>Repere les evolutions a venir du reseau (nouvelles releases) qui mentionnent les endpoints suivis, pour anticiper les changements avant leur mise en production.</td>
+  </tr>
+  <tr>
+    <td class="field-name">Email</td>
+    <td>Prepare et envoie un rapport (Comparaison ou Releases) par email, avec le detail complet en piece jointe Excel.</td>
+  </tr>
+  <tr>
+    <td class="field-name">Configuration</td>
+    <td>Liste en lecture seule les endpoints suivis pour le reseau actif.</td>
+  </tr>
+  <tr>
+    <td class="field-name">Notes</td>
+    <td>Zone de commentaires libres attaches a chaque endpoint, pour garder une trace des observations de l'equipe au fil du temps.</td>
+  </tr>
+</table>
+{% endblock %}

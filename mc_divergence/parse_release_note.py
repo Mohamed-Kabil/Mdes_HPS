@@ -95,7 +95,6 @@ API_DISPLAY_NAME_TO_PATH = {
     'notify token updated (ntu)': '/notifyTokenUpdated',
     'validate activation code': '/validateActivationCode',
     'get account information': '/getAccountInformation',
-    'notify suspicious events': '/notifySuspiciousEvents',
 }
 
 

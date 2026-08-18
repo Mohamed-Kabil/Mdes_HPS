@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "networks/_macros.html" import network_logo %}
+{% block title %}Systeme de conformite reseaux{% endblock %}
+{% block content %}
+<div class="platform-hero">
+  <div class="platform-hero-content">
+    <div class="platform-hero-text">
+      <h1 class="platform-hero-title">Systeme de conformite reseaux</h1>
+      <p class="platform-hero-subtitle">Gerez vos reseaux de paiement et assurez la conformite.</p>
+    </div>
+
+    <div class="card-grid">
+      {% for net in networks %}
+      <a class="card network-pick-card" href="{{ url_for(net.key ~ '.accueil_view') }}">
+        {{ network_logo(net, 56) }}
+        <div class="card-title">{{ net.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

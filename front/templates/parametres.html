@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Parametres — Systeme de conformite reseaux{% endblock %}
+{% block content %}
+<h1>Parametres</h1>
+<p class="caption">Configuration de l'envoi d'email (destinataires par defaut et identifiants SMTP).</p>
+
+{% if saved %}
+<p class="conforme">Parametres enregistres.</p>
+{% endif %}
+
+<form method="post" class="email-form">
+  <label>Serveur SMTP
+    <input type="text" name="smtp_server" value="{{ smtp_server }}">
+  </label>
+  <label>Port SMTP
+    <input type="number" name="smtp_port" value="{{ smtp_port }}">
+  </label>
+  <label>Adresse d'envoi (sender_email)
+    <input type="text" name="sender_email" value="{{ sender_email }}">
+  </label>
+  <label>Mot de passe
+    <input type="password" name="sender_password" value="" autocomplete="new-password">
+  </label>
+  <p class="caption">Laisser le mot de passe vide pour conserver celui deja enregistre.</p>
+  <label>Destinataires par defaut (separes par des virgules)
+    <input type="text" name="default_recipients" value="{{ default_recipients }}">
+  </label>
+  <button type="submit">Enregistrer</button>
+</form>
+{% endblock %}

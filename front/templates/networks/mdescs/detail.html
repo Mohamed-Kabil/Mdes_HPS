@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ path }} — Detail{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('mdescs.comparison_view') }}">&larr; Retour</a></p>
+<h1>{{ path }}</h1>
+
+{% if not implemented %}
+  <p class="card-status">Non implemente par HPS — aucune comparaison possible.</p>
+{% elif error %}
+  <p class="card-status">Erreur lors de la comparaison : {{ error }}</p>
+{% elif not missing %}
+  <p class="conforme">Aucun champ manquant — endpoint conforme.</p>
+{% else %}
+  <table class="detail-table">
+    <tr><th>Severite</th><th>Champ</th><th>Explication</th></tr>
+    {% for m in missing %}
+    <tr>
+      <td><span class="badge badge-{{ m.severity|lower }}">{{ m.severity }}</span></td>
+      <td class="field-name">{{ m.field }}</td>
+      <td>{{ m.description or "(pas de description)" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+{% endblock %}

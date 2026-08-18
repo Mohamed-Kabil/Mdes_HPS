@@ -1,0 +1,58 @@
+{# Macros partagees entre reseaux — evite de dupliquer ce balisage a chaque
+   fois qu'un nouveau reseau est ajoute (Etape 5 : structure extensible). #}
+
+{% macro stat_bar(stats) %}
+<div class="stat-bar">
+  {% for value, label in stats %}
+  <span><strong>{{ value }}</strong> {{ label }}</span>
+  {% if not loop.last %}<span class="sep">&middot;</span>{% endif %}
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro network_banner(network_name) %}
+<div class="network-banner">
+  Import manuel requis — aucune source automatique disponible cote {{ network_name }},
+  contrairement a Mastercard (pas d'equivalent a llms-full.txt).
+</div>
+{% endmacro %}
+
+{# Logo d'un reseau avec repli propre : la boite garde une taille fixe
+   quel que soit le resultat, et si le fichier logo est absent/casse,
+   onerror retire la balise <img> pour laisser voir la lettre de repli
+   deja presente en dessous (pas d'icone d'image cassee). #}
+{% macro network_logo(net, size=32) %}
+<span class="network-logo-wrap" style="width:{{ size }}px;height:{{ size }}px;">
+  <span class="network-logo-fallback" style="font-size:{{ (size * 0.45)|round|int }}px;">{{ net.name[0] }}</span>
+  <img src="{{ url_for('static', filename=net.logo) }}" alt=""
+       class="network-logo-img" onerror="this.remove()">
+</span>
+{% endmacro %}
+
+{# Logo de la plateforme (HPS), meme mecanisme de repli que network_logo —
+   utilise dans le bandeau, present sur toutes les pages. #}
+{% macro platform_logo(size=32) %}
+<span class="network-logo-wrap" style="width:{{ size }}px;height:{{ size }}px;">
+  <span class="network-logo-fallback" style="font-size:{{ (size * 0.45)|round|int }}px;">H</span>
+  <img src="{{ url_for('static', filename='logos/hps.png') }}" alt=""
+       class="network-logo-img" onerror="this.remove()">
+</span>
+{% endmacro %}
+
+{# Bloc "page d'accueil" d'un reseau : logo + nom en grand + bouton
+   d'action principal. Partage entre Mastercard et Visa — seuls les
+   libelles/URL/etat disabled different d'un reseau a l'autre. #}
+{% macro home_hero(net, primary_label, primary_url, primary_disabled, primary_loading=False) %}
+<div class="home-hero">
+  {{ network_logo(net, 96) }}
+  <h1>{{ net.name }}</h1>
+  <div class="home-hero-actions">
+    {% if primary_disabled %}
+    <span class="hero-btn hero-btn-disabled">{{ primary_label }}</span>
+    {% else %}
+    <a class="hero-btn hero-btn-primary{{ ' js-loading-btn' if primary_loading else '' }}"
+       href="{{ primary_url }}" data-loading-text="Analyse en cours...">{{ primary_label }}</a>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}

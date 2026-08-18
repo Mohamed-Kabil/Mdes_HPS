@@ -73,11 +73,11 @@ DEFAULT_REPORT_XLSX_PATH = os.path.join(HERE, "reports", "phase1_divergence_repo
 EMAIL_RECIPIENTS = os.environ.get('MC_DIVERGENCE_RECIPIENTS')  # comma-separated, unset = TBD
 
 
-# The 8 APIs the pipeline prioritizes end-to-end (prompt: "APIs prioritaires").
+# The 7 APIs the pipeline prioritizes end-to-end (prompt: "APIs prioritaires").
 PRIORITY_PATHS = {
     '/requestactivationmethods', '/deliveractivationcode',
     '/authorizeservice', '/notifyserviceactivated', '/notifytokenupdated',
-    '/validateactivationcode', '/getaccountinformation', '/notifysuspiciousevents',
+    '/validateactivationcode', '/getaccountinformation',
 }
 
 
@@ -551,7 +551,6 @@ PRIORITY_PATH_DISPLAY = [
     ('/notifyTokenUpdated', 'Notify Token Updated (NTU)'),
     ('/validateActivationCode', 'Validate Activation Code (VAC)'),
     ('/getAccountInformation', 'Get Account Information (GAI)'),
-    ('/notifySuspiciousEvents', 'Notify Suspicious Events (NSE)'),
 ]
 
 
@@ -844,7 +843,7 @@ def _write_summary_sheet(wb, audited_notes, cutoff_str, predig_direct, api_sheet
         r += 1
 
     r += 1
-    ws.cell(row=r, column=1, value="Vérification directe pre-dig.yaml vs data.yaml — 8 APIs prioritaires").font = Font(bold=True, size=12)
+    ws.cell(row=r, column=1, value="Vérification directe pre-dig.yaml vs data.yaml — 7 APIs prioritaires").font = Font(bold=True, size=12)
     r += 1
     header_row = r
     headers = ['API', 'Endpoint', 'Statut', 'Écarts fiables', 'Champs total', 'Détail']
@@ -997,12 +996,11 @@ PRIORITY_DISPLAY_NAMES = {
     'notifytokenupdated': 'Notify Token Updated (NTU)',
     'validateactivationcode': 'Validate Activation Code (VAC)',
     'getaccountinformation': 'Get Account Information (GAI)',
-    'notifysuspiciousevents': 'Notify Suspicious Events (NSE)',
 }
 PRIORITY_DISPLAY_ORDER = [
     'requestactivationmethods', 'deliveractivationcode', 'authorizeservice',
     'notifyserviceactivated', 'notifytokenupdated',
-    'validateactivationcode', 'getaccountinformation', 'notifysuspiciousevents',
+    'validateactivationcode', 'getaccountinformation',
 ]
 
 
@@ -1175,7 +1173,7 @@ def run(data_yaml_path, cutoff, cache_dir, xlsx_path, refresh, send=False):
 
     print(f"  [phase1] loading pre-dig.yaml <- {predig_path}", file=sys.stderr)
     predig_spec = load_spec(predig_path, repair=True)
-    print("  [phase1] direct structural diff: pre-dig.yaml vs data.yaml (8 priority APIs)", file=sys.stderr)
+    print("  [phase1] direct structural diff: pre-dig.yaml vs data.yaml (7 priority APIs)", file=sys.stderr)
     predig_direct = audit_predig_vs_data_direct(predig_spec, data_spec)
 
     audited_notes = []
@@ -1206,6 +1204,7 @@ def run(data_yaml_path, cutoff, cache_dir, xlsx_path, refresh, send=False):
             'url': record['url'],
             'mdes_release': record['mdes_release'],
             'published_date': record['published_date'],
+            'timeline': record['timeline'],
             'changes': audited_changes,
         })
 

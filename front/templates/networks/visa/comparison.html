@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "networks/_macros.html" import stat_bar %}
+{% block title %}Comparaison — Visa{% endblock %}
+{% block content %}
+<h1>Comparaison — sources/data.yaml vs Visa Installment Solutions</h1>
+
+<p class="caption">
+  Analyse generee manuellement le {{ generated_at }} &middot;
+  <a href="{{ export_url }}">Exporter en Excel</a>
+</p>
+
+<form method="get" class="filter-form">
+  <input type="hidden" name="filtered" value="1">
+  <label><input type="checkbox" name="critique" {% if show_critique %}checked{% endif %}> Critique</label>
+  <label><input type="checkbox" name="important" {% if show_important %}checked{% endif %}> Important</label>
+  <label><input type="checkbox" name="mineur" {% if show_mineur %}checked{% endif %}> Mineur</label>
+  <label><input type="checkbox" name="hide_compliant" {% if hide_compliant %}checked{% endif %}> Masquer les endpoints deja conformes</label>
+  <button type="submit">Appliquer</button>
+</form>
+
+{{ stat_bar([
+  (kpis.total_missing, "champs manquants"),
+  (kpis.n_critical_endpoints, "endpoints avec Critique"),
+  (kpis.n_compliant, "conformes"),
+  (kpis.n_total, "analyses"),
+]) }}
+
+<div class="card-grid">
+  {% for card in cards %}
+  <a class="card sev-{{ card.severity_class }}" href="{{ url_for('visa.comparison_detail', endpoint_name=card.ep_name) }}" data-detail-id="{{ card.ep_name }}">
+    <div class="card-title">{{ card.path }}</div>
+    <div class="card-badges">
+      {% if card.severity_counts.Critique %}<span class="badge badge-critique">C{{ card.severity_counts.Critique }}</span>{% endif %}
+      {% if card.severity_counts.Important %}<span class="badge badge-important">I{{ card.severity_counts.Important }}</span>{% endif %}
+      {% if card.severity_counts.Mineur %}<span class="badge badge-mineur">M{{ card.severity_counts.Mineur }}</span>{% endif %}
+    </div>
+    <div class="card-count">{{ card.missing_count }} champ(s)</div>
+  </a>
+  {% endfor %}
+</div>
+
+<div hidden>
+  {% for card in cards %}
+  <div id="detail-data-{{ card.ep_name }}">
+    <h2>{{ card.path }}</h2>
+    {% if not card.missing_fields %}
+      <p class="conforme">Aucun ecart — endpoint conforme.</p>
+    {% else %}
+      <table class="detail-table">
+        <tr><th>Severite</th><th>Champ</th><th>Explication</th></tr>
+        {% for m in card.missing_fields %}
+        <tr>
+          <td><span class="badge badge-{{ m.severity|lower }}">{{ m.severity }}</span></td>
+          <td class="field-name">{{ m.field }}</td>
+          <td>{{ m.description or "(pas de description)" }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

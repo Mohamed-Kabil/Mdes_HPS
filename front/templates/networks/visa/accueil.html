@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "networks/_macros.html" import home_hero %}
+{% block title %}Visa — Systeme de conformite reseaux{% endblock %}
+{% block content %}
+{% set net = networks|selectattr("key", "equalto", "visa")|first %}
+{{ home_hero(net, primary_label, primary_url, primary_disabled) }}
+<p class="caption">Analyse generee manuellement (pas de source automatique cote Visa, contrairement a Mastercard).</p>
+{% endblock %}
