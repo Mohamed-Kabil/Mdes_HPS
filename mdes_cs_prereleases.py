@@ -179,14 +179,14 @@ def check_latest(cache_dir, refresh=False):
 # isolated from Part 1's own checkpoint by living under a different
 # cache_dir), not automatically switching between each other.
 #
-#   - check_pending() ("Vérifier après le dernier audit CS"): every release
+#   - check_pending() ("Check after last CS audit"): every release
 #     whose Production date (parsed from the note body itself, via
 #     parse_release_note.parse_note -- reused as-is, its date-line regex
 #     already matches this note format) hasn't happened yet -- i.e. not yet
 #     reflected in the live mdes-customer-service.yaml spec, same
 #     "Production date <= today implies already live" assumption Part 1
 #     uses. The ONLY action that ADVANCES the checkpoint.
-#   - check_since_checkpoint() ("Vérifier la dernière release CS"): releases
+#   - check_since_checkpoint() ("Check latest CS release"): releases
 #     newer than whatever check_pending() last examined. Never advances the
 #     checkpoint itself. Falls back to just the newest table entry if
 #     check_pending() has never been run.
@@ -297,7 +297,7 @@ def format_release_block(entry):
     timeline = parsed["timeline"]
     lines = [
         f"- {entry['title']}",
-        f"    Date de mise à jour : {entry['upgrade_date']}",
+        f"    Updated on          : {entry['upgrade_date']}",
         f"    Affects             : {', '.join(entry['matched_apis'])}",
         f"    URL                 : {entry['url']}",
         f"    MTF date            : {timeline['mtf_date']}",
@@ -314,8 +314,8 @@ def format_release_block(entry):
 
 def render_email_body(relevant):
     lines = [
-        f"{len(relevant)} pre-release note(s) MDES Customer Service concernent les opérations suivies "
-        f"({', '.join(TARGET_APIS)}) :",
+        f"{len(relevant)} MDES Customer Service pre-release note(s) mention the tracked operations "
+        f"({', '.join(TARGET_APIS)}):",
         "",
     ]
     for entry in relevant:
@@ -329,13 +329,13 @@ def default_report_xlsx_path():
 
 
 def _write_summary_sheet(wb, relevant):
-    ws = wb.create_sheet("Résumé", 0)
-    ws['A1'] = f"MDES Customer Service — {len(relevant)} release(s) impactant les opérations suivies"
+    ws = wb.create_sheet("Summary", 0)
+    ws['A1'] = f"MDES Customer Service — {len(relevant)} release(s) affecting tracked operations"
     ws['A1'].font = TITLE_FONT
     ws.merge_cells('A1:D1')
 
     header_row = 3
-    headers = ['Note', 'Date de mise à jour', 'Opérations concernées', 'URL']
+    headers = ['Note', 'Updated on', 'Affected operations', 'URL']
     for col, h in enumerate(headers, start=1):
         ws.cell(row=header_row, column=col, value=h)
     _style_header_row(ws, header_row, len(headers))
@@ -356,8 +356,8 @@ def _write_operation_sheet(wb, sheet_name, api, relevant):
     ws['A1'] = api
     ws['A1'].font = TITLE_FONT
 
-    headers = ['Note', 'Date de mise à jour', 'Endpoint(s)', 'Changement', 'Description',
-               'Champ', 'Type', 'Required']
+    headers = ['Note', 'Updated on', 'Endpoint(s)', 'Change', 'Description',
+               'Field', 'Type', 'Required']
     header_row = 3
     for col, h in enumerate(headers, start=1):
         ws.cell(row=header_row, column=col, value=h)
@@ -369,14 +369,14 @@ def _write_operation_sheet(wb, sheet_name, api, relevant):
             continue
         changes = entry['parsed']['changes']
         if not changes:
-            values = [entry['title'], entry['upgrade_date'], '', '(aucun changement structuré parsé)',
+            values = [entry['title'], entry['upgrade_date'], '', '(no structured change parsed)',
                        '', '', '', '']
             for col, v in enumerate(values, start=1):
                 ws.cell(row=row, column=col, value=v).alignment = WRAP
             row += 1
             continue
         for c in changes:
-            endpoints = ', '.join(c['endpoints']) if c['endpoints'] else '(aucun endpoint identifié)'
+            endpoints = ', '.join(c['endpoints']) if c['endpoints'] else '(no endpoint identified)'
             if not c['fields']:
                 values = [entry['title'], entry['upgrade_date'], endpoints, c['title'],
                            c.get('description') or '', '', '', '']

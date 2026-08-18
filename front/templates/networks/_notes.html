@@ -2,17 +2,17 @@
 {% block title %}Notes — {{ network_key }}{% endblock %}
 {% block content %}
 <h1>Notes</h1>
-<p class="caption">Commentaires libres attaches a chaque endpoint suivi.</p>
+<p class="caption">Free-text comments attached to each tracked endpoint.</p>
 
 {% for ep in endpoints %}
 <h2>/{{ ep }}</h2>
 
 {% set ep_notes = notes_by_endpoint.get(ep, []) %}
 {% if not ep_notes %}
-<p class="caption">Aucune note pour le moment.</p>
+<p class="caption">No notes yet.</p>
 {% else %}
 <table class="detail-table">
-  <tr><th>Date</th><th>Auteur</th><th>Note</th></tr>
+  <tr><th>Date</th><th>Author</th><th>Note</th></tr>
   {% for note in ep_notes %}
   <tr>
     <td class="field-name">{{ note.date }}</td>
@@ -25,13 +25,13 @@
 
 <form method="post" class="email-form">
   <input type="hidden" name="endpoint_name" value="{{ ep }}">
-  <label>Nouvelle note
+  <label>New note
     <textarea name="texte" rows="2"></textarea>
   </label>
-  <label>Auteur
+  <label>Author
     <input type="text" name="auteur">
   </label>
-  <button type="submit">Ajouter la note</button>
+  <button type="submit">Add note</button>
 </form>
 {% endfor %}
 {% endblock %}

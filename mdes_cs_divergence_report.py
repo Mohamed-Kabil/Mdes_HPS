@@ -65,8 +65,8 @@ DEFAULT_OUTPUT_MD = os.path.join(HERE, 'mdes_cs_divergence_report.md')
 DEFAULT_REPORT_XLSX_PATH = os.path.join(HERE, 'mc_divergence', 'reports', 'mdes_cs_divergence_report.xlsx')
 
 STATUS_LABEL_FR = {
-    'implemente': 'Implémenté', 'partiel': 'Partiel',
-    'non_verifiable': 'Non vérifiable', 'non_implemente': 'Non implémenté',
+    'implemente': 'Implemented', 'partiel': 'Partial',
+    'non_verifiable': 'Not verifiable', 'non_implemente': 'Not implemented',
 }
 STATUS_FILL = {
     'implemente': PatternFill('solid', fgColor='C6EFCE'),
@@ -181,55 +181,6 @@ def audit_operation(spec_fields, java_fields_by_path):
     return results
 
 
-def group_shared_field_gaps(operations):
-    """Fields marked non_implemente identically across 2+ operations at
-    once — same relationship as phase1_historical_audit.py's
-    group_shared_schema_fixes(), but clustering directly on the field path
-    (there's no separate spec-schema-origin vs data-schema-origin pair here
-    like the pre-dig/data.yaml side has — the CS spec's own field path IS
-    the shared key, since the exact same dotted path showing up as missing
-    on 2+ operations means the exact same underlying Java gap)."""
-    by_field = {}
-    for op in operations:
-        if 'error' in op:
-            continue
-        for f in op.get('fields', []):
-            if f['status'] != 'non_implemente':
-                continue
-            entry = by_field.setdefault(f['field'], {
-                'field': f['field'], 'required': f['required'], 'type': f['type'], 'operations': [],
-            })
-            entry['operations'].append(op['operation'])
-    clusters = [c for c in by_field.values() if len(c['operations']) >= 2]
-    clusters.sort(key=lambda c: len(c['operations']), reverse=True)
-    return clusters
-
-
-def summarize_by_root_field(field_clusters):
-    """Rolls per-field clusters up to their top-level parent (e.g. every
-    'EncryptedAccountInformation.*' leaf rolls up to 'EncryptedAccountInformation')
-    — the actionable unit: one Java change (wiring up that object) resolves
-    every leaf under it, across every operation missing it. Same idea as
-    summarize_by_data_target() on the pre-dig side."""
-    rollup = {}
-    for c in field_clusters:
-        root = c['field'].split('.')[0]
-        r = rollup.setdefault(root, {'root_field': root, 'fields': [], 'operations': set()})
-        r['fields'].append(c['field'])
-        r['operations'].update(c['operations'])
-    out = []
-    for r in rollup.values():
-        out.append({
-            'root_field': r['root_field'],
-            'field_count': len(r['fields']),
-            'fields': sorted(r['fields']),
-            'operation_count': len(r['operations']),
-            'operations': sorted(r['operations']),
-        })
-    out.sort(key=lambda r: (r['operation_count'], r['field_count']), reverse=True)
-    return out
-
-
 def run(spec_path, java_mapping_path):
     spec = load_spec(spec_path, repair=True)
     java_fields_by_op, java_meta = load_java_fields(java_mapping_path)
@@ -257,43 +208,27 @@ def run(spec_path, java_mapping_path):
             'fields': fields,
         })
 
-    shared_gaps = summarize_by_root_field(group_shared_field_gaps(operations))
-
     return {
         'spec_source': spec_path,
         'java_mapping_source': java_mapping_path,
         'java_mapping_generated_at': java_meta.get('generatedAt'),
         'operations': operations,
-        'shared_gaps': shared_gaps,
     }
 
 
 def render_markdown(report):
     lines = [
-        '# MDES Customer Service — écarts spec officiel vs implémentation Java (auto-généré)',
+        '# MDES Customer Service — official spec vs Java implementation gaps (auto-generated)',
         '',
-        f"Spec officiel : `{report['spec_source']}`",
-        f"Extraction Java : `{report['java_mapping_source']}` (générée le {report['java_mapping_generated_at']})",
+        f"Official spec: `{report['spec_source']}`",
+        f"Java extraction: `{report['java_mapping_source']}` (generated on {report['java_mapping_generated_at']})",
         '',
-        '`non_implemente` = champ du spec absent de tout ce que le code Java construit actuellement. '
-        '`non_verifiable` = un champ Java correspondant existe mais son identité n\'a pas pu être résolue '
-        '(voir MDES_CS_API_JAVA_MAPPING_LINK.md) — écart dans la donnée, pas une absence confirmée. '
-        '`partiel` = résolu par le modèle local plutôt que par un scan direct. `implemente` = trouvé directement.',
+        '`non_implemente` = spec field absent from everything the Java code currently builds. '
+        '`non_verifiable` = a matching Java field exists but its identity could not be resolved '
+        '(see MDES_CS_API_JAVA_MAPPING_LINK.md) — a data gap, not a confirmed absence. '
+        '`partiel` = resolved by the local model rather than a direct scan. `implemente` = found directly.',
         '',
     ]
-
-    shared_gaps = report.get('shared_gaps') or []
-    if shared_gaps:
-        lines.append('## Écarts à cause commune — corriger une fois pour résoudre plusieurs opérations')
-        lines.append('')
-        for g in shared_gaps:
-            lines.append(
-                f"- Corriger `{g['root_field']}` côté Java → résout **{g['field_count']} champ(s)** "
-                f"sur **{g['operation_count']} opération(s)** d'un coup : {', '.join(g['operations'])}"
-            )
-            for field in g['fields']:
-                lines.append(f"  - `{field}`")
-        lines.append('')
 
     for op in report['operations']:
         if 'error' in op:
@@ -302,18 +237,18 @@ def render_markdown(report):
         c = op['counts']
         lines.append(f"## {op['operation']} — `POST {op['path']}`")
         lines.append(
-            f"{op['total_fields']} champ(s) au total — "
-            f"{c.get('implemente', 0)} implémenté(s), {c.get('partiel', 0)} partiel(s), "
-            f"{c.get('non_verifiable', 0)} non vérifiable(s), {c.get('non_implemente', 0)} non implémenté(s)."
+            f"{op['total_fields']} field(s) total — "
+            f"{c.get('implemente', 0)} implemented, {c.get('partiel', 0)} partial, "
+            f"{c.get('non_verifiable', 0)} not verifiable, {c.get('non_implemente', 0)} not implemented."
         )
         problems = [f for f in op['fields'] if f['status'] != 'implemente']
         if problems:
             lines.append('')
-            lines.append('| Champ (spec officiel) | Statut | Requis | Champ Java correspondant |')
+            lines.append('| Field (official spec) | Status | Required | Matching Java field |')
             lines.append('|---|---|---|---|')
             for f in problems:
                 lines.append(
-                    f"| `{f['field']}` | {f['status']} | {'oui' if f['required'] else 'non'} | "
+                    f"| `{f['field']}` | {f['status']} | {'yes' if f['required'] else 'no'} | "
                     f"{f['matched_java_field'] or '—'} |"
                 )
         lines.append('')
@@ -327,14 +262,14 @@ def render_markdown(report):
 # ============================================================================
 
 def _write_summary_sheet(wb, report, op_sheet_names):
-    ws = wb.create_sheet("Résumé", 0)
-    ws['A1'] = "MDES Customer Service — écarts spec officiel vs implémentation Java"
+    ws = wb.create_sheet("Summary", 0)
+    ws['A1'] = "MDES Customer Service — official spec vs Java implementation gaps"
     ws['A1'].font = TITLE_FONT
     ws.merge_cells('A1:E1')
-    ws['A2'] = f"Spec officiel : {report['spec_source']}"
-    ws['A3'] = f"Extraction Java du {report['java_mapping_generated_at']}"
+    ws['A2'] = f"Official spec: {report['spec_source']}"
+    ws['A3'] = f"Java extraction from {report['java_mapping_generated_at']}"
 
-    headers = ['Opération', 'Total champs', 'Implémenté', 'Partiel', 'Non vérifiable', 'Non implémenté']
+    headers = ['Operation', 'Total fields', 'Implemented', 'Partial', 'Not verifiable', 'Not implemented']
     header_row = 5
     for col, h in enumerate(headers, start=1):
         ws.cell(row=header_row, column=col, value=h)
@@ -390,33 +325,6 @@ def _write_operation_sheet(wb, sheet_name, op):
     _autosize(ws, [45, 16, 9, 12, 45, 30, 60])
 
 
-def _write_shared_gaps_sheet(wb, shared_gaps):
-    if not shared_gaps:
-        return
-    ws = wb.create_sheet("Écarts à cause commune")
-    ws['A1'] = "Un seul changement côté Java résout plusieurs opérations à la fois"
-    ws['A1'].font = TITLE_FONT
-    ws.merge_cells('A1:D1')
-
-    headers = ['Champ racine', 'Champs concernés', 'Nb champs', 'Nb opérations', 'Opérations concernées']
-    header_row = 3
-    for col, h in enumerate(headers, start=1):
-        ws.cell(row=header_row, column=col, value=h)
-    _style_header_row(ws, header_row, len(headers))
-
-    row = header_row + 1
-    for g in shared_gaps:
-        values = [g['root_field'], ', '.join(g['fields']), g['field_count'], g['operation_count'],
-                  ', '.join(g['operations'])]
-        for col, v in enumerate(values, start=1):
-            cell = ws.cell(row=row, column=col, value=v)
-            cell.alignment = WRAP
-        row += 1
-
-    ws.freeze_panes = f"A{header_row + 1}"
-    _autosize(ws, [26, 60, 11, 13, 40])
-
-
 def render_report_xlsx(report, xlsx_path):
     wb = Workbook()
     wb.remove(wb.active)
@@ -434,7 +342,6 @@ def render_report_xlsx(report, xlsx_path):
         if 'error' in op:
             continue
         _write_operation_sheet(wb, op_sheet_names[op['operation']], op)
-    _write_shared_gaps_sheet(wb, report.get('shared_gaps') or [])
 
     os.makedirs(os.path.dirname(xlsx_path), exist_ok=True)
     wb.save(xlsx_path)
@@ -452,36 +359,27 @@ def email_subject(report):
          + op['counts'].get('partiel', 0))
         for op in report['operations'] if 'error' not in op
     )
-    return f"[MDES Customer Service] Audit divergences — {total_issues} écart(s) à traiter"
+    return f"[MDES Customer Service] Divergence audit — {total_issues} gap(s) to address"
 
 
 def render_email_body(report):
     lines = [
-        "Bonjour,", "",
-        "L'audit MDES Customer Service (spec officiel Mastercard vs implémentation Java) "
-        "a été relancé. Résumé ci-dessous, détail champ par champ en pièce jointe.",
+        "Hello,", "",
+        "The MDES Customer Service audit (official Mastercard spec vs Java implementation) "
+        "has been re-run. Summary below, field-by-field detail in the attachment.",
         "",
     ]
 
     for op in report['operations']:
         if 'error' in op:
-            lines.append(f"- **{op['operation']}** : {op['error']}")
+            lines.append(f"- **{op['operation']}**: {op['error']}")
             continue
         c = op['counts']
         issues = c.get('non_implemente', 0) + c.get('non_verifiable', 0) + c.get('partiel', 0)
-        lines.append(f"- **{op['operation']}** : {issues} écart(s) sur {op['total_fields']} champ(s) "
-                     f"({c.get('non_implemente', 0)} non implémenté(s), "
-                     f"{c.get('non_verifiable', 0)} non vérifiable(s), {c.get('partiel', 0)} partiel(s))")
+        lines.append(f"- **{op['operation']}**: {issues} gap(s) out of {op['total_fields']} field(s) "
+                     f"({c.get('non_implemente', 0)} not implemented, "
+                     f"{c.get('non_verifiable', 0)} not verifiable, {c.get('partiel', 0)} partial)")
     lines.append('')
-
-    shared_gaps = report.get('shared_gaps') or []
-    if shared_gaps:
-        lines.append("### Écarts à cause commune — corriger une fois pour résoudre plusieurs opérations")
-        lines.append('')
-        for g in shared_gaps:
-            lines.append(f"- Corriger `{g['root_field']}` côté Java → résout {g['field_count']} champ(s) "
-                         f"sur {g['operation_count']} opération(s) d'un coup : {', '.join(g['operations'])}")
-        lines.append('')
 
     return '\n'.join(lines)
 

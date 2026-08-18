@@ -42,8 +42,8 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-# Recipient given directly (2026-07-09): destinataire par défaut tant que
-# MC_DIVERGENCE_RECIPIENTS n'est pas défini.
+# Recipient given directly (2026-07-09): default recipient as long as
+# MC_DIVERGENCE_RECIPIENTS isn't set.
 DEFAULT_RECIPIENTS = ["simokabil03@gmail.com"]
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
@@ -97,26 +97,26 @@ def send_email(subject, body, recipients=None, attachments=None):
     missing = [name for name, val in (('SMTP_HOST', host),) if not val]
     if missing:
         raise SmtpConfigError(
-            f"Variable(s) d'environnement manquante(s) pour l'envoi SMTP : {', '.join(missing)}. "
-            "Aucun email envoyé. Définis au minimum SMTP_HOST (+ SMTP_USER/SMTP_PASSWORD si le "
-            "relais exige une authentification) avant de relancer avec --send."
+            f"Missing environment variable(s) for SMTP sending: {', '.join(missing)}. "
+            "No email sent. Set at least SMTP_HOST (+ SMTP_USER/SMTP_PASSWORD if the "
+            "relay requires authentication) before retrying with --send."
         )
     if not sender:
         raise SmtpConfigError(
-            "SMTP_FROM (ou SMTP_USER en repli) n'est pas défini — impossible de déterminer "
-            "l'expéditeur. Aucun email envoyé."
+            "SMTP_FROM (or SMTP_USER as fallback) is not set — cannot determine "
+            "the sender. No email sent."
         )
 
     to_list = recipients or _get_recipients()
     if not to_list:
-        raise SmtpConfigError("Aucun destinataire — MC_DIVERGENCE_RECIPIENTS est vide. Aucun email envoyé.")
+        raise SmtpConfigError("No recipient — MC_DIVERGENCE_RECIPIENTS is empty. No email sent.")
 
     if attachments:
         msg = MIMEMultipart()
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
         for path in attachments:
             if not os.path.exists(path):
-                raise SmtpConfigError(f"Pièce jointe introuvable : {path}. Aucun email envoyé.")
+                raise SmtpConfigError(f"Attachment not found: {path}. No email sent.")
             ctype, _ = mimetypes.guess_type(path)
             _, subtype = (ctype.split('/', 1) if ctype else ('application', 'octet-stream'))
             with open(path, 'rb') as f:
@@ -158,9 +158,9 @@ def main():
     try:
         sent_to = send_email(args.subject, args.body, recipients=recipients, attachments=args.attach)
     except SmtpConfigError as e:
-        print(f"ERREUR : {e}", file=sys.stderr)
+        print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
-    print(f"Email envoyé à : {', '.join(sent_to)}")
+    print(f"Email sent to: {', '.join(sent_to)}")
 
 
 if __name__ == '__main__':

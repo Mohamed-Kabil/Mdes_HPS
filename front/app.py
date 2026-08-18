@@ -121,7 +121,7 @@ def build_network_blueprint(key, name, adapter):
         has_run = adapter.get_comparison(refresh=False).get("has_run", False)
         return render_template(
             f"networks/{key}/accueil.html",
-            primary_label="Voir la comparaison" if has_run else "Lancer l'analyse",
+            primary_label="View comparison" if has_run else "Run analysis",
             primary_url=url_for(f"{key}.comparison_view", **({} if has_run else {"refresh": 1})),
             primary_disabled=False, primary_loading=not has_run,
         )
@@ -138,23 +138,22 @@ def build_network_blueprint(key, name, adapter):
             refresh_url=url_for(f"{key}.comparison_view", refresh=1),
             generated_at=data["generated_at"], export_url=url_for(f"{key}.comparison_export"),
             kpis=data["kpis"], cards=data["cards"],
-            shared_fixes=data.get("shared_fixes") or [],
         )
 
     @bp.get("/comparaison/export")
     def comparison_export():
         path = adapter.export_comparison_xlsx()
         if not path or not os.path.exists(path):
-            return "Aucun rapport disponible — lancez d'abord une analyse.", 404
+            return "No report available — run an analysis first.", 404
         return send_from_directory(os.path.dirname(path), os.path.basename(path), as_attachment=True)
 
     @bp.get("/comparaison/<path:endpoint_name>")
     def comparison_detail(endpoint_name):
         card = adapter.get_comparison_detail(endpoint_name)
         if card is None:
-            return "Endpoint introuvable.", 404
+            return "Endpoint not found.", 404
         return render_template(f"networks/{key}/detail.html", path=card["path"], implemented=card["implemented"],
-                                error=card["error"], missing=card["missing_fields"])
+                                error=card["error"], all_fields=card["all_fields"])
 
     @bp.get("/releases")
     def releases_view():
@@ -180,7 +179,7 @@ def build_network_blueprint(key, name, adapter):
     def releases_export():
         path = adapter.export_releases_xlsx()
         if not path or not os.path.exists(path):
-            return "Aucun rapport disponible — lancez d'abord une analyse.", 404
+            return "No report available — run an analysis first.", 404
         return send_from_directory(os.path.dirname(path), os.path.basename(path), as_attachment=True)
 
     @bp.route("/email", methods=["GET", "POST"])
@@ -201,13 +200,13 @@ def build_network_blueprint(key, name, adapter):
                 return render_template(
                     f"networks/{key}/email.html", view=view, has_data=True, result=(status, message),
                     pending_confirm=False, subject=subject, intro=intro, recipients=recipients,
-                    preview_html=_preview_html(intro), attachment_name=data.get("attachment_name") or "(aucune)",
+                    preview_html=_preview_html(intro), attachment_name=data.get("attachment_name") or "(none)",
                 )
 
             return render_template(
                 f"networks/{key}/email.html", view=view, has_data=True, result=None, pending_confirm=True,
                 subject=subject, intro=intro, recipients=recipients,
-                preview_html=_preview_html(intro), attachment_name=data.get("attachment_name") or "(aucune)",
+                preview_html=_preview_html(intro), attachment_name=data.get("attachment_name") or "(none)",
             )
 
         if not data.get("has_data"):
@@ -258,10 +257,10 @@ def _release_date_presets(years):
     (e.g. one dated for November while today is August)."""
     today = date.today()
     presets = [
-        ("Tout", None, None),
-        ("3 derniers mois", (today - timedelta(days=90)).isoformat(), None),
-        ("6 derniers mois", (today - timedelta(days=180)).isoformat(), None),
-        ("Cette annee", f"{today.year}-01-01", f"{today.year}-12-31"),
+        ("All", None, None),
+        ("Last 3 months", (today - timedelta(days=90)).isoformat(), None),
+        ("Last 6 months", (today - timedelta(days=180)).isoformat(), None),
+        ("This year", f"{today.year}-01-01", f"{today.year}-12-31"),
     ]
     for y in years:
         presets.append((y, f"{y}-01-01", f"{y}-12-31"))

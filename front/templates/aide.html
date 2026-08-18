@@ -1,30 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Aide — Systeme de conformite reseaux{% endblock %}
+{% block title %}Help — Network Compliance System{% endblock %}
 {% block content %}
-<h1>Aide</h1>
-<p class="caption">Ce que fait chaque section, pour un nouveau membre de l'equipe.</p>
+<h1>Help</h1>
+<p class="caption">What each section does, for a new team member.</p>
 
 <table class="detail-table">
   <tr><th>Section</th><th>Role</th></tr>
   <tr>
-    <td class="field-name">Comparaison</td>
-    <td>Compare l'implementation HPS (data.yaml) a la specification actuelle du reseau (ex. pre-dig.yaml pour Mastercard) et liste les champs manquants par endpoint, classes par severite (Critique/Important/Mineur).</td>
+    <td class="field-name">Comparison</td>
+    <td>Compares the HPS implementation (data.yaml) against the network's current specification (e.g. pre-dig.yaml for Mastercard) and lists the gaps per endpoint (missing or divergent field). No criticality level: assessing how serious a gap is is an analyst's job.</td>
   </tr>
   <tr>
     <td class="field-name">Releases</td>
-    <td>Repere les evolutions a venir du reseau (nouvelles releases) qui mentionnent les endpoints suivis, pour anticiper les changements avant leur mise en production.</td>
+    <td>Tracks upcoming network changes (new releases) that mention the tracked endpoints, to anticipate changes before they go to production.</td>
   </tr>
   <tr>
     <td class="field-name">Email</td>
-    <td>Prepare et envoie un rapport (Comparaison ou Releases) par email, avec le detail complet en piece jointe Excel.</td>
+    <td>Prepares and sends a report (Comparison or Releases) by email, with the full detail attached as an Excel file.</td>
   </tr>
   <tr>
     <td class="field-name">Configuration</td>
-    <td>Liste en lecture seule les endpoints suivis pour le reseau actif.</td>
+    <td>Read-only list of the endpoints tracked for the active network.</td>
   </tr>
   <tr>
     <td class="field-name">Notes</td>
-    <td>Zone de commentaires libres attaches a chaque endpoint, pour garder une trace des observations de l'equipe au fil du temps.</td>
+    <td>Free-text comment area attached to each endpoint, to keep a record of the team's observations over time.</td>
   </tr>
 </table>
 {% endblock %}

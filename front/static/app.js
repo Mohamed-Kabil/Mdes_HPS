@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function openPanel(sourceEl) {
     panelBody.innerHTML = sourceEl.innerHTML;
+    initFieldFilters(panelBody);
     overlay.classList.add("open");
     panel.classList.add("open");
   }
@@ -44,6 +45,61 @@ document.addEventListener("DOMContentLoaded", function () {
       closePanel();
     }
   });
+});
+
+// Filtre du tableau de detail champ par champ (page Comparaison) — bascule
+// Ecarts / Tous les champs + filtre Requis (Oui/Non/Tous), sans
+// rechargement. Ecouteurs delegues sur `document` (pas sur les elements du
+// tableau eux-memes) car le panneau lateral remplace son contenu via
+// innerHTML a chaque ouverture (voir openPanel ci-dessus), ce qui perdrait
+// des listeners attaches directement ; ca couvre aussi la page de detail
+// autonome (/comparaison/<endpoint>), qui utilise le meme balisage hors
+// panneau.
+function applyFieldFilters(group) {
+  var activeBtn = group.querySelector(".filter-chip[data-mode].active");
+  var mode = activeBtn ? activeBtn.dataset.mode : "gaps";
+  var select = group.querySelector(".field-requis-select");
+  var requis = select ? select.value : "all";
+  var table = group.nextElementSibling;
+  if (!table || !table.classList.contains("field-detail-table")) {
+    return;
+  }
+  table.querySelectorAll("tr[data-gap]").forEach(function (row) {
+    var showByMode = mode === "all" || row.dataset.gap === "yes";
+    var showByRequis = requis === "all" || row.dataset.required === requis;
+    row.style.display = showByMode && showByRequis ? "" : "none";
+  });
+}
+
+function initFieldFilters(root) {
+  root.querySelectorAll(".field-filter").forEach(applyFieldFilters);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  initFieldFilters(document);
+});
+
+document.addEventListener("click", function (event) {
+  var btn = event.target.closest(".field-filter .filter-chip[data-mode]");
+  if (!btn) {
+    return;
+  }
+  var group = btn.closest(".field-filter");
+  group.querySelectorAll(".filter-chip[data-mode]").forEach(function (b) {
+    b.classList.remove("active");
+  });
+  btn.classList.add("active");
+  applyFieldFilters(group);
+});
+
+document.addEventListener("change", function (event) {
+  if (!event.target.classList.contains("field-requis-select")) {
+    return;
+  }
+  var group = event.target.closest(".field-filter");
+  if (group) {
+    applyFieldFilters(group);
+  }
 });
 
 // Menu deroulant "Reseaux" — meme principe que le panneau de detail :

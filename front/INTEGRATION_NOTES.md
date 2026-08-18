@@ -90,15 +90,14 @@ busywork with no real value. If you ever want them live, they just need a
   functions produce lightly-marked-up plain text (`###` headers, `-` lists),
   and adding a markdown-to-HTML dependency just for this preview felt like
   overkill — flag if you'd rather have it rendered properly.
-- **Severity mapping (Critique/Important/Mineur)** is a new concept this
-  frontend introduces; the underlying data uses different vocabularies per
-  part:
-  - Part 1: `reliable=False` → Mineur; `reliable=True` + `non_implemente` →
-    Critique; `reliable=True` + `partiel` → Important.
-  - Part 2: `non_implemente` → Critique; `non_verifiable` → Important;
-    `partiel` → Mineur.
-  These are my judgment calls, not something either script defined —
-  worth a second look if severity is going to drive real prioritization.
+- **No severity/criticality ranking (Critique/Important/Mineur) anywhere.**
+  An earlier version of this frontend introduced one (my own judgment call,
+  not something either script defined) — removed on request: this
+  dashboard states what differs (ecart vs conforme), sizing up how much a
+  gap matters is an analyst's call, not the tool's. Still keeps the
+  "reliable" signal internally (see `_is_gap()` in both adapters) to decide
+  what counts as an ecart worth surfacing at all vs. noise, but that's a
+  data-quality filter, not a severity tier exposed to the user.
 
 ## Everything else
 

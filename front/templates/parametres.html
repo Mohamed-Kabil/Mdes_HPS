@@ -1,30 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Parametres — Systeme de conformite reseaux{% endblock %}
+{% block title %}Settings — Network Compliance System{% endblock %}
 {% block content %}
-<h1>Parametres</h1>
-<p class="caption">Configuration de l'envoi d'email (destinataires par defaut et identifiants SMTP).</p>
+<h1>Settings</h1>
+<p class="caption">Email sending configuration (default recipients and SMTP credentials).</p>
 
 {% if saved %}
-<p class="conforme">Parametres enregistres.</p>
+<p class="conforme">Settings saved.</p>
 {% endif %}
 
 <form method="post" class="email-form">
-  <label>Serveur SMTP
+  <label>SMTP server
     <input type="text" name="smtp_server" value="{{ smtp_server }}">
   </label>
-  <label>Port SMTP
+  <label>SMTP port
     <input type="number" name="smtp_port" value="{{ smtp_port }}">
   </label>
-  <label>Adresse d'envoi (sender_email)
+  <label>Sender address (sender_email)
     <input type="text" name="sender_email" value="{{ sender_email }}">
   </label>
-  <label>Mot de passe
+  <label>Password
     <input type="password" name="sender_password" value="" autocomplete="new-password">
   </label>
-  <p class="caption">Laisser le mot de passe vide pour conserver celui deja enregistre.</p>
-  <label>Destinataires par defaut (separes par des virgules)
+  <p class="caption">Leave the password blank to keep the one already saved.</p>
+  <label>Default recipients (comma-separated)
     <input type="text" name="default_recipients" value="{{ default_recipients }}">
   </label>
-  <button type="submit">Enregistrer</button>
+  <button type="submit">Save</button>
 </form>
 {% endblock %}

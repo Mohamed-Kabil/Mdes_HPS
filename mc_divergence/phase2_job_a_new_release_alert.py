@@ -31,13 +31,13 @@ Two independently-triggerable checks (--check pending|latest, default
 pending — see section 3quater below), sharing one persisted checkpoint
 (cache/phase2_checkpoint.json) but not automatically switching between
 each other:
-  - --check pending ("Vérifier après le dernier pre-dig"): every release
+  - --check pending ("Check after last pre-dig"): every release
     whose Production date hasn't happened yet — i.e. not yet reflected in
     pre-dig.yaml, which only ever contains what's already live. Recomputed
     fresh from Production dates every run. The ONLY action that ADVANCES
     the checkpoint — the authoritative sweep that moves the reference
     point forward.
-  - --check latest ("Vérifier la dernière release"): releases newer than
+  - --check latest ("Check latest release"): releases newer than
     whatever 'pending' last examined. Does NOT advance the checkpoint
     itself, so running it repeatedly keeps re-showing the same still-new
     release(s) until 'pending' runs again. Falls back to just the single
@@ -326,7 +326,7 @@ def releases_since_checkpoint(entries, checkpoint):
 #          button / CLI mode), sharing the checkpoint but not automatically
 #          switching between each other:
 #
-#          - check_pending_since_predig() ("Vérifier après le dernier
+#          - check_pending_since_predig() ("Check after last
 #            pre-dig"): check 1 standalone — every release still not
 #            reflected in pre-dig.yaml (Production date in the future),
 #            recomputed fresh every time from Production dates, independent
@@ -335,7 +335,7 @@ def releases_since_checkpoint(entries, checkpoint):
 #            right after) — it's the authoritative sweep that moves the
 #            reference point forward.
 #
-#          - check_since_checkpoint() ("Vérifier la dernière release"):
+#          - check_since_checkpoint() ("Check latest release"):
 #            check 2 standalone — releases newer than whatever the pre-dig
 #            check last examined. Deliberately does NOT advance the
 #            checkpoint itself, so clicking it repeatedly keeps re-showing
@@ -527,13 +527,13 @@ def _autosize(ws, widths):
 
 
 def _write_summary_sheet(wb, relevant):
-    ws = wb.create_sheet("Résumé", 0)
-    ws['A1'] = f"Phase 2 — {len(relevant)} release(s) impactant les APIs suivies"
+    ws = wb.create_sheet("Summary", 0)
+    ws['A1'] = f"Phase 2 — {len(relevant)} release(s) affecting tracked APIs"
     ws['A1'].font = TITLE_FONT
     ws.merge_cells('A1:F1')
 
     header_row = 3
-    headers = ['Note', 'Version (MDES release)', 'Type', 'Date de mise à jour', 'APIs concernées', 'URL']
+    headers = ['Note', 'Version (MDES release)', 'Type', 'Updated on', 'Affected APIs', 'URL']
     for col, h in enumerate(headers, start=1):
         ws.cell(row=header_row, column=col, value=h)
     _style_header_row(ws, header_row, len(headers))
@@ -555,8 +555,8 @@ def _write_api_sheet(wb, sheet_name, api, relevant):
     ws['A1'] = api
     ws['A1'].font = TITLE_FONT
 
-    headers = ['Note', 'Version', 'Date de mise à jour', 'Endpoint(s)', 'Changement', 'Description',
-               'Champ', 'Type', 'Min', 'Max', 'Required', 'Description du champ']
+    headers = ['Note', 'Version', 'Updated on', 'Endpoint(s)', 'Change', 'Description',
+               'Field', 'Type', 'Min', 'Max', 'Required', 'Field description']
     header_row = 3
     for col, h in enumerate(headers, start=1):
         ws.cell(row=header_row, column=col, value=h)
@@ -568,14 +568,14 @@ def _write_api_sheet(wb, sheet_name, api, relevant):
             continue
         changes = entry['parsed']['changes']
         if not changes:
-            values = [entry['title'], entry['mdes_release'], entry['upgrade_date'], '', '(aucun changement structuré parsé)',
+            values = [entry['title'], entry['mdes_release'], entry['upgrade_date'], '', '(no structured change parsed)',
                        '', '', '', '', '', '', '']
             for col, v in enumerate(values, start=1):
                 ws.cell(row=row, column=col, value=v).alignment = WRAP
             row += 1
             continue
         for c in changes:
-            endpoints = ', '.join(c['endpoints']) if c['endpoints'] else '(aucun endpoint identifié)'
+            endpoints = ', '.join(c['endpoints']) if c['endpoints'] else '(no endpoint identified)'
             if not c['fields']:
                 values = [entry['title'], entry['mdes_release'], entry['upgrade_date'], endpoints,
                            c['title'], c.get('description') or '', '', '', '', '', '', '']
@@ -606,7 +606,7 @@ def _write_api_sheet(wb, sheet_name, api, relevant):
 
 
 def render_report_xlsx(relevant, xlsx_path):
-    """Builds the workbook attached to the phase 2 email: a 'Résumé' sheet
+    """Builds the workbook attached to the phase 2 email: a 'Summary' sheet
     (one row per relevant release) and one sheet per tracked API that was
     actually mentioned in at least one relevant release, each listing every
     change/field concerning that API across all matching releases."""

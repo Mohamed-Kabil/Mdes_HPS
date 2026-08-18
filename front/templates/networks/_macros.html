@@ -1,5 +1,5 @@
-{# Macros partagees entre reseaux — evite de dupliquer ce balisage a chaque
-   fois qu'un nouveau reseau est ajoute (Etape 5 : structure extensible). #}
+{# Macros shared across networks — avoids duplicating this markup each
+   time a new network is added (Step 5: extensible structure). #}
 
 {% macro stat_bar(stats) %}
 <div class="stat-bar">
@@ -10,17 +10,57 @@
 </div>
 {% endmacro %}
 
+{# Field-by-field detail table (Comparison page, panel + standalone detail
+   page) -- filterable in JS (see app.js) without a reload: toggle
+   Gaps / All fields, plus a Required filter (Yes/No/All), like the old
+   dashboard (front_legacy/app.js). Status = gap/compliant only -- no
+   criticality level (Critical/Important/Minor): this tool states the
+   gaps, assessing their severity is an analyst's job, not the tool's. #}
+{% macro field_detail_table(all_fields) %}
+{% set gaps = all_fields|selectattr('is_gap')|list %}
+<div class="field-filter">
+  <button type="button" class="filter-chip active" data-mode="gaps">Gaps ({{ gaps|length }})</button>
+  <button type="button" class="filter-chip" data-mode="all">All fields ({{ all_fields|length }})</button>
+  <label class="field-requis-label">Required
+    <select class="filter-chip filter-chip-select field-requis-select">
+      <option value="all">All</option>
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
+  </label>
+</div>
+{% if not all_fields %}
+<p class="conforme">No gap — endpoint compliant.</p>
+{% else %}
+<table class="detail-table field-detail-table">
+  <tr><th>Status</th><th>Field</th><th>Required</th><th>Explanation</th></tr>
+  {% for f in all_fields %}
+  <tr data-gap="{{ 'yes' if f.is_gap else 'no' }}"
+      data-required="{{ 'yes' if f.required is true else ('no' if f.required is false else 'na') }}">
+    <td>
+      {% if f.is_gap %}<span class="badge badge-ecart">Gap</span>
+      {% else %}<span class="badge badge-conforme">Compliant</span>{% endif %}
+    </td>
+    <td class="field-name">{{ f.field }}</td>
+    <td>{{ "Yes" if f.required is true else ("No" if f.required is false else "—") }}</td>
+    <td>{{ f.description or "(no description)" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endmacro %}
+
 {% macro network_banner(network_name) %}
 <div class="network-banner">
-  Import manuel requis — aucune source automatique disponible cote {{ network_name }},
-  contrairement a Mastercard (pas d'equivalent a llms-full.txt).
+  Manual import required — no automated source available for {{ network_name }},
+  unlike Mastercard (no equivalent to llms-full.txt).
 </div>
 {% endmacro %}
 
-{# Logo d'un reseau avec repli propre : la boite garde une taille fixe
-   quel que soit le resultat, et si le fichier logo est absent/casse,
-   onerror retire la balise <img> pour laisser voir la lettre de repli
-   deja presente en dessous (pas d'icone d'image cassee). #}
+{# A network's logo with a clean fallback: the box keeps a fixed size no
+   matter what, and if the logo file is missing/broken, onerror removes
+   the <img> tag to reveal the fallback letter already sitting underneath
+   (no broken-image icon). #}
 {% macro network_logo(net, size=32) %}
 <span class="network-logo-wrap" style="width:{{ size }}px;height:{{ size }}px;">
   <span class="network-logo-fallback" style="font-size:{{ (size * 0.45)|round|int }}px;">{{ net.name[0] }}</span>
@@ -29,8 +69,8 @@
 </span>
 {% endmacro %}
 
-{# Logo de la plateforme (HPS), meme mecanisme de repli que network_logo —
-   utilise dans le bandeau, present sur toutes les pages. #}
+{# Platform logo (HPS), same fallback mechanism as network_logo —
+   used in the top bar, present on every page. #}
 {% macro platform_logo(size=32) %}
 <span class="network-logo-wrap" style="width:{{ size }}px;height:{{ size }}px;">
   <span class="network-logo-fallback" style="font-size:{{ (size * 0.45)|round|int }}px;">H</span>
@@ -39,9 +79,9 @@
 </span>
 {% endmacro %}
 
-{# Bloc "page d'accueil" d'un reseau : logo + nom en grand + bouton
-   d'action principal. Partage entre Mastercard et Visa — seuls les
-   libelles/URL/etat disabled different d'un reseau a l'autre. #}
+{# A network's "home page" block: logo + big name + primary action
+   button. Shared between Mastercard and Visa — only the
+   labels/URL/disabled state differ from one network to another. #}
 {% macro home_hero(net, primary_label, primary_url, primary_disabled, primary_loading=False) %}
 <div class="home-hero">
   {{ network_logo(net, 96) }}
@@ -51,7 +91,7 @@
     <span class="hero-btn hero-btn-disabled">{{ primary_label }}</span>
     {% else %}
     <a class="hero-btn hero-btn-primary{{ ' js-loading-btn' if primary_loading else '' }}"
-       href="{{ primary_url }}" data-loading-text="Analyse en cours...">{{ primary_label }}</a>
+       href="{{ primary_url }}" data-loading-text="Analysis in progress...">{{ primary_label }}</a>
     {% endif %}
   </div>
 </div>

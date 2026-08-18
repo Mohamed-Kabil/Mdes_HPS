@@ -227,7 +227,7 @@ def compare_field(note_field, matched_info):
         expected = NOTE_TYPE_TO_SCHEMA_TYPE.get(norm_note_type)
         actual = matched_info.get('type')
         if expected and actual and expected != actual:
-            reasons.append(f"type: note dit '{note_type}' ({expected}), data.yaml a '{actual}'")
+            reasons.append(f"type: note says '{note_type}' ({expected}), data.yaml has '{actual}'")
             mismatched_attrs.add('type')
 
     for note_key, schema_key, label in (('min', 'minLength', 'minLength'), ('max', 'maxLength', 'maxLength')):
@@ -235,14 +235,14 @@ def compare_field(note_field, matched_info):
         if note_val and re.match(r'^\d+$', str(note_val).strip()):
             actual = matched_info.get(schema_key)
             if actual is not None and int(note_val) != int(actual):
-                reasons.append(f"{label}: note dit {note_val}, data.yaml a {actual}")
+                reasons.append(f"{label}: note says {note_val}, data.yaml has {actual}")
                 mismatched_attrs.add(schema_key)
 
     if note_field.get('required') is not None:
         actual_required = bool(matched_info.get('required'))
         if note_field['required'] != actual_required:
             reasons.append(
-                f"required: note dit {note_field['required']}, data.yaml a {actual_required}"
+                f"required: note says {note_field['required']}, data.yaml has {actual_required}"
             )
             mismatched_attrs.add('required')
 
@@ -589,14 +589,14 @@ def audit_predig_vs_data_direct(predig_spec, data_spec):
             predig_line = info.get('line')
             if data_fields is None:
                 field_results.append({'name': key, 'status': 'non_implemente',
-                                       'reasons': ["endpoint absent de data.yaml"], 'reliable': True,
+                                       'reasons': ["endpoint missing from data.yaml"], 'reliable': True,
                                        'predig_origin': predig_origin, 'data_origin': None,
                                        'predig_line': predig_line, 'data_line': None, **expected})
                 continue
             matches = find_matches(leaf_name, data_fields)
             if not matches:
                 field_results.append({'name': key, 'status': 'non_implemente',
-                                       'reasons': ["aucun champ correspondant trouvé"], 'reliable': True,
+                                       'reasons': ["no matching field found"], 'reliable': True,
                                        'predig_origin': predig_origin,
                                        'data_origin': closest_origin(key, data_origins),
                                        'predig_line': predig_line, 'data_line': None, **expected})
@@ -609,7 +609,7 @@ def audit_predig_vs_data_direct(predig_spec, data_spec):
             }
             status, reasons, mismatched_attrs = compare_field(pseudo_note_field, data_fields[best[0]])
             if not best[1]:
-                reasons = reasons + ["nom trouvé mais imbrication différente — à vérifier"]
+                reasons = reasons + ["name found but nesting differs — needs review"]
             # 'reliable' = False only when EVERY mismatched attribute is one
             # of the known-noisy ones (minLength/required) — a field that
             # also mismatches on type/maxLength stays reliable even if it
@@ -658,13 +658,13 @@ def audit_change(change, data_spec, endpoint_cache):
             if not matches:
                 field_results.append({
                     'name': nf['name'], 'status': 'non_implemente',
-                    'matched_path': None, 'reasons': ["aucun champ correspondant trouvé"],
+                    'matched_path': None, 'reasons': ["no matching field found"],
                 })
                 continue
             best = next((m for m in matches if m[1]), matches[0])
             status, reasons, _mismatched = compare_field(nf, flat_fields[best[0]])
             if not best[1]:
-                reasons = reasons + ["nom trouvé mais imbrication différente — à vérifier"]
+                reasons = reasons + ["name found but nesting differs — needs review"]
             field_results.append({
                 'name': nf['name'], 'status': status,
                 'matched_path': best[0], 'reasons': reasons,
@@ -718,8 +718,8 @@ def worst_status(statuses):
 # ============================================================================
 
 STATUS_LABEL_FR = {
-    'implemente': 'Implémenté', 'partiel': 'Partiel',
-    'non_implemente': 'Non implémenté', 'a_verifier_manuellement': 'À vérifier',
+    'implemente': 'Implemented', 'partiel': 'Partial',
+    'non_implemente': 'Not implemented', 'a_verifier_manuellement': 'Needs review',
 }
 STATUS_FILL = {
     'implemente': PatternFill('solid', fgColor='C6EFCE'),
@@ -762,20 +762,20 @@ def _write_api_sheet(wb, sheet_name, path, entry):
     ws = wb.create_sheet(sheet_name)
     ws['A1'] = entry['display']
     ws['A1'].font = TITLE_FONT
-    ws['A2'] = f"Endpoint : {path}"
+    ws['A2'] = f"Endpoint: {path}"
     ws['A2'].font = Font(italic=True)
 
     if not entry.get('endpoint_exists_in_predig'):
-        ws['A4'] = "Endpoint non documenté dans pre-dig.yaml — rien à vérifier."
+        ws['A4'] = "Endpoint not documented in pre-dig.yaml — nothing to check."
         _autosize(ws, [60])
         return
     if not entry['endpoint_exists_in_data']:
-        ws['A4'] = (f"Endpoint absent de data.yaml — {len(entry['fields'])} champ(s) du spec "
-                     f"Mastercard non vérifiable(s).")
+        ws['A4'] = (f"Endpoint missing from data.yaml — {len(entry['fields'])} field(s) from the Mastercard "
+                     f"spec not verifiable.")
         ws['A4'].font = Font(bold=True, color='9C0006')
 
-    headers = ['Champ', 'Statut', 'Fiable', 'Raisons', 'Type attendu', 'MinLength',
-               'MaxLength', 'Required', 'Description', 'Origine pre-dig.yaml', 'Origine data.yaml']
+    headers = ['Field', 'Status', 'Reliable', 'Reasons', 'Expected type', 'MinLength',
+               'MaxLength', 'Required', 'Description', 'pre-dig.yaml origin', 'data.yaml origin']
     header_row = 6
     for col, h in enumerate(headers, start=1):
         ws.cell(row=header_row, column=col, value=h)
@@ -792,10 +792,10 @@ def _write_api_sheet(wb, sheet_name, path, entry):
     for f in fields_sorted:
         reason_txt = '; '.join(f['reasons'])
         values = [
-            f['name'], STATUS_LABEL_FR[f['status']], 'Oui' if f['reliable'] else 'Non',
+            f['name'], STATUS_LABEL_FR[f['status']], 'Yes' if f['reliable'] else 'No',
             reason_txt, f.get('type') or '', f.get('minLength') if f.get('minLength') is not None else '',
             f.get('maxLength') if f.get('maxLength') is not None else '',
-            '' if f.get('required') is None else ('Oui' if f['required'] else 'Non'),
+            '' if f.get('required') is None else ('Yes' if f['required'] else 'No'),
             f.get('description') or '', f.get('predig_origin') or '', f.get('data_origin') or '',
         ]
         for col, v in enumerate(values, start=1):
@@ -816,8 +816,8 @@ def _write_api_sheet(wb, sheet_name, path, entry):
 
 
 def _write_summary_sheet(wb, audited_notes, cutoff_str, predig_direct, api_sheet_names):
-    ws = wb.create_sheet("Résumé", 0)
-    ws['A1'] = f"Audit historique des divergences MDES — depuis {cutoff_str}"
+    ws = wb.create_sheet("Summary", 0)
+    ws['A1'] = f"MDES divergence historical audit — since {cutoff_str}"
     ws['A1'].font = TITLE_FONT
     ws.merge_cells('A1:D1')
 
@@ -828,13 +828,13 @@ def _write_summary_sheet(wb, audited_notes, cutoff_str, predig_direct, api_sheet
     adoption_rate = round(100 * counts['implemente'] / verifiable, 1) if verifiable else 0.0
 
     stats = [
-        ("Changements audités (notes de release)", total),
-        ("Notes couvertes", len(audited_notes)),
-        ("Implémentés", counts['implemente']),
-        ("Partiels", counts['partiel']),
-        ("Non implémentés", counts['non_implemente']),
-        ("À vérifier manuellement", counts['a_verifier_manuellement']),
-        ("Taux d'adoption global (%)", adoption_rate),
+        ("Audited changes (release notes)", total),
+        ("Notes covered", len(audited_notes)),
+        ("Implemented", counts['implemente']),
+        ("Partial", counts['partiel']),
+        ("Not implemented", counts['non_implemente']),
+        ("Needs manual review", counts['a_verifier_manuellement']),
+        ("Overall adoption rate (%)", adoption_rate),
     ]
     r = 3
     for label, value in stats:
@@ -843,10 +843,10 @@ def _write_summary_sheet(wb, audited_notes, cutoff_str, predig_direct, api_sheet
         r += 1
 
     r += 1
-    ws.cell(row=r, column=1, value="Vérification directe pre-dig.yaml vs data.yaml — 7 APIs prioritaires").font = Font(bold=True, size=12)
+    ws.cell(row=r, column=1, value="Direct check pre-dig.yaml vs data.yaml — 7 priority APIs").font = Font(bold=True, size=12)
     r += 1
     header_row = r
-    headers = ['API', 'Endpoint', 'Statut', 'Écarts fiables', 'Champs total', 'Détail']
+    headers = ['API', 'Endpoint', 'Status', 'Reliable gaps', 'Total fields', 'Detail']
     for col, h in enumerate(headers, start=1):
         ws.cell(row=header_row, column=col, value=h)
     _style_header_row(ws, header_row, len(headers))
@@ -861,7 +861,7 @@ def _write_summary_sheet(wb, audited_notes, cutoff_str, predig_direct, api_sheet
         status_cell.fill = STATUS_FILL.get(summary['status'], PatternFill())
         ws.cell(row=r, column=4, value=summary['reliable_issues'])
         ws.cell(row=r, column=5, value=summary['total_fields'])
-        link_cell = ws.cell(row=r, column=6, value=f"Voir '{api_sheet_names[path]}'")
+        link_cell = ws.cell(row=r, column=6, value=f"See '{api_sheet_names[path]}'")
         link_cell.hyperlink = f"#'{api_sheet_names[path]}'!A1"
         link_cell.font = Font(color='0563C1', underline='single')
         r += 1
@@ -887,47 +887,10 @@ def summarize_api_status_xlsx(entry):
     return {"status": status, "reliable_issues": len(reliable_problems), "total_fields": len(entry["fields"])}
 
 
-def _write_shared_fixes_sheet(wb, predig_direct):
-    field_clusters = group_shared_schema_fixes(predig_direct)
-    if not field_clusters:
-        return
-    by_data_target = summarize_by_data_target(field_clusters)
-
-    ws = wb.create_sheet("Écarts à cause commune")
-    ws['A1'] = "Un seul schéma partagé à corriger résout plusieurs endpoints à la fois"
-    ws['A1'].font = TITLE_FONT
-    ws.merge_cells('A1:F1')
-
-    header_row = 3
-    headers = ['Schéma data.yaml', 'Champs concernés', 'Nb champs', 'Nb endpoints',
-               'Endpoints concernés', 'Schémas pre-dig.yaml source']
-    for col, h in enumerate(headers, start=1):
-        ws.cell(row=header_row, column=col, value=h)
-    _style_header_row(ws, header_row, len(headers))
-
-    r = header_row + 1
-    for target in by_data_target:
-        pairs_for_target = [p for p in summarize_schema_fix_clusters(field_clusters)
-                             if p['data_origin'] == target['data_origin']]
-        all_fields = sorted({f['name'] for p in pairs_for_target for f in p['fields']})
-        ws.cell(row=r, column=1, value=target['data_origin'])
-        ws.cell(row=r, column=2, value=', '.join(all_fields))
-        ws.cell(row=r, column=3, value=target['field_count'])
-        ws.cell(row=r, column=4, value=target['endpoint_count'])
-        ws.cell(row=r, column=5, value=', '.join(target['endpoints']))
-        ws.cell(row=r, column=6, value=', '.join(target['predig_origins']))
-        for col in range(1, len(headers) + 1):
-            ws.cell(row=r, column=col).alignment = WRAP
-        r += 1
-
-    ws.freeze_panes = f"A{header_row + 1}"
-    _autosize(ws, [26, 40, 11, 12, 45, 30])
-
-
 def _write_notes_detail_sheet(wb, audited_notes):
-    ws = wb.create_sheet("Détail par note")
-    headers = ['Note (version)', 'URL', 'Changement', 'Statut', 'API prioritaire',
-               'Endpoint(s)', 'Champ', 'Détail statut', 'Raisons']
+    ws = wb.create_sheet("Detail by note")
+    headers = ['Note (version)', 'URL', 'Change', 'Status', 'Priority API',
+               'Endpoint(s)', 'Field', 'Status detail', 'Reasons']
     for col, h in enumerate(headers, start=1):
         ws.cell(row=1, column=col, value=h)
     _style_header_row(ws, 1, len(headers))
@@ -935,19 +898,19 @@ def _write_notes_detail_sheet(wb, audited_notes):
     r = 2
     for note in audited_notes:
         for c in sorted(note['changes'], key=lambda c: STATUS_RANK[c['status']], reverse=True):
-            endpoints = ', '.join(ep['endpoint'] for ep in c['endpoint_results']) or '(endpoint non identifié)'
+            endpoints = ', '.join(ep['endpoint'] for ep in c['endpoint_results']) or '(endpoint not identified)'
             field_rows = [(ep['endpoint'], f) for ep in c['endpoint_results'] for f in ep['fields']
                           if f['status'] != 'implemente']
             if not field_rows:
                 values = [note['version'], note['url'], c['title'], STATUS_LABEL_FR[c['status']],
-                          'Oui' if c['_is_priority'] else 'Non', endpoints, '', '', '']
+                          'Yes' if c['_is_priority'] else 'No', endpoints, '', '', '']
                 for col, v in enumerate(values, start=1):
                     ws.cell(row=r, column=col, value=v).alignment = WRAP
                 r += 1
                 continue
             for endpoint, f in field_rows:
                 values = [note['version'], note['url'], c['title'], STATUS_LABEL_FR[c['status']],
-                          'Oui' if c['_is_priority'] else 'Non', endpoint, f['name'],
+                          'Yes' if c['_is_priority'] else 'No', endpoint, f['name'],
                           STATUS_LABEL_FR[f['status']], '; '.join(f['reasons'])]
                 for col, v in enumerate(values, start=1):
                     ws.cell(row=r, column=col, value=v).alignment = WRAP
@@ -958,9 +921,9 @@ def _write_notes_detail_sheet(wb, audited_notes):
 
 
 def render_report_xlsx(audited_notes, cutoff_str, xlsx_path, predig_direct=None):
-    """Builds the workbook attached to the email: a 'Résumé' sheet, one sheet
-    per priority API (field-by-field, colored by status), a shared-schema-
-    fixes sheet, and a per-release-note detail sheet."""
+    """Builds the workbook attached to the email: a 'Summary' sheet, one sheet
+    per priority API (field-by-field, colored by status), and a per-release-
+    note detail sheet."""
     wb = Workbook()
     wb.remove(wb.active)  # placeholder default sheet, real sheets added below
 
@@ -977,7 +940,6 @@ def render_report_xlsx(audited_notes, cutoff_str, xlsx_path, predig_direct=None)
         entry = predig_direct.get(path, {'display': display})
         _write_api_sheet(wb, api_sheet_names[path], path, entry)
 
-    _write_shared_fixes_sheet(wb, predig_direct)
     if audited_notes:
         _write_notes_detail_sheet(wb, audited_notes)
 
@@ -1017,24 +979,24 @@ def summarize_priority_api(entry):
     if not entry.get('endpoint_exists_in_predig'):
         return None
     if not entry['endpoint_exists_in_data']:
-        return f"endpoint absent de data.yaml ({len(entry['fields'])} champ(s) non vérifiable(s))"
+        return f"endpoint missing from data.yaml ({len(entry['fields'])} field(s) not verifiable)"
     reliable_problems = [f for f in entry['fields'] if f['status'] != 'implemente' and f['reliable']]
     if not reliable_problems:
         return None
     counts = {}
     for f in reliable_problems:
         side = 'response' if f['name'].startswith('response') else 'request'
-        bucket = counts.setdefault(side, {'manquant': 0, 'divergent': 0})
-        bucket['manquant' if f['status'] == 'non_implemente' else 'divergent'] += 1
+        bucket = counts.setdefault(side, {'missing': 0, 'divergent': 0})
+        bucket['missing' if f['status'] == 'non_implemente' else 'divergent'] += 1
     parts = []
     for side in ('request', 'response'):
         if side not in counts:
             continue
         sub = []
-        if counts[side]['manquant']:
-            sub.append(f"{counts[side]['manquant']} champ(s) manquant(s)")
+        if counts[side]['missing']:
+            sub.append(f"{counts[side]['missing']} missing field(s)")
         if counts[side]['divergent']:
-            sub.append(f"{counts[side]['divergent']} champ(s) divergent(s)")
+            sub.append(f"{counts[side]['divergent']} divergent field(s)")
         parts.append(f"{side} — {', '.join(sub)}")
     return " ; ".join(parts)
 
@@ -1054,7 +1016,7 @@ def render_email_draft(audited_notes, cutoff_str, predig_direct=None):
                 continue
             if not ep['endpoint_exists']:
                 by_endpoint.setdefault(key, []).append(
-                    (None, 'endpoint absent de data.yaml', c['note_version'], c['title']))
+                    (None, 'endpoint missing from data.yaml', c['note_version'], c['title']))
                 continue
             for f in ep['fields']:
                 if f['status'] == 'implemente':
@@ -1063,21 +1025,21 @@ def render_email_draft(audited_notes, cutoff_str, predig_direct=None):
                     (f['name'], f['status'], c['note_version'], c['title']))
 
     lines = [
-        f"Objet : [MDES] Audit divergences — {len(urgent)} écart(s) à traiter (depuis {cutoff_str})",
-        f"À : {EMAIL_RECIPIENTS or '(destinataires non définis — placeholder, voir MC_DIVERGENCE_RECIPIENTS)'}",
+        f"Subject: [MDES] Divergence audit — {len(urgent)} gap(s) to address (since {cutoff_str})",
+        f"To: {EMAIL_RECIPIENTS or '(recipients not set — placeholder, see MC_DIVERGENCE_RECIPIENTS)'}",
         "",
-        f"Bonjour,", "",
-        f"L'audit historique des pre-release notes Mastercard MDES (depuis {cutoff_str}) a détecté "
-        f"{len(urgent)} changement(s) partiellement ou non implémentés dans data.yaml sur "
-        f"{len(all_changes)} changements au total.",
+        f"Hello,", "",
+        f"The historical audit of Mastercard MDES pre-release notes (since {cutoff_str}) detected "
+        f"{len(urgent)} partially or not implemented change(s) in data.yaml out of "
+        f"{len(all_changes)} total changes.",
         "",
-        "Le rapport complet (détail note par note) est joint en pièce jointe à cet email.",
+        "The full report (note-by-note detail) is attached to this email.",
         "",
     ]
 
     if predig_direct:
-        lines.append("### APIs prioritaires — résumé (vérification directe pre-dig.yaml vs data.yaml, "
-                     "écarts fiables uniquement — détail champ par champ en pièce jointe)")
+        lines.append("### Priority APIs — summary (direct check pre-dig.yaml vs data.yaml, "
+                     "reliable gaps only — field-by-field detail in the attachment)")
         lines.append("")
         any_summary = False
         for path, entry in predig_direct.items():
@@ -1085,51 +1047,39 @@ def render_email_draft(audited_notes, cutoff_str, predig_direct=None):
             if summary is None:
                 continue
             any_summary = True
-            lines.append(f"- **{entry['display']}** : {summary}")
+            lines.append(f"- **{entry['display']}**: {summary}")
         if not any_summary:
-            lines.append("Aucun écart fiable détecté sur les APIs prioritaires.")
+            lines.append("No reliable gap detected on the priority APIs.")
         lines.append("")
-        lines.append("(Divergences mineures minLength/required omises du résumé, probablement "
-                     "dues au style de génération de data.yaml — voir le rapport complet en pièce jointe "
-                     "pour le détail.)")
+        lines.append("(Minor minLength/required divergences omitted from the summary, likely "
+                     "due to data.yaml's generation style — see the full report in the attachment "
+                     "for detail.)")
         lines.append("")
-
-        field_clusters = group_shared_schema_fixes(predig_direct)
-        by_data_target = summarize_by_data_target(field_clusters)
-        if by_data_target:
-            lines.append("### Écarts à cause commune — corriger une fois pour résoudre plusieurs endpoints "
-                         "(détail en pièce jointe)")
-            lines.append("")
-            for r in by_data_target:
-                lines.append(f"- Corriger `{r['data_origin']}` dans data.yaml → résout {r['field_count']} "
-                             f"champ(s) sur {r['endpoint_count']} endpoint(s) d'un coup : "
-                             f"{', '.join(r['endpoints'])}")
-            lines.append("")
 
     if by_endpoint:
-        lines.append("### Contexte par note (quelle release a introduit quoi — indicatif, détail en pièce jointe)")
+        lines.append("### Context by note (which release introduced what — informational, detail in the attachment)")
         lines.append("")
         for key in PRIORITY_DISPLAY_ORDER:
             entries = by_endpoint.get(key)
             if not entries:
                 continue
             notes = sorted({f"{note_version} ({title})" for _, _, note_version, title in entries})
-            lines.append(f"- **{PRIORITY_DISPLAY_NAMES[key]}** : {len(entries)} champ(s) concerné(s) "
-                         f"sur {len(notes)} note(s) — {'; '.join(notes)}")
+            lines.append(f"- **{PRIORITY_DISPLAY_NAMES[key]}**: {len(entries)} field(s) affected "
+                         f"across {len(notes)} note(s) — {'; '.join(notes)}")
         lines.append("")
 
     to_verify = [c for c in urgent if c['status'] == 'a_verifier_manuellement']
     if to_verify:
-        lines.append("### À vérifier manuellement (note sans tableau structuré — rien de vérifiable automatiquement)")
+        lines.append("### Needs manual review (note without a structured table — nothing automatically verifiable)")
         lines.append("")
         for c in to_verify:
-            endpoints = ', '.join(ep['endpoint'] for ep in c['endpoint_results']) or '(endpoint non identifié)'
+            endpoints = ', '.join(ep['endpoint'] for ep in c['endpoint_results']) or '(endpoint not identified)'
             lines.append(f"- {c['note_version']} — **{c['title']}** ({endpoints})")
         lines.append("")
 
     other_urgent = [c for c in urgent if not c['_is_priority'] and c['status'] != 'a_verifier_manuellement']
     if other_urgent:
-        lines.append("### Autres écarts (APIs non prioritaires)")
+        lines.append("### Other gaps (non-priority APIs)")
         lines.append("")
         for c in other_urgent:
             lines.append(f"- [{c['status']}] {c['note_version']} — {c['title']}")

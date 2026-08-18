@@ -534,6 +534,31 @@ select.filter-chip.filter-chip-select.active {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23FFFFFF'/%3E%3C/svg%3E");
 }
 
+/* Filtre du tableau de detail champ par champ (page Comparaison) — reprend
+   les chips de la page Releases (bascule Ecarts fiables/Tous les champs +
+   select Requis), <button> ici plutot que <a> donc reset explicite du
+   style natif (bordure/police) que le navigateur applique aux boutons. */
+.field-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.field-filter button.filter-chip {
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.field-requis-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--mineur);
+  margin-left: 4px;
+}
+
 /* Barre de stats — une seule ligne compacte, pas de boites flottantes */
 .stat-bar {
   display: flex;
@@ -584,6 +609,13 @@ a.card:hover {
 .card.sev-na { border-left-color: var(--mineur); }
 .card.sev-accent { border-left-color: var(--accent-start); }
 
+/* Etat d'une carte endpoint (page Comparaison, predig/mdescs) — ecart
+   constate vs conforme, pas un niveau de gravite : rouge/vert binaire (il y
+   a un ecart ou pas), jamais de palette graduee rouge/orange/jaune. */
+.card.state-ecart { border-left-color: var(--critique); }
+.card.state-conforme { border-left-color: var(--conforme); }
+.card.state-na { border-left-color: var(--mineur); }
+
 /* Carte de selection de reseau (accueil plateforme) — variante centree de
    .card, sans barre de severite (pas de conformite a signaler ici).
    Selecteur a.card.network-pick-card (specificite superieure a a.card
@@ -631,6 +663,8 @@ a.card.network-pick-card {
 .badge-critique { background: var(--critique); }
 .badge-important { background: var(--important); }
 .badge-mineur { background: var(--mineur); }
+.badge-conforme { background: var(--conforme); }
+.badge-ecart { background: var(--mineur); }
 .card-count {
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -685,53 +719,23 @@ a.card.network-pick-card {
   font-size: 13px;
   border-bottom: 1px solid var(--line-soft);
   vertical-align: top;
+  word-break: break-word;
 }
 .field-name {
   font-family: var(--font-mono);
   font-size: 12.5px;
 }
 
-/* Ecarts a cause commune (page Comparaison) — un seul changement (schema
-   data.yaml partage / champ Java partage) resout plusieurs endpoints ou
-   operations a la fois. <details>/<summary> natifs, pas de JS necessaire. */
-.shared-fixes-heading {
-  margin-top: 28px;
-  font-size: 16px;
+/* Table de detail champ par champ (modale/page Comparaison) — layout fixe
+   pour que les noms de champ longs (dot-path) enroulent au lieu de forcer
+   un defilement horizontal dans la modale. */
+.field-detail-table {
+  table-layout: fixed;
 }
-.shared-fixes {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
-}
-.shared-fix-card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-}
-.shared-fix-card summary {
-  cursor: pointer;
-  font-size: 13.5px;
-  line-height: 1.5;
-}
-.shared-fix-card summary code {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  background: var(--bg);
-  padding: 1px 5px;
-  border-radius: 4px;
-}
-.shared-fix-fields {
-  margin: 10px 0 0;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.shared-fix-fields li {
-  word-break: break-word;
-}
+.field-detail-table th:nth-child(1), .field-detail-table td:nth-child(1) { width: 13%; }
+.field-detail-table th:nth-child(2), .field-detail-table td:nth-child(2) { width: 27%; }
+.field-detail-table th:nth-child(3), .field-detail-table td:nth-child(3) { width: 10%; }
+.field-detail-table th:nth-child(4), .field-detail-table td:nth-child(4) { width: 50%; }
 
 /* Chronologie des releases (page Releases > Chronologie complete) — liste
    triee, une carte par changement de release, contenu copie de la note
@@ -910,8 +914,8 @@ a.card.network-pick-card {
   position: fixed;
   top: 50%;
   left: 50%;
-  max-height: 82vh;
-  width: min(640px, 92vw);
+  max-height: 88vh;
+  width: min(1040px, 94vw);
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: 12px;

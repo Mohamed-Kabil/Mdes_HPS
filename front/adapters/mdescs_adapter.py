@@ -10,7 +10,7 @@ recomputes from whatever's on disk; it's cheap either way.
 "Releases" = every CS pre-release note that mentions a tracked operation,
 across the full release-history table (mdes_cs_prereleases.filter_relevant_releases()
 over ALL entries, not the checkpoint-scoped subset the old dashboard's
-"Vérifier après / Vérifier la dernière" buttons used — see summary note).
+"Check after / Check latest" buttons used — see summary note).
 """
 
 import json
@@ -34,12 +34,12 @@ os.makedirs(DATA_DIR, exist_ok=True)
 RELEASES_CACHE_PATH = os.path.join(DATA_DIR, "mdescs_releases_cache.json")
 
 OPERATION_DESCRIPTIONS = {
-    "Search": "Recherche un ou plusieurs tokens associés à un PAN, un TUR ou un device ID.",
-    "Token Activate": "Active un token pour la première fois après provisioning.",
-    "Token Update": "Met à jour les données associées à un ou plusieurs tokens (ex. FPAN).",
-    "Token Suspend": "Change le statut d'un token de actif à suspendu.",
-    "Token Unsuspend": "Change le statut d'un token de suspendu à actif.",
-    "Token Delete": "Supprime définitivement un token.",
+    "Search": "Searches for one or more tokens associated with a PAN, a TUR, or a device ID.",
+    "Token Activate": "Activates a token for the first time after provisioning.",
+    "Token Update": "Updates the data associated with one or more tokens (e.g. FPAN).",
+    "Token Suspend": "Changes a token's status from active to suspended.",
+    "Token Unsuspend": "Changes a token's status from suspended to active.",
+    "Token Delete": "Permanently deletes a token.",
 }
 
 
@@ -47,8 +47,11 @@ def _slug(operation_name):
     return operation_name.lower().replace(" ", "-")
 
 
-def _severity(status):
-    return {"non_implemente": "Critique", "non_verifiable": "Important", "partiel": "Mineur"}.get(status)
+def _is_gap(status):
+    """Whether a field counts as an ecart worth surfacing -- not a
+    severity/criticality ranking: this tool states what differs, sizing up
+    how much that matters is an analyst call, not the dashboard's."""
+    return status in ("non_implemente", "non_verifiable", "partiel")
 
 
 def _card_from_op(op):
@@ -56,32 +59,25 @@ def _card_from_op(op):
     if "error" in op:
         return {
             "ep_name": ep_name, "path": op["path"], "implemented": False, "error": op["error"],
-            "missing_count": 0, "missing_fields": [], "severity_counts": {}, "severity_class": "na",
+            "missing_count": 0, "missing_fields": [], "all_fields": [], "card_state": "na",
         }
 
     missing_fields = []
-    severity_counts = {"Critique": 0, "Important": 0, "Mineur": 0}
+    all_fields = []
     for f in op["fields"]:
-        sev = _severity(f["status"])
-        if sev is None:
-            continue
-        severity_counts[sev] += 1
-        description = f"Champ Java correspondant : {f['matched_java_field']}" if f.get("matched_java_field") else None
-        missing_fields.append({"field": f["field"], "severity": sev, "description": description})
+        is_gap = _is_gap(f["status"])
+        description = f"Matching Java field: {f['matched_java_field']}" if f.get("matched_java_field") else None
+        field_entry = {"field": f["field"], "is_gap": is_gap, "required": f.get("required"), "description": description}
+        all_fields.append(field_entry)
+        if is_gap:
+            missing_fields.append(field_entry)
 
-    if severity_counts["Critique"]:
-        severity_class = "critique"
-    elif severity_counts["Important"]:
-        severity_class = "important"
-    elif severity_counts["Mineur"]:
-        severity_class = "mineur"
-    else:
-        severity_class = "conforme"
+    card_state = "ecart" if missing_fields else "conforme"
 
     return {
         "ep_name": ep_name, "path": op["path"], "implemented": True, "error": None,
-        "missing_count": len(missing_fields), "missing_fields": missing_fields,
-        "severity_counts": severity_counts, "severity_class": severity_class,
+        "missing_count": len(missing_fields), "missing_fields": missing_fields, "all_fields": all_fields,
+        "card_state": card_state,
     }
 
 
@@ -93,23 +89,17 @@ def get_comparison(refresh=False):
     cards = [_card_from_op(op) for op in report["operations"]]
 
     total_missing = sum(c["missing_count"] for c in cards)
-    n_critical_endpoints = sum(1 for c in cards if c["severity_counts"].get("Critique"))
-    n_compliant = sum(1 for c in cards if c["severity_class"] == "conforme")
-
-    shared_fixes = [{
-        "title": g["root_field"], "field_count": g["field_count"],
-        "endpoint_count": g["operation_count"], "endpoints": g["operations"],
-        "fields": g["fields"],
-    } for g in (report.get("shared_gaps") or [])]
+    n_with_gaps = sum(1 for c in cards if c["missing_count"])
+    n_compliant = sum(1 for c in cards if c["card_state"] == "conforme")
 
     return {
         "has_run": True,
         "generated_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
         "kpis": {
-            "total_missing": total_missing, "n_critical_endpoints": n_critical_endpoints,
+            "total_missing": total_missing, "n_with_gaps": n_with_gaps,
             "n_compliant": n_compliant, "n_total": len(cards),
         },
-        "cards": cards, "shared_fixes": shared_fixes,
+        "cards": cards,
         "_report": report,
     }
 
@@ -180,7 +170,7 @@ def _run_releases_check():
                 continue
             change_fields = [f["name"] for f in c.get("fields", [])]
             timeline.append({
-                "title": c.get("title") or "(sans titre)",
+                "title": c.get("title") or "(no title)",
                 "mdes_release": r["title"],
                 "description": c.get("description") or "",
                 "mtf": note_timeline.get("mtf_date"),
@@ -203,7 +193,7 @@ def _run_releases_check():
     }
 
     subject = cs_pre.email_subject(relevant) if relevant else "[MDES Customer Service] 0 new release(s) impacting tracked operations"
-    body = cs_pre.render_email_body(relevant) if relevant else "Aucune release pertinente trouvée pour les opérations suivies."
+    body = cs_pre.render_email_body(relevant) if relevant else "No relevant release found for the tracked operations."
     xlsx_path = cs_pre.default_report_xlsx_path()
     if relevant:
         cs_pre.render_report_xlsx(relevant, xlsx_path)
@@ -256,7 +246,7 @@ def get_email_data(view):
             return {"has_data": False}
         if not cached.get("xlsx_path"):
             return {"has_data": True, "subject": cached["subject"], "intro": cached["body"],
-                    "attachment_path": None, "attachment_name": "(aucune release pertinente — pas de pièce jointe)"}
+                    "attachment_path": None, "attachment_name": "(no relevant release — no attachment)"}
         return {
             "has_data": True, "subject": cached["subject"], "intro": cached["body"],
             "attachment_path": cached["xlsx_path"], "attachment_name": os.path.basename(cached["xlsx_path"]),
@@ -280,7 +270,7 @@ def send_report_email(view, subject, body, recipients):
     recipient_list = [r.strip() for r in recipients.split(",") if r.strip()] or None
     try:
         sent_to = send_email_module.send_email(subject, body, recipients=recipient_list, attachments=attachments)
-        return "success", f"Email envoyé à {', '.join(sent_to)}."
+        return "success", f"Email sent to {', '.join(sent_to)}."
     except send_email_module.SmtpConfigError as e:
         return "error", str(e)
 

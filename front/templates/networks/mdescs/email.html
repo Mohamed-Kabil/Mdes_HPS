@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Email — Systeme de conformite reseaux{% endblock %}
+{% block title %}Email — Network Compliance System{% endblock %}
 {% block content %}
-<h1>Envoyer par email</h1>
+<h1>Send by email</h1>
 
 <div class="view-switch">
-  <a href="{{ url_for('mdescs.email_view', view='comparison') }}" class="{{ 'active' if view == 'comparison' else '' }}">Comparaison</a>
+  <a href="{{ url_for('mdescs.email_view', view='comparison') }}" class="{{ 'active' if view == 'comparison' else '' }}">Comparison</a>
   <a href="{{ url_for('mdescs.email_view', view='releases') }}" class="{{ 'active' if view == 'releases' else '' }}">Releases</a>
 </div>
 
 {% if not has_data %}
   <p class="caption">
-    Aucune analyse {{ 'Comparaison' if view == 'comparison' else 'Releases' }} n'a encore ete lancee.
-    <a href="{{ url_for('mdescs.' ~ ('comparison_view' if view == 'comparison' else 'releases_view'), refresh=1) }}">Lancer l'analyse</a>
+    No {{ 'Comparison' if view == 'comparison' else 'Releases' }} analysis has been run yet.
+    <a href="{{ url_for('mdescs.' ~ ('comparison_view' if view == 'comparison' else 'releases_view'), refresh=1) }}">Run the analysis</a>
   </p>
 {% else %}
 
@@ -25,37 +25,37 @@
 
 {% if pending_confirm %}
   <div class="confirm-box">
-    <p>Confirmer l'envoi a : <strong>{{ recipients }}</strong><br>Objet : <strong>{{ subject }}</strong><br>Piece jointe : <strong>{{ attachment_name }}</strong></p>
+    <p>Confirm sending to: <strong>{{ recipients }}</strong><br>Subject: <strong>{{ subject }}</strong><br>Attachment: <strong>{{ attachment_name }}</strong></p>
     <form method="post">
       <input type="hidden" name="view" value="{{ view }}">
       <input type="hidden" name="subject" value="{{ subject }}">
       <textarea name="intro" hidden>{{ intro }}</textarea>
       <input type="hidden" name="recipients" value="{{ recipients }}">
       <input type="hidden" name="confirmed" value="1">
-      <button type="submit">Confirmer l'envoi</button>
+      <button type="submit">Confirm sending</button>
     </form>
-    <a href="{{ url_for('mdescs.email_view', view=view) }}">Annuler</a>
+    <a href="{{ url_for('mdescs.email_view', view=view) }}">Cancel</a>
   </div>
 {% else %}
   <form method="post" class="email-form">
     <input type="hidden" name="view" value="{{ view }}">
-    <label>Objet
+    <label>Subject
       <input type="text" name="subject" value="{{ subject }}">
     </label>
-    <label>Message d'introduction
+    <label>Intro message
       <textarea name="intro" rows="6">{{ intro }}</textarea>
     </label>
-    <label>Destinataires (separes par des virgules)
+    <label>Recipients (comma-separated)
       <input type="text" name="recipients" value="{{ recipients }}">
     </label>
-    <button type="submit">Envoyer</button>
+    <button type="submit">Send</button>
   </form>
 {% endif %}
 
-<h2>Apercu de l'email (ce qui sera reellement envoye)</h2>
+<h2>Email preview (what will actually be sent)</h2>
 <div class="email-preview">
   {{ preview_html | safe }}
-  <p class="attachment-note">&#128206; {{ attachment_name }} (piece jointe)</p>
+  <p class="attachment-note">&#128206; {{ attachment_name }} (attachment)</p>
 </div>
 {% endif %}
 {% endblock %}

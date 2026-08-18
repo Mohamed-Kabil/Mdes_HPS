@@ -49,24 +49,25 @@ PREDIG_PATH = os.path.join(CACHE_DIR, "pre-dig.yaml")
 PREDIG_META_PATH = os.path.join(CACHE_DIR, "pre-dig.yaml.meta.json")
 
 ENDPOINT_DESCRIPTIONS = {
-    '/requestActivationMethods': "Retourne les méthodes d'activation disponibles pour un token (SMS, email, etc.) avant sa première activation.",
-    '/deliverActivationCode': "Envoie le code d'activation à l'utilisateur via la méthode choisie.",
-    '/authorizeService': "Autorise/valide une transaction de tokenisation — coeur du flux d'enrôlement.",
-    '/notifyServiceActivated': "Notifie que le service de tokenisation a été activé pour un compte.",
-    '/notifyTokenUpdated': "Notifie qu'un token existant a été mis à jour (changement de PAN, expiration, etc.).",
-    '/validateActivationCode': "Valide le code d'activation saisi par l'utilisateur.",
-    '/getAccountInformation': "Retourne les informations du compte associé à un token.",
+    '/requestActivationMethods': "Returns the activation methods available for a token (SMS, email, etc.) before its first activation.",
+    '/deliverActivationCode': "Sends the activation code to the user via the chosen method.",
+    '/authorizeService': "Authorizes/validates a tokenization transaction — core of the enrollment flow.",
+    '/notifyServiceActivated': "Notifies that the tokenization service has been activated for an account.",
+    '/notifyTokenUpdated': "Notifies that an existing token has been updated (PAN change, expiration, etc.).",
+    '/validateActivationCode': "Validates the activation code entered by the user.",
+    '/getAccountInformation': "Returns the account information associated with a token.",
 }
 
 
-def _severity(status, reliable):
+def _is_gap(status, reliable):
+    """Whether a field counts as an ecart worth surfacing -- not implemented,
+    or a mismatch the tool isn't confident enough about to call compliant
+    (see MINOR_NOISE_ATTRS in phase1_historical_audit.py). Deliberately NOT
+    a severity/criticality ranking: this tool states what differs, sizing up
+    how much that matters is an analyst call, not the dashboard's."""
     if not reliable:
-        return "Mineur"
-    if status == "non_implemente":
-        return "Critique"
-    if status == "partiel":
-        return "Important"
-    return None
+        return True
+    return status in ("non_implemente", "partiel")
 
 
 def _card_from_entry(path, display, entry):
@@ -74,42 +75,35 @@ def _card_from_entry(path, display, entry):
     if not entry.get("endpoint_exists_in_predig"):
         return {
             "ep_name": ep_name, "path": path, "implemented": False,
-            "error": "Endpoint absent de pre-dig.yaml (spec Mastercard).",
-            "missing_count": 0, "missing_fields": [], "severity_counts": {},
-            "severity_class": "na",
+            "error": "Endpoint missing from pre-dig.yaml (Mastercard spec).",
+            "missing_count": 0, "missing_fields": [], "all_fields": [],
+            "card_state": "na",
         }
     if not entry["endpoint_exists_in_data"]:
         return {
             "ep_name": ep_name, "path": path, "implemented": False, "error": None,
-            "missing_count": len(entry["fields"]), "missing_fields": [], "severity_counts": {},
-            "severity_class": "critique",
+            "missing_count": len(entry["fields"]), "missing_fields": [], "all_fields": [],
+            "card_state": "ecart",
         }
 
     missing_fields = []
-    severity_counts = {"Critique": 0, "Important": 0, "Mineur": 0}
+    all_fields = []
     for f in entry["fields"]:
-        sev = _severity(f["status"], f["reliable"])
-        if sev is None:
-            continue
-        severity_counts[sev] += 1
-        missing_fields.append({
-            "field": f["name"], "severity": sev,
+        is_gap = _is_gap(f["status"], f["reliable"])
+        field_entry = {
+            "field": f["name"], "is_gap": is_gap, "required": f.get("required"),
             "description": "; ".join(f.get("reasons") or []) or None,
-        })
+        }
+        all_fields.append(field_entry)
+        if is_gap:
+            missing_fields.append(field_entry)
 
-    if severity_counts["Critique"]:
-        severity_class = "critique"
-    elif severity_counts["Important"]:
-        severity_class = "important"
-    elif severity_counts["Mineur"]:
-        severity_class = "mineur"
-    else:
-        severity_class = "conforme"
+    card_state = "ecart" if missing_fields else "conforme"
 
     return {
         "ep_name": ep_name, "path": path, "implemented": True, "error": None,
-        "missing_count": len(missing_fields), "missing_fields": missing_fields,
-        "severity_counts": severity_counts, "severity_class": severity_class,
+        "missing_count": len(missing_fields), "missing_fields": missing_fields, "all_fields": all_fields,
+        "card_state": card_state,
     }
 
 
@@ -157,24 +151,13 @@ def _compute_comparison():
     cards = [_card_from_entry(path, display, predig_direct[path]) for path, display in p1.PRIORITY_PATH_DISPLAY]
 
     total_missing = sum(c["missing_count"] for c in cards)
-    n_critical_endpoints = sum(1 for c in cards if c["severity_counts"].get("Critique"))
-    n_compliant = sum(1 for c in cards if c["severity_class"] == "conforme")
-
-    field_clusters = p1.group_shared_schema_fixes(predig_direct)
-    shared_fixes = [{
-        "title": target["data_origin"],
-        "field_count": target["field_count"],
-        "endpoint_count": target["endpoint_count"],
-        "endpoints": target["endpoints"],
-        "fields": sorted({f["name"] for p in p1.summarize_schema_fix_clusters(field_clusters)
-                           if p["data_origin"] == target["data_origin"] for f in p["fields"]}),
-    } for target in p1.summarize_by_data_target(field_clusters)]
+    n_with_gaps = sum(1 for c in cards if c["missing_count"])
+    n_compliant = sum(1 for c in cards if c["card_state"] == "conforme")
 
     payload = {
         "generated_at": _generated_at(),
-        "shared_fixes": shared_fixes,
         "kpis": {
-            "total_missing": total_missing, "n_critical_endpoints": n_critical_endpoints,
+            "total_missing": total_missing, "n_with_gaps": n_with_gaps,
             "n_compliant": n_compliant, "n_total": len(cards),
         },
         "cards": cards,
@@ -211,7 +194,7 @@ def export_comparison_xlsx():
     (an earlier version of this function reused that one instead, which
     meant a comparison export/email was unavailable until Releases had
     been run at least once, and went stale the moment Comparaison alone
-    was refreshed). render_report_xlsx() already builds a 'Résumé' +
+    was refreshed). render_report_xlsx() already builds a 'Summary' +
     per-API + shared-fixes-sheet workbook and skips the notes-detail sheet
     when audited_notes is empty, so this needs no new writer, just calling
     it with audited_notes=[] and the direct diff freshly recomputed."""
@@ -260,7 +243,7 @@ def _run_releases_audit():
             endpoints = sorted({er["endpoint"].lstrip('/') for er in tracked_results})
             fields = sorted({f["name"] for er in tracked_results for f in er.get("fields", [])})
             timeline.append({
-                "title": change.get("title") or "(sans titre)",
+                "title": change.get("title") or "(no title)",
                 "mdes_release": note["mdes_release"],
                 "description": change.get("description") or "",
                 "mtf": note_timeline.get("mtf_date"),
@@ -338,11 +321,11 @@ def get_email_data(view):
     comparison = get_comparison(refresh=False)
     if not comparison.get("has_run"):
         return {"has_data": False}
-    subject = f"[MDES] Comparaison Pre-Digitization — {comparison['kpis']['total_missing']} écart(s)"
-    intro_lines = [f"{comparison['kpis']['total_missing']} champ(s) manquant(s) sur {comparison['kpis']['n_total']} endpoint(s) prioritaires."]
+    subject = f"[MDES] Pre-Digitization Comparison — {comparison['kpis']['total_missing']} gap(s)"
+    intro_lines = [f"{comparison['kpis']['total_missing']} missing field(s) across {comparison['kpis']['n_total']} priority endpoint(s)."]
     for c in comparison["cards"]:
         if c["missing_count"]:
-            intro_lines.append(f"- {c['path']} : {c['missing_count']} champ(s) manquant(s)")
+            intro_lines.append(f"- {c['path']}: {c['missing_count']} missing field(s)")
     xlsx_path = export_comparison_xlsx()
     return {
         "has_data": True, "subject": subject, "intro": "\n".join(intro_lines),
@@ -356,7 +339,7 @@ def send_report_email(view, subject, body, recipients):
     recipient_list = [r.strip() for r in recipients.split(",") if r.strip()] or None
     try:
         sent_to = send_email_module.send_email(subject, body, recipients=recipient_list, attachments=attachments)
-        return "success", f"Email envoyé à {', '.join(sent_to)}."
+        return "success", f"Email sent to {', '.join(sent_to)}."
     except send_email_module.SmtpConfigError as e:
         return "error", str(e)
 
