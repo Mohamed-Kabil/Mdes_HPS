@@ -28,10 +28,13 @@ import mdes_cs_divergence_report as cs_div
 import mdes_cs_prereleases as cs_pre
 import send_email as send_email_module
 from .release_dates import best_date_iso, display_url
+from .report_naming import dated_report_path
 
 DATA_DIR = os.path.join(FRONT_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 RELEASES_CACHE_PATH = os.path.join(DATA_DIR, "mdescs_releases_cache.json")
+REPORTS_DIR = os.path.join(PROJECT_ROOT, "mc_divergence", "reports")
+NETWORK_SLUG = "customer_service"
 
 OPERATION_DESCRIPTIONS = {
     "Search": "Searches for one or more tokens associated with a PAN, a TUR, or a device ID.",
@@ -115,8 +118,9 @@ def export_comparison_xlsx():
     data = get_comparison(refresh=False)
     if not data.get("has_run"):
         return None
-    cs_div.render_report_xlsx(data["_report"], cs_div.DEFAULT_REPORT_XLSX_PATH)
-    return cs_div.DEFAULT_REPORT_XLSX_PATH
+    xlsx_path = dated_report_path(REPORTS_DIR, NETWORK_SLUG, "report")
+    cs_div.render_report_xlsx(data["_report"], xlsx_path)
+    return xlsx_path
 
 
 def _load_releases_cache():
@@ -194,7 +198,7 @@ def _run_releases_check():
 
     subject = cs_pre.email_subject(relevant) if relevant else "[MDES Customer Service] 0 new release(s) impacting tracked operations"
     body = cs_pre.render_email_body(relevant) if relevant else "No relevant release found for the tracked operations."
-    xlsx_path = cs_pre.default_report_xlsx_path()
+    xlsx_path = dated_report_path(REPORTS_DIR, NETWORK_SLUG, "releases_report")
     if relevant:
         cs_pre.render_report_xlsx(relevant, xlsx_path)
 

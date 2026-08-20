@@ -38,11 +38,13 @@ import fetch_mc_source
 import phase1_historical_audit as p1
 import send_email as send_email_module
 from .release_dates import best_date_iso, display_url
+from .report_naming import dated_report_path
 
 DATA_DIR = os.path.join(FRONT_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 RELEASES_CACHE_PATH = os.path.join(DATA_DIR, "predig_releases_cache.json")
-COMPARISON_XLSX_PATH = os.path.join(MC_DIVERGENCE_DIR, "reports", "phase1_comparison_report.xlsx")
+REPORTS_DIR = os.path.join(MC_DIVERGENCE_DIR, "reports")
+NETWORK_SLUG = "pre_digitization"
 
 CACHE_DIR = fetch_mc_source.DEFAULT_CACHE_DIR
 PREDIG_PATH = os.path.join(CACHE_DIR, "pre-dig.yaml")
@@ -201,8 +203,9 @@ def export_comparison_xlsx():
     data_spec = p1.load_spec(p1.DEFAULT_DATA_YAML, repair=True)
     predig_spec = p1.load_spec(PREDIG_PATH, repair=True)
     predig_direct = p1.audit_predig_vs_data_direct(predig_spec, data_spec)
-    p1.render_report_xlsx([], DEFAULT_CUTOFF, COMPARISON_XLSX_PATH, predig_direct)
-    return COMPARISON_XLSX_PATH
+    xlsx_path = dated_report_path(REPORTS_DIR, NETWORK_SLUG, "report")
+    p1.render_report_xlsx([], DEFAULT_CUTOFF, xlsx_path, predig_direct)
+    return xlsx_path
 
 
 def _load_releases_cache():
@@ -222,8 +225,9 @@ DEFAULT_CUTOFF = "2025-01"
 
 def _run_releases_audit():
     cutoff = p1.parse_cutoff(DEFAULT_CUTOFF)
+    xlsx_path = dated_report_path(REPORTS_DIR, NETWORK_SLUG, "releases_report")
     audited_notes, subject, body = p1.run(
-        p1.DEFAULT_DATA_YAML, cutoff, CACHE_DIR, p1.DEFAULT_REPORT_XLSX_PATH,
+        p1.DEFAULT_DATA_YAML, cutoff, CACHE_DIR, xlsx_path,
         refresh=True, send=False,
     )
 
@@ -269,7 +273,7 @@ def _run_releases_audit():
     payload = {
         "generated_at": datetime.now(timezone.utc).astimezone().strftime("%d/%m/%Y %H:%M"),
         "kpis": kpis, "timeline": timeline,
-        "xlsx_path": p1.DEFAULT_REPORT_XLSX_PATH, "subject": subject, "body": body,
+        "xlsx_path": xlsx_path, "subject": subject, "body": body,
     }
     _save_releases_cache(payload)
     return payload
@@ -302,9 +306,9 @@ def get_releases_timeline(refresh=False, date_from=None, date_to=None, endpoint=
 
 def export_releases_xlsx():
     data = get_releases(refresh=False)
-    if not data.get("has_run"):
-        _run_releases_audit()
-    return p1.DEFAULT_REPORT_XLSX_PATH
+    if not data.get("has_run") or "xlsx_path" not in data:
+        data = {"has_run": True, **_run_releases_audit()}
+    return data["xlsx_path"]
 
 
 def get_email_data(view):

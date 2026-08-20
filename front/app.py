@@ -35,7 +35,7 @@ PROJECT_ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "mc_divergence"))
 
-from adapters import predig_adapter, mdescs_adapter
+from adapters import predig_adapter, mdescs_adapter, mcs_adapter
 import notes_store
 import env_store
 
@@ -46,6 +46,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 NETWORKS = [
     {"key": "predig", "name": "MDES Pre-Digitization", "logo": "logos/mastercard.svg"},
     {"key": "mdescs", "name": "MDES Customer Service", "logo": "logos/mastercard.svg"},
+    {"key": "mcs", "name": "Mastercard Checkout Solutions", "logo": "logos/mastercard.svg"},
 ]
 
 SECTION_BY_FUNC = {
@@ -60,7 +61,7 @@ SECTION_BY_FUNC = {
 
 @app.context_processor
 def inject_globals():
-    current_network_key = request.blueprint if request.blueprint in {"predig", "mdescs"} else None
+    current_network_key = request.blueprint if request.blueprint in {"predig", "mdescs", "mcs"} else None
     current_section = None
     if current_network_key and request.endpoint:
         func = request.endpoint.split(".", 1)[-1]
@@ -275,18 +276,21 @@ def _preview_html(text):
     return f'<pre class="email-preview-pre">{escape(text)}</pre>'
 
 
+REPORT_PREFIX_BY_NETWORK = {
+    "predig": "pre_digitization_", "mdescs": "customer_service_", "mcs": "checkout_solutions_",
+}
+
+
 def _list_reports(network_key):
     if not os.path.isdir(REPORTS_DIR):
         return []
+    prefix = REPORT_PREFIX_BY_NETWORK.get(network_key)
     reports = []
     for name_ in os.listdir(REPORTS_DIR):
         path = os.path.join(REPORTS_DIR, name_)
         if not os.path.isfile(path):
             continue
-        is_cs = name_.startswith("mdes_cs_")
-        if network_key == "mdescs" and not is_cs:
-            continue
-        if network_key == "predig" and is_cs:
+        if prefix and not name_.startswith(prefix):
             continue
         stat = os.stat(path)
         from datetime import datetime
@@ -302,6 +306,7 @@ def _list_reports(network_key):
 
 app.register_blueprint(build_network_blueprint("predig", "MDES Pre-Digitization", predig_adapter))
 app.register_blueprint(build_network_blueprint("mdescs", "MDES Customer Service", mdescs_adapter))
+app.register_blueprint(build_network_blueprint("mcs", "Mastercard Checkout Solutions", mcs_adapter))
 
 
 if __name__ == "__main__":

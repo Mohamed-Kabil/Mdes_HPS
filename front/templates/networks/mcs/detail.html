@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "networks/_macros.html" import field_detail_table %}
+{% block title %}{{ path }} — Detail{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('mcs.comparison_view') }}">&larr; Back</a></p>
+<h1>{{ path }}</h1>
+
+{% if not implemented %}
+  <p class="card-status">Not implemented by HPS — no comparison possible.</p>
+{% elif error %}
+  <p class="card-status">Error during comparison: {{ error }}</p>
+{% else %}
+  {{ field_detail_table(all_fields) }}
+{% endif %}
+{% endblock %}

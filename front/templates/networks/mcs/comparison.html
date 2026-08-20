@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "networks/_macros.html" import stat_bar, field_detail_table %}
+{% block title %}Comparison — Network Compliance System{% endblock %}
+{% block content %}
+<h1>Comparison — data.yaml vs Mastercard Checkout Solutions (Card + Batch Enroll APIs)</h1>
+
+{% if not has_run %}
+<p class="caption">No analysis run yet.</p>
+<p class="caption"><a href="{{ refresh_url }}">Run the analysis</a></p>
+{% else %}
+<p class="caption">
+  Generated on {{ generated_at }} &middot;
+  <a href="{{ refresh_url }}">Refresh analysis</a>
+  <a href="{{ export_url }}">Export to Excel</a>
+  <a href="{{ url_for('mcs.email_view', view='comparison') }}">Send an email</a>
+</p>
+
+{{ stat_bar([
+  (kpis.total_missing, "missing fields"),
+  (kpis.n_with_gaps, "endpoints with gap(s)"),
+  (kpis.n_compliant, "compliant"),
+  (kpis.n_total, "analyzed"),
+]) }}
+
+<div class="card-grid">
+  {% for card in cards %}
+  <a class="card state-{{ card.card_state }}" href="{{ url_for('mcs.comparison_detail', endpoint_name=card.ep_name) }}" data-detail-id="{{ card.ep_name }}">
+    <div class="card-title">{{ card.path }}</div>
+    {% if not card.implemented %}
+      <div class="card-status">Not implemented by HPS</div>
+    {% elif card.error %}
+      <div class="card-status">Comparison error</div>
+    {% else %}
+      <div class="card-count">{{ card.missing_count }} field(s) with a gap</div>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+<div hidden>
+  {% for card in cards %}
+  <div id="detail-data-{{ card.ep_name }}">
+    <h2>{{ card.path }}</h2>
+    {% if not card.implemented %}
+      <p class="card-status">Not implemented by HPS — no comparison possible.</p>
+    {% elif card.error %}
+      <p class="card-status">Error during comparison: {{ card.error }}</p>
+    {% else %}
+      {{ field_detail_table(card.all_fields) }}
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

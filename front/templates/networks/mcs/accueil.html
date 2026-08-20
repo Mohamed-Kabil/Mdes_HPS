@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% from "networks/_macros.html" import home_hero %}
+{% block title %}Mastercard Checkout Solutions — Network Compliance System{% endblock %}
+{% block content %}
+{% set net = networks|selectattr("key", "equalto", "mcs")|first %}
+{{ home_hero(net, primary_label, primary_url, primary_disabled, primary_loading) }}
+{% endblock %}
